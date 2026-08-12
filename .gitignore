@@ -1,8 +1,11 @@
-# Nestjs specific
-/dist
-/node_modules
-/build
-/tmp
+# Build outputs & deps (any workspace, any depth)
+dist/
+node_modules/
+build/
+tmp/
+
+# Turborepo
+.turbo/
 
 # Logs
 logs
