@@ -29,6 +29,9 @@ importers:
       '@nestjs/platform-express':
         specifier: ^11.0.1
         version: 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)
+      '@pomodoro/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -105,6 +108,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@pomodoro/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0)(terser@5.49.2))
