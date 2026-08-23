@@ -1,9 +1,9 @@
-import wall from '../../assets/wall.png';
-import floor from '../../assets/floor.png';
-import Desk from '../../assets/desk.svg?react';
-import Lamp from '../../assets/lamp.svg?react';
-import Shelf from '../../assets/shelf.svg?react';
-import LPPlayer from '../../assets/lp_player.svg?react';
+import wall from '@/assets/wall.png';
+import floor from '@/assets/floor.png';
+import Desk from '@/assets/desk.svg?react';
+import Lamp from '@/assets/lamp.svg?react';
+import Shelf from '@/assets/shelf.svg?react';
+import LPPlayer from '@/assets/lp_player.svg?react';
 
 function Pomodoro() {
   return (
