@@ -1,1 +1,29 @@
 @import 'tailwindcss';
+
+@font-face {
+  font-family: 'DearFromsol';
+  src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/2607161334@griun-fromsol-rg/griun-fromsol-rg/Griun_Fromsol-Rg.woff2')
+    format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@theme {
+  --color-*: initial;
+
+  --color-black: #1b1b1b;
+  --color-gray: #bababa;
+  --color-white: #ffffff;
+
+  --color-tomato-body-1: #9beb87;
+  --color-tomato-body-2: #f5ae8d;
+  --color-tomato-body-3: #f5908d;
+  --color-tomato-body-4: #f36673;
+  --color-tomato-leaf: #2ae578;
+
+  --font-dearfromsol: 'DearFromsol';
+}
+
+body {
+  @apply font-dearfromsol text-black;
+}
