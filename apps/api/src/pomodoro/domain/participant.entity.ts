@@ -6,5 +6,6 @@ export class Participant implements ParticipantShape {
     public nickname: string,
     public statusMessage: string,
     public currentCycle: number,
+    public joinedAt: string,
   ) {}
 }
