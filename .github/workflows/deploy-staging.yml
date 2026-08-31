@@ -1,0 +1,74 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches: [staging]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm test
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 20
+    steps:
+      - name: Build and restart on host
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          command_timeout: 15m
+          script_stop: true
+          script: |
+            cd "${{ secrets.APP_DIR }}"
+            git fetch --prune origin
+            git reset --hard ${{ github.sha }}
+            docker compose up -d --build
+            docker image prune -f
+
+      - name: Smoke test
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          command_timeout: 3m
+          script_stop: true
+          script: |
+            cd "${{ secrets.APP_DIR }}"
+            for _ in $(seq 1 30); do
+              code=$(curl -s --max-time 5 -o /dev/null -w '%{http_code}' http://localhost:3000/ || true)
+              if [ -n "$code" ] && [ "$code" != "000" ]; then
+                echo "API responded: HTTP $code"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "No response within 60s"
+            docker compose logs --tail 50 api
+            exit 1
