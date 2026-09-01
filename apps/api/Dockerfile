@@ -22,6 +22,8 @@ RUN pnpm --filter @pomodoro/api --prod deploy --legacy /out
 
 FROM node:24-alpine AS runner
 
+LABEL org.opencontainers.image.source=https://github.com/Wannabe-Ketchup/development
+
 WORKDIR /app
 
 ENV NODE_ENV=production \

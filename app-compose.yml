@@ -1,0 +1,17 @@
+services:
+  nest:
+    image: ghcr.io/wannabe-ketchup/pomodoro-api:${TAG:-staging}
+    container_name: nest
+    ports:
+      - '127.0.0.1:3000:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    networks:
+      - ketchup
+    restart: always
+
+networks:
+  ketchup:
+    external: true
+    name: ketchup-network
