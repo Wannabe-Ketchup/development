@@ -30,6 +30,12 @@ jobs:
       - run: pnpm build
       - run: pnpm test
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+          retention-days: 1
+
   build-push:
     needs: verify
     runs-on: ubuntu-latest
@@ -70,6 +76,11 @@ jobs:
       packages: read
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: web-dist
 
       - name: Copy compose file to host
         uses: appleboy/scp-action@v1
@@ -126,3 +137,14 @@ jobs:
             echo "No healthy response after 30 attempts"
             docker compose -f app-compose.yml logs --tail 50 nest
             exit 1
+
+      - name: Copy web build to host
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "web-dist/*"
+          target: ${{ secrets.WEB_DIR }}
+          strip_components: 1
+          overwrite: true
