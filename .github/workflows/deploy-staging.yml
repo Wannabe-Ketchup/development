@@ -93,7 +93,7 @@ jobs:
             trap 'docker logout ghcr.io >/dev/null 2>&1' EXIT
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             TAG=${{ github.sha }} docker compose -f app-compose.yml pull
-            TAG=${{ github.sha }} docker compose -f app-compose.yml up -d
+            TAG=${{ github.sha }} docker compose -f app-compose.yml up -d --wait --wait-timeout 120
             docker image prune -af \
               --filter "until=168h" \
               --filter "label=org.opencontainers.image.source=https://github.com/Wannabe-Ketchup/development"
@@ -104,25 +104,25 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          command_timeout: 3m
+          command_timeout: 5m
           script_stop: true
           script: |
             cd "${{ secrets.APP_DIR }}"
             for _ in $(seq 1 30); do
-              code=$(curl -s --max-time 5 -o /dev/null -w '%{http_code}' http://localhost:3000/ || true)
+              code=$(curl -s --max-time 5 -o /dev/null -w '%{http_code}' http://localhost:3000/health || true)
+              if [ "$code" = "200" ]; then
+                echo "Health check passed"
+                exit 0
+              fi
               case "$code" in
-                2*|3*|4*)
-                  echo "API responded: HTTP $code"
-                  exit 0
-                  ;;
                 5*)
                   echo "API returned server error: HTTP $code"
                   docker compose -f app-compose.yml logs --tail 50 nest
                   exit 1
                   ;;
               esac
-              sleep 2
+              sleep 3
             done
-            echo "No response within 60s"
+            echo "No healthy response after 30 attempts"
             docker compose -f app-compose.yml logs --tail 50 nest
             exit 1

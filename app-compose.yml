@@ -7,11 +7,14 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-    networks:
-      - ketchup
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - "-e"
+        - "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     restart: always
-
-networks:
-  ketchup:
-    external: true
-    name: ketchup-network
