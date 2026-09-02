@@ -109,32 +109,21 @@ jobs:
               --filter "until=168h" \
               --filter "label=org.opencontainers.image.source=https://github.com/Wannabe-Ketchup/development"
 
-      - name: Smoke test
+      - name: Verify API reachable from host
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          command_timeout: 5m
           script_stop: true
           script: |
             cd "${{ secrets.APP_DIR }}"
-            for _ in $(seq 1 30); do
-              code=$(curl -s --max-time 5 -o /dev/null -w '%{http_code}' http://localhost:3000/health || true)
-              if [ "$code" = "200" ]; then
-                echo "Health check passed"
-                exit 0
-              fi
-              case "$code" in
-                5*)
-                  echo "API returned server error: HTTP $code"
-                  docker compose -f app-compose.yml logs --tail 50 nest
-                  exit 1
-                  ;;
-              esac
-              sleep 3
-            done
-            echo "No healthy response after 30 attempts"
+            code=$(curl -s --max-time 5 -o /dev/null -w '%{http_code}' http://localhost:3000/health || true)
+            if [ "$code" = "200" ]; then
+              echo "API reachable from host"
+              exit 0
+            fi
+            echo "API not reachable from host: HTTP $code"
             docker compose -f app-compose.yml logs --tail 50 nest
             exit 1
 
