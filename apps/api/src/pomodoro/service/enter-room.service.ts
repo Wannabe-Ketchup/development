@@ -31,11 +31,11 @@ export class EnterRoomService {
 
     return {
       participant: { id: participant.id, nickname: participant.nickname },
-      roomSnapshot: this.toRoomSnapshot(room),
+      room: this.toRoom(room),
     };
   }
 
-  private toRoomSnapshot(room: Room): JoinRoomResponse['roomSnapshot'] {
+  private toRoom(room: Room): JoinRoomResponse['room'] {
     return {
       roomId: room.roomId,
       mode: room.mode,

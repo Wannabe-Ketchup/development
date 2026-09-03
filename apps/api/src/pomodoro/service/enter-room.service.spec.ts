@@ -75,7 +75,7 @@ describe('EnterRoomService.joinRoom', () => {
     );
   });
 
-  it('존재하는 방에 정원 여유가 있으면 참여자를 생성해 입장시키고 방 스냅샷을 반환한다', () => {
+  it('존재하는 방에 정원 여유가 있으면 참여자를 생성해 입장시키고 방 정보를 반환한다', () => {
     // Given
     const { room, join } = createMockRoom();
     findExistingRoom.mockReturnValue(room);
@@ -95,7 +95,7 @@ describe('EnterRoomService.joinRoom', () => {
       id: participant.id,
       nickname: participant.nickname,
     });
-    expect(result.roomSnapshot).toEqual({
+    expect(result.room).toEqual({
       roomId: room.roomId,
       mode: room.mode,
       currentCycle: room.currentCycle,
