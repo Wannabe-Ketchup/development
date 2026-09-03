@@ -1,7 +1,17 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Param, Post } from '@nestjs/common';
 import { TimerService } from '../service/timer.service';
+import { EnterRoomService } from '../service/enter-room.service';
+import type { JoinRoomResponse } from '../dto/join-room-response.dto';
 
 @Controller('pomodoro')
 export class PomodoroController {
-  constructor(private readonly timerService: TimerService) {}
+  constructor(
+    private readonly timerService: TimerService,
+    private readonly enterRoomService: EnterRoomService,
+  ) {}
+
+  @Post(':roomId')
+  enterRoom(@Param('roomId') roomId: string): JoinRoomResponse {
+    return this.enterRoomService.joinRoom(roomId);
+  }
 }
