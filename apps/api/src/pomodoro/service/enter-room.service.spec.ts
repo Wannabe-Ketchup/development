@@ -6,9 +6,6 @@ import { RoomRepository } from '../repository/room.repository';
 import { Room } from '../domain/room.entity';
 import { Participant } from '../domain/participant.entity';
 import { Timer } from '../domain/timer.entity';
-import * as nicknameUtil from '../util/nickname.util';
-
-jest.mock('../util/nickname.util');
 
 describe('EnterRoomService.joinRoom', () => {
   const roomId = 'room-1';
@@ -50,6 +47,8 @@ describe('EnterRoomService.joinRoom', () => {
   let createParticipant: jest.Mock;
   let participantService: ParticipantService;
 
+  let generateRandomNickname: jest.SpyInstance;
+
   let service: EnterRoomService;
 
   beforeEach(() => {
@@ -69,15 +68,18 @@ describe('EnterRoomService.joinRoom', () => {
       roomRepository,
       participantService,
     );
+
+    generateRandomNickname = jest.spyOn(
+      service as never,
+      'generateRandomNickname',
+    );
   });
 
   it('존재하는 방에 정원 여유가 있으면 참여자를 생성해 입장시키고 방 스냅샷을 반환한다', () => {
     // Given
     const { room, join } = createMockRoom();
     findExistingRoom.mockReturnValue(room);
-    (nicknameUtil.generateRandomNickname as jest.Mock).mockReturnValue(
-      '졸린토마토',
-    );
+    generateRandomNickname.mockReturnValue('졸린토마토');
     const participant = createMockParticipant('졸린토마토');
     createParticipant.mockReturnValue(participant);
 
@@ -124,7 +126,7 @@ describe('EnterRoomService.joinRoom', () => {
     const { room } = createMockRoom({ hasNickname });
     findExistingRoom.mockReturnValue(room);
 
-    (nicknameUtil.generateRandomNickname as jest.Mock)
+    generateRandomNickname
       .mockReturnValueOnce('형용사A토마토')
       .mockReturnValueOnce('형용사B토마토')
       .mockReturnValueOnce('형용사C토마토');

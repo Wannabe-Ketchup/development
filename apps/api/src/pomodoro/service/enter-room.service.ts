@@ -3,8 +3,9 @@ import { RoomRepository } from '../repository/room.repository';
 import { RoomQueryService } from './room-query.service';
 import { ParticipantService } from './participant.service';
 import { Room } from '../domain/room.entity';
-import { generateRandomNickname } from '../util/nickname.util';
 import { JoinRoomResponse } from '../dto/join-room-response.dto';
+
+const NICKNAME_ADJECTIVES = ['졸린', '배고픈', '느긋한', '즐거운'];
 
 @Injectable()
 export class EnterRoomService {
@@ -21,7 +22,7 @@ export class EnterRoomService {
 
     let nickname: string;
     do {
-      nickname = generateRandomNickname();
+      nickname = this.generateRandomNickname();
     } while (room.hasNickname(nickname));
 
     const participant = this.participantService.createParticipant(nickname);
@@ -42,5 +43,12 @@ export class EnterRoomService {
       timer: room.timer,
       participants: [...room.participants.values()],
     };
+  }
+
+  private generateRandomNickname(): string {
+    const adjective =
+      NICKNAME_ADJECTIVES[Math.floor(Math.random() * NICKNAME_ADJECTIVES.length)];
+
+    return `${adjective}토마토`;
   }
 }
