@@ -10,7 +10,7 @@ export class PomodoroController {
     private readonly enterRoomService: EnterRoomService,
   ) {}
 
-  @Post(':roomId')
+  @Post('room/:roomId/participant')
   enterRoom(@Param('roomId') roomId: string): JoinRoomResponse {
     return this.enterRoomService.joinRoom(roomId);
   }
