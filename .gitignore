@@ -30,3 +30,5 @@ lerna-debug.log*
 .claude/
 CONTRIBUTING.md
 docs/
+.idea/
+.agents/
