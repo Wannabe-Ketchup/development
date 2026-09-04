@@ -3,7 +3,7 @@ import { PomodoroController } from './controller/pomodoro.controller';
 import { TimerService } from './service/timer.service';
 import { EnterRoomService } from './service/enter-room.service';
 import { RoomQueryService } from './service/room-query.service';
-import { ParticipantService } from './service/participant.service';
+import { CreateParticipantService } from './service/create-participant.service';
 import { RoomRepository } from './repository/room.repository';
 import { InMemoryRoomRepository } from './repository/in-memory.room.repository';
 
@@ -13,7 +13,7 @@ import { InMemoryRoomRepository } from './repository/in-memory.room.repository';
     TimerService,
     EnterRoomService,
     RoomQueryService,
-    ParticipantService,
+    CreateParticipantService,
     { provide: RoomRepository, useClass: InMemoryRoomRepository },
   ],
 })
