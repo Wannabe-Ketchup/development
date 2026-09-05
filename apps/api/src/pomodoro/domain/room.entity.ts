@@ -4,7 +4,7 @@ import { Participant } from './participant.entity';
 import { Timer } from './timer.entity';
 
 export class Room {
-  constructor(
+  private constructor(
     public readonly roomId: string,
     private _participants: Map<string, Participant>,
     private _capacity: number,
