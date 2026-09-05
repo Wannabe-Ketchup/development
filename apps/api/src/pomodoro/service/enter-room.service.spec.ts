@@ -4,7 +4,6 @@ import { RoomQueryService } from './room-query.service';
 import { RoomRepository } from '../repository/room.repository';
 import { Room } from '../domain/room.entity';
 import { Participant } from '../domain/participant.entity';
-import { Timer } from '../domain/timer.entity';
 import { CreateParticipantService } from './create-participant.service';
 
 describe('EnterRoomService.joinRoom', () => {
