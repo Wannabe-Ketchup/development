@@ -29,3 +29,6 @@ lerna-debug.log*
 # local-only
 .claude/
 CONTRIBUTING.md
+docs/
+.idea/
+.agents/
