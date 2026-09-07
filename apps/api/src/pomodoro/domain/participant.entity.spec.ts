@@ -17,7 +17,7 @@ describe('ParticipantTest', () => {
     expect(participant.nickname).toBe(nickname);
   });
 
-  it('참가자 생성 시 현재 사이클은 1이다.', () => {
+  it('참가자 생성 시 현재 사이클은 0이다.', () => {
     // given
     const nickname = 'ketchup';
 
@@ -29,7 +29,7 @@ describe('ParticipantTest', () => {
     );
 
     // then
-    const expectedCycle = 1;
+    const expectedCycle = 0;
     expect(participant.currentCycle).toBe(expectedCycle);
   });
 

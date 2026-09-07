@@ -15,7 +15,7 @@ export class Participant implements ParticipantShape {
       throw new BadRequestException('닉네임은 10자를 초과할 수 없습니다.');
     }
 
-    const currentCycle = 1;
+    const currentCycle = 0;
     const statusMessage = '';
     return new Participant(id, nickname, statusMessage, currentCycle, joinedAt);
   }
