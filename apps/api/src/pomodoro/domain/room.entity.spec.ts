@@ -17,7 +17,7 @@ describe('RoomTest', () => {
     expect(room.mode).toBe('IDLE');
   });
 
-  it('방 생성 시 기본 사이클은 1이다.', () => {
+  it('방 생성 시 기본 사이클은 0이다.', () => {
     // given
     const roomId = 'roomId';
 
@@ -27,7 +27,7 @@ describe('RoomTest', () => {
     // then
     expect(room.roomId).toBe(roomId);
     expect(room.participants.size).toBe(0);
-    expect(room.currentCycle).toBe(1);
+    expect(room.currentCycle).toBe(0);
   });
 
   it('참가자는 방의 정원이 비어있으면 방에 참가할 수 있다.', () => {
@@ -120,7 +120,7 @@ describe('RoomTest', () => {
     roomId = 'roomId',
     participants = new Map<string, Participant>(),
     timer = {} as Timer,
-    mode = 'IDLE',
+    mode = ROOM_MODE.IDLE,
     currentCycle = 1,
   ): Room => {
     const room = Object.create(Room.prototype) as Room;

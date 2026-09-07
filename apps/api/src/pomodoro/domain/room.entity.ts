@@ -18,7 +18,7 @@ export class Room {
     const timer = {} as Timer; // TODO: 실제 타이머 엔티티 생성 하도록 수정 필요.
     const capacity = 4;
     const participants = new Map<string, Participant>();
-    const currentCycle = 1;
+    const currentCycle = 0;
 
     return new Room(roomId, participants, capacity, timer, mode, currentCycle);
   }
