@@ -1,6 +1,5 @@
 import { SSE_EVENT_TYPES } from '@pomodoro/shared';
 import type { SseEventPayload } from '@pomodoro/shared';
-import { API_BASE_URL } from '../config/api';
 
 export interface SseCallbacks {
   onMessage: (event: SseEventPayload) => void;
@@ -16,7 +15,7 @@ export function createRoomSseConnection(
   roomId: string,
   callbacks: SseCallbacks,
 ): SseConnection {
-  const url = `${API_BASE_URL}/sse/pomodoro/${roomId}`;
+  const url = `/api/sse/pomodoro/${roomId}`;
   const eventSource = new EventSource(url);
 
   if (callbacks.onOpen) {
