@@ -4,8 +4,11 @@ import Desk from '@/assets/desk.svg?react';
 import Lamp from '@/assets/lamp.svg?react';
 import Shelf from '@/assets/shelf.svg?react';
 import LPPlayer from '@/assets/lp_player.svg?react';
+import { cn } from '@/lib/cn';
+import { useTheme } from './hooks/useTheme';
 
 function Pomodoro() {
+  const { theme, toggleTheme } = useTheme();
   return (
     <div className="relative h-dvh w-dvw overflow-hidden">
       {/* 배경 레이어 */}
@@ -20,13 +23,21 @@ function Pomodoro() {
           src={floor}
           alt="바닥 이미지"
         />
+
+        {theme === 'dark' && <div className="absolute inset-0 bg-black/60" />}
       </div>
 
       {/* 콘텐츠 레이어 */}
       <div className="absolute inset-0">
         <div className="absolute bottom-14 left-1/2 -translate-x-1/2">
           <Desk />
-          <Lamp className="absolute bottom-18 -left-38 [&_.lamp-outline]:opacity-0 hover:[&_.lamp-outline]:opacity-100" />
+          <Lamp
+            className={cn(
+              'absolute bottom-18 -left-38 [&_.lamp-outline]:opacity-0 hover:[&_.lamp-outline]:opacity-100',
+              theme === 'dark' ? 'text-lamp-off' : 'text-lamp-on',
+            )}
+            onClick={toggleTheme}
+          />
         </div>
         <div className="absolute right-14.5 bottom-[40%]">
           <Shelf />
