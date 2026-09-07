@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import { ROOM_MODE } from '@pomodoro/shared';
 import { EnterRoomService } from './enter-room.service';
 import { RoomQueryService } from './room-query.service';
 import { RoomRepository } from '../repository/room.repository';
@@ -17,7 +18,7 @@ describe('EnterRoomService.joinRoom', () => {
     const room = {
       roomId,
       participants: new Map(),
-      mode: 'IDLE',
+      mode: ROOM_MODE.IDLE,
       currentCycle: 1,
       timer: {},
       hasNickname,

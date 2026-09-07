@@ -1,10 +1,11 @@
 import { BadRequestException } from '@nestjs/common';
+import { ROOM_MODE } from '@pomodoro/shared';
 import { Room } from './room.entity';
 import { Participant } from './participant.entity';
 import { Timer } from './timer.entity';
 
 describe('RoomTest', () => {
-  it('방 생성 시 기본 모드는 idle 이다.', () => {
+  it('방 생성 시 기본 모드는 IDLE 이다.', () => {
     // given
     const roomId = 'roomId';
 
@@ -14,7 +15,7 @@ describe('RoomTest', () => {
     // then
     expect(room.roomId).toBe(roomId);
     expect(room.participants.size).toBe(0);
-    expect(room.mode).toBe('IDLE');
+    expect(room.mode).toBe(ROOM_MODE.IDLE);
   });
 
   it('방 생성 시 기본 사이클은 0이다.', () => {

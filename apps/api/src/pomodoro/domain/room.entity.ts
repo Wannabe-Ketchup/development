@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import type { RoomMode } from '@pomodoro/shared';
+import { ROOM_MODE, type RoomMode } from '@pomodoro/shared';
 import { Participant } from './participant.entity';
 import { Timer } from './timer.entity';
 
@@ -14,7 +14,7 @@ export class Room {
   ) {}
 
   static create(roomId: string): Room {
-    const mode = 'IDLE' as RoomMode;
+    const mode = ROOM_MODE.IDLE;
     const timer = {} as Timer; // TODO: 실제 타이머 엔티티 생성 하도록 수정 필요.
     const capacity = 4;
     const participants = new Map<string, Participant>();
