@@ -12,7 +12,8 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check:duplicate-keys": "node scripts/check-duplicate-keys.mjs"
   },
   "devDependencies": {
     "prettier": "^3.9.6",
