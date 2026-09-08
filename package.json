@@ -2,6 +2,7 @@
   "name": "pomodoro",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "engines": {
     "node": "24.x"
   },
@@ -13,7 +14,7 @@
     "test": "turbo run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check:duplicate-keys": "node scripts/check-duplicate-keys.mjs"
+    "check:duplicate-keys": "node scripts/check-duplicate-keys.js"
   },
   "devDependencies": {
     "prettier": "^3.9.6",
