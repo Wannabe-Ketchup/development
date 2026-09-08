@@ -29,7 +29,7 @@ function Pomodoro() {
 
       {/* 콘텐츠 레이어 */}
       <div className="absolute inset-0">
-        <div className="absolute bottom-14 left-1/2 -translate-x-1/2">
+        <div className="absolute top-[calc(60%+60px)] left-1/2 -translate-x-1/2">
           <Desk />
           <Lamp
             className={cn(
@@ -39,7 +39,7 @@ function Pomodoro() {
             onClick={toggleTheme}
           />
         </div>
-        <div className="absolute right-14.5 bottom-[40%]">
+        <div className="absolute bottom-[40%] left-[calc(50%+428px)]">
           <Shelf />
           <LPPlayer className="absolute top-23.5 left-0 [&_.lp-outline]:opacity-0 hover:[&_.lp-outline]:opacity-100" />
         </div>
