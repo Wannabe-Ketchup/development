@@ -33,7 +33,7 @@ function Pomodoro() {
           <Desk />
           <Lamp
             className={cn(
-              'clickable absolute bottom-18 -left-38 [&_.lamp-outline]:opacity-0 hover:[&_.lamp-outline]:opacity-100',
+              'clickable pointer-events-none absolute bottom-18 -left-38 *:pointer-events-auto [&_.lamp-outline]:opacity-0 hover:[&_.lamp-outline]:opacity-100',
               theme === 'dark' ? 'text-lamp-off' : 'text-lamp-on',
             )}
             onClick={toggleTheme}
@@ -41,7 +41,7 @@ function Pomodoro() {
         </div>
         <div className="absolute bottom-[40%] left-[calc(50%+428px)]">
           <Shelf />
-          <LPPlayer className="clickable absolute top-23.5 left-0 [&_.lp-outline]:opacity-0 hover:[&_.lp-outline]:opacity-100" />
+          <LPPlayer className="clickable pointer-events-none absolute top-23.5 left-0 *:pointer-events-auto [&_.lp-outline]:opacity-0 hover:[&_.lp-outline]:opacity-100" />
         </div>
       </div>
     </div>
