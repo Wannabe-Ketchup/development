@@ -36,4 +36,9 @@ export class SseService {
     const id = String(++this.eventIdCounter);
     this.subject.next({ roomId, event, id, retry: options?.retry });
   }
+
+  createMessageEvent(event: SseEventPayload): MessageEvent {
+    const id = String(++this.eventIdCounter);
+    return { type: event.type, data: event.data, id, retry: 5000 };
+  }
 }

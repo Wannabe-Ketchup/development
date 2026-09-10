@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RoomRepository } from '../repository/room.repository';
 import { RoomQueryService } from './room-query.service';
-import { Room } from '../domain/room.entity';
+import { RoomPresenceService } from './room-presence.service';
 import { JoinRoomResponse } from '../dto/join-room-response.dto';
 import { CreateParticipantService } from './create-participant.service';
 
@@ -13,10 +13,24 @@ export class EnterRoomService {
     private readonly roomQueryService: RoomQueryService,
     private readonly roomRepository: RoomRepository,
     private readonly createParticipantService: CreateParticipantService,
+    private readonly roomPresenceService: RoomPresenceService,
   ) {}
 
-  joinRoom(roomId: string): JoinRoomResponse {
+  joinRoom(roomId: string, participantId?: string): JoinRoomResponse {
     const room = this.roomQueryService.findExistingRoom(roomId);
+
+    const existingParticipant = participantId
+      ? room.participants.get(participantId)
+      : undefined;
+    if (existingParticipant) {
+      return {
+        participant: {
+          id: existingParticipant.id,
+          nickname: existingParticipant.nickname,
+        },
+        room: this.roomQueryService.toRoom(room),
+      };
+    }
 
     let nickname: string;
     do {
@@ -25,26 +39,17 @@ export class EnterRoomService {
 
     const joinedAt = new Date().toISOString();
     const participant = this.createParticipantService.create(
-      joinedAt,
       nickname,
+      joinedAt,
     );
     room.join(participant);
 
     this.roomRepository.save(room);
+    this.roomPresenceService.registerPendingParticipant(roomId, participant.id);
 
     return {
       participant: { id: participant.id, nickname: participant.nickname },
-      room: this.toRoom(room),
-    };
-  }
-
-  private toRoom(room: Room): JoinRoomResponse['room'] {
-    return {
-      roomId: room.roomId,
-      mode: room.mode,
-      currentCycle: room.currentCycle,
-      timer: room.timer,
-      participants: [...room.participants.values()],
+      room: this.roomQueryService.toRoom(room),
     };
   }
 

@@ -2,6 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { ROOM_MODE } from '@pomodoro/shared';
 import { EnterRoomService } from './enter-room.service';
 import { RoomQueryService } from './room-query.service';
+import { RoomPresenceService } from './room-presence.service';
 import { RoomRepository } from '../repository/room.repository';
 import { Room } from '../domain/room.entity';
 import { Participant } from '../domain/participant.entity';
@@ -10,14 +11,20 @@ import { CreateParticipantService } from './create-participant.service';
 describe('EnterRoomService.joinRoom', () => {
   const roomId = 'room-1';
 
-  const createMockRoom = (roomOverrides: { hasNickname?: jest.Mock } = {}) => {
+  const createMockRoom = (
+    roomOverrides: {
+      hasNickname?: jest.Mock;
+      participants?: Map<string, Participant>;
+    } = {},
+  ) => {
     const hasNickname =
       roomOverrides.hasNickname ?? jest.fn().mockReturnValue(false);
     const join = jest.fn();
+    const participants = roomOverrides.participants ?? new Map();
 
     const room = {
       roomId,
-      participants: new Map(),
+      participants,
       mode: ROOM_MODE.IDLE,
       currentCycle: 1,
       timer: {},
@@ -48,13 +55,26 @@ describe('EnterRoomService.joinRoom', () => {
 
   let generateRandomNickname: jest.SpyInstance;
 
+  let registerPendingParticipant: jest.Mock;
+  let roomPresenceService: RoomPresenceService;
+
   let service: EnterRoomService;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
     findExistingRoom = jest.fn();
-    roomQueryService = { findExistingRoom } as unknown as RoomQueryService;
+    const toRoom = jest.fn((room: Room) => ({
+      roomId: room.roomId,
+      mode: room.mode,
+      currentCycle: room.currentCycle,
+      timer: room.timer,
+      participants: [...room.participants.values()],
+    }));
+    roomQueryService = {
+      findExistingRoom,
+      toRoom,
+    } as unknown as RoomQueryService;
 
     save = jest.fn();
     roomRepository = { save, findById: jest.fn(), delete: jest.fn() };
@@ -62,10 +82,16 @@ describe('EnterRoomService.joinRoom', () => {
     create = jest.fn();
     createParticipantService = { create };
 
+    registerPendingParticipant = jest.fn();
+    roomPresenceService = {
+      registerPendingParticipant,
+    };
+
     service = new EnterRoomService(
       roomQueryService,
       roomRepository,
       createParticipantService,
+      roomPresenceService,
     );
 
     generateRandomNickname = jest.spyOn(
@@ -86,7 +112,7 @@ describe('EnterRoomService.joinRoom', () => {
     const result = service.joinRoom(roomId);
 
     // then
-    expect(create).toHaveBeenCalledWith(expect.any(String), '졸린토마토');
+    expect(create).toHaveBeenCalledWith('졸린토마토', expect.any(String));
     expect(create).toHaveBeenCalledTimes(1);
     expect(join).toHaveBeenCalledWith(participant);
     expect(save).toHaveBeenCalledWith(room);
@@ -138,7 +164,66 @@ describe('EnterRoomService.joinRoom', () => {
 
     // then
     expect(hasNickname).toHaveBeenCalledTimes(3);
-    expect(create).toHaveBeenCalledWith(expect.any(String), '형용사C토마토');
+    expect(create).toHaveBeenCalledWith('형용사C토마토', expect.any(String));
     expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it('새로 입장하는 참가자는 퇴장 타이머가 등록된다', () => {
+    // given
+    const { room } = createMockRoom();
+    findExistingRoom.mockReturnValue(room);
+    generateRandomNickname.mockReturnValue('졸린토마토');
+    const participant = createMockParticipant('졸린토마토');
+    create.mockReturnValue(participant);
+
+    // when
+    service.joinRoom(roomId);
+
+    // then
+    expect(registerPendingParticipant).toHaveBeenCalledWith(
+      roomId,
+      participant.id,
+    );
+  });
+
+  it('이미 방에 참여 중인 participantId로 다시 입장을 요청하면 새 참가자를 만들지 않고 기존 상태를 그대로 반환한다', () => {
+    // given
+    const existingParticipant = createMockParticipant('졸린토마토');
+    const { room, join } = createMockRoom({
+      participants: new Map([[existingParticipant.id, existingParticipant]]),
+    });
+    findExistingRoom.mockReturnValue(room);
+
+    // when
+    const result = service.joinRoom(roomId, existingParticipant.id);
+
+    // then
+    expect(create).not.toHaveBeenCalled();
+    expect(join).not.toHaveBeenCalled();
+    expect(registerPendingParticipant).not.toHaveBeenCalled();
+    expect(result.participant).toEqual({
+      id: existingParticipant.id,
+      nickname: existingParticipant.nickname,
+    });
+  });
+
+  it('방에 없는 participantId로 입장을 요청하면 새 참가자로 취급해 정상 입장시킨다', () => {
+    // given
+    const { room, join } = createMockRoom();
+    findExistingRoom.mockReturnValue(room);
+    generateRandomNickname.mockReturnValue('졸린토마토');
+    const participant = createMockParticipant('졸린토마토');
+    create.mockReturnValue(participant);
+
+    // when
+    service.joinRoom(roomId, 'not-existing-participant-id');
+
+    // then
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(join).toHaveBeenCalledWith(participant);
+    expect(registerPendingParticipant).toHaveBeenCalledWith(
+      roomId,
+      participant.id,
+    );
   });
 });
