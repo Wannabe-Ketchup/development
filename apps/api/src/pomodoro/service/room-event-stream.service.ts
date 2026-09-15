@@ -34,7 +34,7 @@ export class RoomEventStreamService {
     }
 
     return merge(
-      of(this.sseService.createMessageEvent(roomStateEvent)),
+      of(this.sseService.createOwnSnapshotEvent(roomStateEvent)),
       this.sseService.subscribe(roomId),
     );
   }

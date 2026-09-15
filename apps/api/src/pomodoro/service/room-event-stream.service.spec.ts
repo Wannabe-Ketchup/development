@@ -30,7 +30,7 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   let subscribe: jest.Mock;
   let emit: jest.Mock;
-  let createMessageEvent: jest.Mock;
+  let createOwnSnapshotEvent: jest.Mock;
   let sseService: SseService;
 
   let service: RoomEventStreamService;
@@ -51,11 +51,11 @@ describe('RoomEventStreamService.streamEvents', () => {
 
     subscribe = jest.fn();
     emit = jest.fn();
-    createMessageEvent = jest.fn();
+    createOwnSnapshotEvent = jest.fn();
     sseService = {
       subscribe,
       emit,
-      createMessageEvent,
+      createOwnSnapshotEvent,
     } as unknown as SseService;
 
     service = new RoomEventStreamService(
@@ -88,7 +88,7 @@ describe('RoomEventStreamService.streamEvents', () => {
       type: 'room_state',
       data: roomSnapshot,
     } as unknown as MessageEvent;
-    createMessageEvent.mockReturnValue(personalMessageEvent);
+    createOwnSnapshotEvent.mockReturnValue(personalMessageEvent);
 
     // when
     const received = await firstValueFrom(
@@ -103,7 +103,7 @@ describe('RoomEventStreamService.streamEvents', () => {
     // given
     confirmParticipant.mockReturnValue({ isNewlyConfirmed: false });
     subscribe.mockReturnValue(NEVER);
-    createMessageEvent.mockReturnValue({
+    createOwnSnapshotEvent.mockReturnValue({
       type: 'room_state',
       data: roomSnapshot,
     });
@@ -123,7 +123,7 @@ describe('RoomEventStreamService.streamEvents', () => {
       type: 'room_state',
       data: roomSnapshot,
     } as unknown as MessageEvent;
-    createMessageEvent.mockReturnValue(personalMessageEvent);
+    createOwnSnapshotEvent.mockReturnValue(personalMessageEvent);
 
     // when
     const received = await firstValueFrom(
@@ -138,7 +138,7 @@ describe('RoomEventStreamService.streamEvents', () => {
   it('재연결/재사용된 참가자도 그 이후 방에서 발생하는 브로드캐스트는 계속 수신한다', () => {
     // given
     confirmParticipant.mockReturnValue({ isNewlyConfirmed: false });
-    createMessageEvent.mockReturnValue({
+    createOwnSnapshotEvent.mockReturnValue({
       type: 'room_state',
       data: roomSnapshot,
     });
