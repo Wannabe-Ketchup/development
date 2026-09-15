@@ -53,7 +53,7 @@ describe('RoomPresenceService + SseService 통합', () => {
     const received = subscribeAndCollect();
 
     // when
-    const { isNewlyConfirmed } = presenceService.confirmParticipant(
+    const isNewlyConfirmed = presenceService.confirmParticipant(
       roomId,
       participantId,
     );
@@ -85,7 +85,7 @@ describe('RoomPresenceService + SseService 통합', () => {
     const received = subscribeAndCollect(); // 이후 구독 시작
 
     // when
-    const { isNewlyConfirmed } = presenceService.confirmParticipant(
+    const isNewlyConfirmed = presenceService.confirmParticipant(
       roomId,
       participantId,
     ); // 재연결

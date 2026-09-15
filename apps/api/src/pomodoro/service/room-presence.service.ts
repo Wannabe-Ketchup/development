@@ -25,17 +25,14 @@ export class RoomPresenceService {
     this.pendingTimers.set(participantId, timer);
   }
 
-  confirmParticipant(
-    roomId: string,
-    participantId: string,
-  ): { isNewlyConfirmed: boolean } {
+  confirmParticipant(roomId: string, participantId: string): boolean {
     const timer = this.pendingTimers.get(participantId);
     if (!timer) {
-      return { isNewlyConfirmed: false };
+      return false;
     }
 
     clearTimeout(timer);
     this.pendingTimers.delete(participantId);
-    return { isNewlyConfirmed: true };
+    return true;
   }
 }

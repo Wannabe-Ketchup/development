@@ -24,7 +24,7 @@ export class RoomEventStreamService {
       data: RoomDto.fromEntity(room),
     };
 
-    const { isNewlyConfirmed } = this.roomPresenceService.confirmParticipant(
+    const isNewlyConfirmed = this.roomPresenceService.confirmParticipant(
       roomId,
       participantId,
     );

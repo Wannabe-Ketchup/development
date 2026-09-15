@@ -67,7 +67,7 @@ describe('RoomPresenceService', () => {
       const result = service.confirmParticipant(roomId, participantId);
 
       // then
-      expect(result).toEqual({ isNewlyConfirmed: true });
+      expect(result).toBe(true);
     });
 
     it('새로고침으로 재입장한 기존 참가자(퇴장 타이머가 등록된 적 없음)는 SSE가 연결돼도 브로드캐스트되지 않는다', () => {
@@ -78,7 +78,7 @@ describe('RoomPresenceService', () => {
       const result = service.confirmParticipant(roomId, participantId);
 
       // then
-      expect(result).toEqual({ isNewlyConfirmed: false });
+      expect(result).toBe(false);
     });
 
     it('네트워크가 잠깐 끊겼다 재연결된 기존 참가자(이미 확정됐던 사람)는 다시 브로드캐스트되지 않는다', () => {
@@ -90,7 +90,7 @@ describe('RoomPresenceService', () => {
       const result = service.confirmParticipant(roomId, participantId);
 
       // then
-      expect(result).toEqual({ isNewlyConfirmed: false });
+      expect(result).toBe(false);
     });
   });
 });
