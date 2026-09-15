@@ -3,6 +3,7 @@ import { RoomRepository } from '../repository/room.repository';
 import { RoomQueryService } from './room-query.service';
 import { RoomPresenceService } from './room-presence.service';
 import { JoinRoomResponse } from '../dto/join-room-response.dto';
+import { RoomDto } from '../dto/room.dto';
 import { CreateParticipantService } from './create-participant.service';
 
 const NICKNAME_ADJECTIVES = ['졸린', '배고픈', '느긋한', '즐거운'];
@@ -28,7 +29,7 @@ export class EnterRoomService {
           id: existingParticipant.id,
           nickname: existingParticipant.nickname,
         },
-        room: this.roomQueryService.toRoom(room),
+        room: RoomDto.fromEntity(room),
       };
     }
 
@@ -49,7 +50,7 @@ export class EnterRoomService {
 
     return {
       participant: { id: participant.id, nickname: participant.nickname },
-      room: this.roomQueryService.toRoom(room),
+      room: RoomDto.fromEntity(room),
     };
   }
 

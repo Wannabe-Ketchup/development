@@ -5,6 +5,7 @@ import { RoomEventStreamService } from './room-event-stream.service';
 import { SseService } from './sse.service';
 import { RoomPresenceService } from './room-presence.service';
 import { RoomQueryService } from './room-query.service';
+import { RoomDto } from '../dto/room.dto';
 import { Room } from '../domain/room.entity';
 
 describe('RoomEventStreamService.streamEvents', () => {
@@ -22,7 +23,6 @@ describe('RoomEventStreamService.streamEvents', () => {
   const roomStateEvent = { type: 'room_state' as const, data: roomSnapshot };
 
   let findExistingRoom: jest.Mock;
-  let toRoom: jest.Mock;
   let roomQueryService: RoomQueryService;
 
   let confirmParticipant: jest.Mock;
@@ -37,11 +37,12 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   beforeEach(() => {
     findExistingRoom = jest.fn().mockReturnValue(room);
-    toRoom = jest.fn().mockReturnValue(roomSnapshot);
     roomQueryService = {
       findExistingRoom,
-      toRoom,
     } as unknown as RoomQueryService;
+    jest
+      .spyOn(RoomDto, 'fromEntity')
+      .mockReturnValue(roomSnapshot as unknown as RoomDto);
 
     confirmParticipant = jest.fn();
     roomPresenceService = {

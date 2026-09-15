@@ -64,16 +64,8 @@ describe('EnterRoomService.joinRoom', () => {
     jest.clearAllMocks();
 
     findExistingRoom = jest.fn();
-    const toRoom = jest.fn((room: Room) => ({
-      roomId: room.roomId,
-      mode: room.mode,
-      currentCycle: room.currentCycle,
-      timer: room.timer,
-      participants: [...room.participants.values()],
-    }));
     roomQueryService = {
       findExistingRoom,
-      toRoom,
     } as unknown as RoomQueryService;
 
     save = jest.fn();

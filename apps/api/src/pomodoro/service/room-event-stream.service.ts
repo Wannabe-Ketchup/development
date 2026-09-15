@@ -4,6 +4,7 @@ import type { SseEventPayload } from '@pomodoro/shared';
 import { SseService } from './sse.service';
 import { RoomPresenceService } from './room-presence.service';
 import { RoomQueryService } from './room-query.service';
+import { RoomDto } from '../dto/room.dto';
 
 @Injectable()
 export class RoomEventStreamService {
@@ -20,7 +21,7 @@ export class RoomEventStreamService {
     const room = this.roomQueryService.findExistingRoom(roomId);
     const roomStateEvent: SseEventPayload = {
       type: 'room_state',
-      data: this.roomQueryService.toRoom(room),
+      data: RoomDto.fromEntity(room),
     };
 
     const { isNewlyConfirmed } = this.roomPresenceService.confirmParticipant(
