@@ -2,22 +2,15 @@ import type { Participant } from '@pomodoro/shared';
 import tomato from '@/assets/tomato.svg';
 import { cn } from '@/lib/cn';
 
-interface ParticipantSeatProps {
+interface TomatoProps {
   participant: Participant;
-  translateX: number;
   isPending: boolean;
+  className?: string;
 }
 
-export function ParticipantSeat({
-  participant,
-  translateX,
-  isPending,
-}: ParticipantSeatProps) {
+export function Tomato({ participant, isPending, className }: TomatoProps) {
   return (
-    <div
-      className="absolute bottom-0 left-1/2 flex flex-col items-center transition-transform duration-300 ease-out"
-      style={{ transform: `translateX(calc(-50% + ${translateX}px))` }}
-    >
+    <div className={cn('flex flex-col items-center', className)}>
       <span className="mb-1 rounded bg-white px-2 py-0.5 text-sm whitespace-nowrap">
         {participant.nickname}
       </span>

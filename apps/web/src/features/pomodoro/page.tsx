@@ -13,8 +13,7 @@ import { useRoomId } from './lib/room-id';
 import { enterRoom } from '@/api/room';
 import { getParticipantId, saveParticipantId } from './lib/participant-storage';
 import { getSeatTranslateX } from './lib/seat-layout';
-import { ParticipantSeat } from './components/ParticipantSeat';
-import { SeatChair } from './components/SeatChair';
+import { Participant } from './components/Participant';
 import { RoomTimer } from './components/RoomTimer';
 
 const SEAT_SPACING_PX = 182;
@@ -86,22 +85,6 @@ function Pomodoro() {
         {/* roomId가 유효하고 방 정보를 받아온 뒤에만 타이머를 보여준다 */}
         {roomId && room && <RoomTimer timer={room.timer} />}
 
-        {/* 의자: roomId가 유효하고 방 정보를 받아온 뒤에만 렌더링한다. 책상보다 z-index를 낮게 둬서 다리가 책상 뒤에 가려지도록 한다 */}
-        {roomId && room && (
-          <div className="absolute top-[calc(60%+215px)] left-1/2 z-0 h-0 w-0">
-            {room.participants.map((participant, index) => (
-              <SeatChair
-                key={participant.id}
-                translateX={getSeatTranslateX(
-                  index,
-                  room.participants.length,
-                  SEAT_SPACING_PX,
-                )}
-              />
-            ))}
-          </div>
-        )}
-
         <div className="absolute top-[calc(60%+60px)] left-1/2 z-10 -translate-x-1/2">
           <Desk />
           <Lamp
@@ -137,11 +120,11 @@ function Pomodoro() {
           </div>
         )}
 
-        {/* 방 정보를 받아온 뒤, 참여자마다 좌석(캐릭터)을 렌더링한다 */}
+        {/* 참여자마다 의자+캐릭터를 함께 렌더링한다. 책상(z-10)보다 아래(z-0)에 둬도, 캐릭터는 디자인상 책상과 겹치지 않아 의자 다리만 책상 뒤로 가려진다 */}
         {roomId && room && (
-          <div className="absolute top-[calc(60%+10px)] left-1/2 z-20 h-0 w-0">
+          <div className="absolute top-[calc(60%+215px)] left-1/2 z-0 h-0 w-0">
             {room.participants.map((participant, index) => (
-              <ParticipantSeat
+              <Participant
                 key={participant.id}
                 participant={participant}
                 translateX={getSeatTranslateX(
