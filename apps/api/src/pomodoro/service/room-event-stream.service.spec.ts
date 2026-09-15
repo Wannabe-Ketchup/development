@@ -1,5 +1,5 @@
 import { NEVER, Subject, firstValueFrom } from 'rxjs';
-import type { MessageEvent } from '@nestjs/common';
+import { NotFoundException, type MessageEvent } from '@nestjs/common';
 import { ROOM_MODE } from '@pomodoro/shared';
 import { RoomEventStreamService } from './room-event-stream.service';
 import { SseService } from './sse.service';
@@ -12,7 +12,9 @@ describe('RoomEventStreamService.streamEvents', () => {
   const roomId = 'room-1';
   const participantId = 'participant-1';
 
-  const room = {} as unknown as Room;
+  const room = {
+    participants: new Map([[participantId, {}]]),
+  } as unknown as Room;
   const roomSnapshot = {
     roomId,
     mode: ROOM_MODE.IDLE,
@@ -63,6 +65,14 @@ describe('RoomEventStreamService.streamEvents', () => {
       roomPresenceService,
       roomQueryService,
     );
+  });
+
+  it('방에 존재하지 않는 participantId로 연결을 요청하면 예외를 던진다', () => {
+    // when / then
+    expect(() =>
+      service.streamEvents(roomId, 'not-existing-participant-id'),
+    ).toThrow(NotFoundException);
+    expect(emit).not.toHaveBeenCalled();
   });
 
   it('최초로 확정된 참가자의 스트림을 요청하면 방 전체에 최신 상태가 즉시 브로드캐스트된다', () => {

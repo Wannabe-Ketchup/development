@@ -1,4 +1,4 @@
-import { Injectable, MessageEvent } from '@nestjs/common';
+import { Injectable, MessageEvent, NotFoundException } from '@nestjs/common';
 import { Observable, merge, of } from 'rxjs';
 import type { SseEventPayload } from '@pomodoro/shared';
 import { SseService } from './sse.service';
@@ -19,6 +19,11 @@ export class RoomEventStreamService {
     participantId: string,
   ): Observable<MessageEvent> {
     const room = this.roomQueryService.findExistingRoom(roomId);
+
+    if (!room.participants.has(participantId)) {
+      throw new NotFoundException('참가자를 찾을 수 없습니다.');
+    }
+
     const roomStateEvent: SseEventPayload = {
       type: 'room_state',
       data: RoomDto.fromEntity(room),
