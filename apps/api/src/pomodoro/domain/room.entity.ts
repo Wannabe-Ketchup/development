@@ -1,5 +1,11 @@
 import { BadRequestException } from '@nestjs/common';
-import { ROOM_MODE, type RoomMode } from '@pomodoro/shared';
+import {
+  ROOM_MODE,
+  type RoomMode,
+  FOCUS_DURATION_SECONDS,
+  BREAK_DURATION_SECONDS,
+  CYCLE_COUNT,
+} from '@pomodoro/shared';
 import { Participant } from './participant.entity';
 import { Timer } from './timer.entity';
 
@@ -15,7 +21,14 @@ export class Room {
 
   static create(roomId: string): Room {
     const mode = ROOM_MODE.IDLE;
-    const timer = {} as Timer; // TODO: 실제 타이머 엔티티 생성 하도록 수정 필요.
+    const timer = new Timer(
+      'IDLE',
+      FOCUS_DURATION_SECONDS,
+      BREAK_DURATION_SECONDS,
+      CYCLE_COUNT,
+      null,
+      FOCUS_DURATION_SECONDS,
+    );
     const capacity = 4;
     const participants = new Map<string, Participant>();
     const currentCycle = 0;
@@ -38,6 +51,10 @@ export class Room {
   join(participant: Participant): void {
     this.validateCapacity();
     this._participants.set(participant.id, participant);
+  }
+
+  leave(participantId: string): void {
+    this._participants.delete(participantId);
   }
 
   get participants(): Map<string, Participant> {

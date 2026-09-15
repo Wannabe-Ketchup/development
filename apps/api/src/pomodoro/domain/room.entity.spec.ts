@@ -31,6 +31,38 @@ describe('RoomTest', () => {
     expect(room.currentCycle).toBe(0);
   });
 
+  it('방 생성 시 타이머는 IDLE 상태의 기본값(집중 25분, 휴식 5분)으로 초기화된다.', () => {
+    // given
+    const roomId = 'roomId';
+
+    // when
+    const room = Room.create(roomId);
+
+    // then
+    expect(room.timer.status).toBe('IDLE');
+    expect(room.timer.focusTimeSec).toBe(1500);
+    expect(room.timer.breakTimeSec).toBe(300);
+    expect(room.timer.timerStartedAt).toBeNull();
+    expect(room.timer.remainingTimeSec).toBe(room.timer.focusTimeSec);
+  });
+
+  it('방에 있는 참가자는 퇴장시키면 참가자 목록에서 제거된다.', () => {
+    // given
+    const room = Room.create('room-1');
+    const participant = Participant.create(
+      'participant-1',
+      'name',
+      new Date().toISOString(),
+    );
+    room.join(participant);
+
+    // when
+    room.leave(participant.id);
+
+    // then
+    expect(room.participants.size).toBe(0);
+  });
+
   it('참가자는 방의 정원이 비어있으면 방에 참가할 수 있다.', () => {
     // given
     const room = createRoom();

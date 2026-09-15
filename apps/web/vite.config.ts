@@ -12,6 +12,12 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // @pomodoro/shared는 pnpm 워크스페이스 심볼릭 링크 + CommonJS 빌드라,
+  // Vite dev 서버가 사전 번들링(esbuild)을 거치지 않으면 브라우저가
+  // CJS의 named export를 인식하지 못한다. 명시적으로 포함시켜 강제 처리한다.
+  optimizeDeps: {
+    include: ['@pomodoro/shared'],
+  },
   server: {
     proxy: {
       '/api': {

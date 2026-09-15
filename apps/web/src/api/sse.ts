@@ -13,9 +13,10 @@ export interface SseConnection {
 
 export function createRoomSseConnection(
   roomId: string,
+  participantId: string,
   callbacks: SseCallbacks,
 ): SseConnection {
-  const url = `/api/sse/pomodoro/${roomId}`;
+  const url = `/api/sse/pomodoro/${roomId}?participantId=${participantId}`;
   const eventSource = new EventSource(url);
 
   if (callbacks.onOpen) {

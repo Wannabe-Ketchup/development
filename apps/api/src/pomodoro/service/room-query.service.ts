@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RoomRepository } from '../repository/room.repository';
-import { Room } from '../domain/room.entity';
+import { Room as RoomEntity } from '../domain/room.entity';
 
 @Injectable()
 export class RoomQueryService {
   constructor(private readonly roomRepository: RoomRepository) {}
 
-  findExistingRoom(roomId: string): Room {
+  findExistingRoom(roomId: string): RoomEntity {
     const room = this.roomRepository.findById(roomId);
 
     if (!room) {
