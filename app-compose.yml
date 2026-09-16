@@ -4,6 +4,8 @@ services:
     container_name: nest
     ports:
       - '127.0.0.1:3000:3000'
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - PORT=3000
