@@ -9,7 +9,7 @@ export function LPPlayer() {
     <div className="absolute top-23.5 left-0">
       {playState === 'playing' && <NoteAnimation />}
       <LPPlayerSvg
-        className="clickable [&_.lp-outline]:opacity-0 hover:[&_.lp-outline]:opacity-100"
+        className="clickable pointer-events-none *:pointer-events-auto [&_.lp-outline]:opacity-0 hover:[&_.lp-outline]:opacity-100"
         onClick={toggleMusic}
       />
     </div>
