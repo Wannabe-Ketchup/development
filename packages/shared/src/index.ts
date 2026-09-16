@@ -5,3 +5,4 @@ export * from './types/timer';
 export * from './types/room';
 export * from './types/participant';
 export * from './types/sse-event';
+export * from './dto/response/music-response.dto';
