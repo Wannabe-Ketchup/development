@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
 import { MusicQueryService } from './music-query.service';
 import { MusicRepository } from '../repository/music.repository';
 import { InMemoryMusicRepository } from '../repository/in-memory.music.repository';
@@ -66,6 +67,18 @@ describe('MusicQueryService (Integration)', () => {
 
       // then
       expect(result).toBe(expectedUrl);
+    });
+
+    it('저장된 음악이 없으면 NotFoundException을 던진다.', () => {
+      // given
+      const emptyUrls: string[] = [];
+      musicRepository.save(emptyUrls);
+      const randomValue = 0.5;
+
+      // when & then
+      expect(() => musicQueryService.getRandomUrl(randomValue)).toThrow(
+        NotFoundException,
+      );
     });
   });
 });

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { MusicRepository } from '../repository/music.repository';
 
 @Injectable()
@@ -8,6 +8,11 @@ export class MusicQueryService {
   // 전체 음악 목록 중 무작위로 하나의 URL을 선택하여 반환
   getRandomUrl(randomValue: number): string {
     const urls = this.musicRepository.findAll();
+
+    if (urls.length === 0) {
+      throw new NotFoundException('저장된 음악이 없습니다.');
+    }
+
     const index = Math.floor(randomValue * urls.length);
     return urls[index];
   }
