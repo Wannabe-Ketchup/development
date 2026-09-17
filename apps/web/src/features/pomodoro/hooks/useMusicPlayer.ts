@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { fetchRandomMusicUrl } from '../api/music';
+import { fetchRandomMusicUrl } from '../../../api/music';
 
 type MusicPlayerState = 'idle' | 'playing';
 
