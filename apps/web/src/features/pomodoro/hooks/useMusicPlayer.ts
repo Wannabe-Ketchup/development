@@ -22,25 +22,26 @@ export function useMusicPlayer() {
     }
   };
 
-  const playMusic = () => {
-    fetchRandomMusicUrl()
-      .then((url) => {
-        const audio = new Audio(url);
+  const playMusic = async () => {
+    try {
+      const url = await fetchRandomMusicUrl();
+      const audio = new Audio(url);
 
-        // 음악이 끝나면 idle로 상태를 바꿈
-        audio.onended = () => {
-          audioRef.current = null;
-          setPlayState('idle');
-        };
-
-        audioRef.current = audio;
-        return audio.play();
-      })
-      .then(() => setPlayState('playing'))
-      .catch((error) => {
-        console.error(error);
+      // 음악이 끝나면 idle로 상태를 바꿈
+      audio.onended = () => {
         audioRef.current = null;
-      });
+        setPlayState('idle');
+      };
+
+      // 기존에 재생중인 음악이 있다면 중지
+      audioRef.current?.pause();
+      audioRef.current = audio;
+      await audio.play();
+      setPlayState('playing');
+    } catch (error) {
+      console.error(error);
+      audioRef.current = null;
+    }
   };
 
   const stopMusic = () => {
