@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { fetchRandomMusicUrl } from '../../../api/music';
 
-type MusicPlayerState = 'idle' | 'playing';
+type MusicPlayerState = 'idle' | 'loading' | 'playing';
 
 export function useMusicPlayer() {
   const [playState, setPlayState] = useState<MusicPlayerState>('idle');
@@ -15,14 +15,15 @@ export function useMusicPlayer() {
   }, []);
 
   const toggleMusic = () => {
-    if (playState === 'playing') {
-      stopMusic();
-    } else {
+    if (playState === 'idle') {
       playMusic();
+    } else if (playState === 'playing') {
+      stopMusic();
     }
   };
 
   const playMusic = async () => {
+    setPlayState('loading');
     try {
       const url = await fetchRandomMusicUrl();
       const audio = new Audio(url);
@@ -33,14 +34,13 @@ export function useMusicPlayer() {
         setPlayState('idle');
       };
 
-      // 기존에 재생중인 음악이 있다면 중지
-      audioRef.current?.pause();
       audioRef.current = audio;
       await audio.play();
       setPlayState('playing');
     } catch (error) {
       console.error(error);
       audioRef.current = null;
+      setPlayState('idle');
     }
   };
 
