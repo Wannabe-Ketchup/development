@@ -6,6 +6,8 @@ services:
       - '127.0.0.1:3000:3000'
     env_file:
       - .env
+    volumes:
+      - ./logs:/logs
     environment:
       - NODE_ENV=production
       - PORT=3000
