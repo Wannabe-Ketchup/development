@@ -3,7 +3,7 @@ import floor from '@/assets/floor.png';
 import Desk from '@/assets/desk.svg?react';
 import Lamp from '@/assets/lamp.svg?react';
 import Shelf from '@/assets/shelf.svg?react';
-import LPPlayer from '@/assets/lp_player.svg?react';
+import { LPPlayer } from './components/LPPlayer';
 import { cn } from '@/lib/cn';
 import { useTheme } from './hooks/useTheme';
 
@@ -41,7 +41,7 @@ function Pomodoro() {
         </div>
         <div className="absolute bottom-[40%] left-[calc(50%+428px)]">
           <Shelf />
-          <LPPlayer className="clickable pointer-events-none absolute top-23.5 left-0 *:pointer-events-auto [&_.lp-outline]:opacity-0 hover:[&_.lp-outline]:opacity-100" />
+          <LPPlayer />
         </div>
       </div>
     </div>

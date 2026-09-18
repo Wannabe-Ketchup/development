@@ -20,10 +20,12 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@pomodoro/shared": "workspace:*",
+    "@aws-sdk/client-s3": "^3.1131.0",
     "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^12.0.0",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@pomodoro/shared": "workspace:*",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -56,6 +58,9 @@
       "js",
       "json",
       "ts"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!.*@nestjs/config)"
     ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
