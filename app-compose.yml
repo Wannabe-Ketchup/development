@@ -5,7 +5,7 @@ services:
     ports:
       - '127.0.0.1:3000:3000'
     volumes:
-      - ./logs:/logs
+      - ./logs:/app/logs
     environment:
       - NODE_ENV=production
       - PORT=3000
