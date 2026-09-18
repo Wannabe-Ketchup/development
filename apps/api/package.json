@@ -59,6 +59,9 @@
       "json",
       "ts"
     ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!.*@nestjs/config)"
+    ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
