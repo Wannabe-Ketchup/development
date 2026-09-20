@@ -2,9 +2,11 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PomodoroModule } from './pomodoro/pomodoro.module';
 import { HealthModule } from './health/health.module';
-import { LoggerModule } from './common/logger/logger.module';
 import { MusicModule } from './music/music.module';
+import { LoggerModule } from './common/logger.module';
 import { HttpLoggerMiddleware } from './common/middleware/HttpLogger.middleware';
+import { AlsModule } from './common/als.module';
+import { AlsMiddleware } from './common/middleware/als.middleware';
 
 @Module({
   imports: [
@@ -12,12 +14,13 @@ import { HttpLoggerMiddleware } from './common/middleware/HttpLogger.middleware'
     PomodoroModule,
     HealthModule,
     MusicModule,
+    AlsModule,
     LoggerModule,
   ],
 })
 export class AppModule implements NestModule {
-  // 모든 라우트에 HttpLoggerMiddleware 적용
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(HttpLoggerMiddleware).forRoutes('*');
+    // AlsMiddleware 다음 HttpLoggerMiddleware 를 실행함.
+    consumer.apply(AlsMiddleware, HttpLoggerMiddleware).forRoutes('*');
   }
 }
