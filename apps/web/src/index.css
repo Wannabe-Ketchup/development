@@ -24,10 +24,25 @@
   --color-lamp-off: #ffffff;
 
   --font-dearfromsol: 'DearFromsol';
+
+  --cursor-default: url('./assets/cursor_default.svg') 4 4, default;
+  --cursor-pointer: url('./assets/cursor_pointer.svg') 4 4, pointer;
+  --cursor-grab: url('./assets/cursor_grab.svg') 4 4, grab;
+  --cursor-grabbing: url('./assets/cursor_grabbing.svg') 4 4, grabbing;
+  --cursor-text: url('./assets/cursor_text.svg') 4 4, text;
 }
 
 body {
-  @apply font-dearfromsol text-black;
+  @apply cursor-default font-dearfromsol text-black;
+}
+
+button,
+a {
+  @apply cursor-pointer;
+}
+
+input[type='text'] {
+  @apply cursor-text;
 }
 
 @keyframes note-slide {
