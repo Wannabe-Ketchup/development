@@ -44,13 +44,3 @@ a {
 input[type='text'] {
   @apply cursor-text;
 }
-
-@keyframes note-slide {
-  0% { transform: translateX(0); }
-  33.33% { transform: translateX(-128px); }
-  66.66% { transform: translateX(-256px); }
-}
-
-.note-animation {
-  animation: note-slide 1.5s steps(1) infinite;
-}
