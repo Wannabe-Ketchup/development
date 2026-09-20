@@ -89,7 +89,7 @@ function Pomodoro() {
           <Desk />
           <Lamp
             className={cn(
-              'clickable pointer-events-none absolute bottom-18 -left-38 *:pointer-events-auto [&_.lamp-outline]:opacity-0 hover:[&_.lamp-outline]:opacity-100',
+              'pointer-events-none absolute bottom-18 -left-38 cursor-pointer *:pointer-events-auto [&_.lamp-outline]:opacity-0 hover:[&_.lamp-outline]:opacity-100',
               theme === 'dark' ? 'text-lamp-off' : 'text-lamp-on',
             )}
             onClick={toggleTheme}
