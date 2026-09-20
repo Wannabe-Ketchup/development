@@ -4,7 +4,7 @@ import { PomodoroModule } from './pomodoro/pomodoro.module';
 import { HealthModule } from './health/health.module';
 import { MusicModule } from './music/music.module';
 import { LoggerModule } from './common/logger.module';
-import { HttpLoggerMiddleware } from './common/middleware/HttpLogger.middleware';
+import { HttpLoggerMiddleware } from './common/middleware/http-logger.middleware';
 import { AlsModule } from './common/als.module';
 import { AlsMiddleware } from './common/middleware/als.middleware';
 
