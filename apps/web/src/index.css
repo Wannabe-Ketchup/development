@@ -33,7 +33,7 @@
 }
 
 body {
-  @apply cursor-default font-dearfromsol text-black;
+  @apply cursor-default font-dearfromsol tracking-[10%] text-black;
 }
 
 button,
@@ -43,4 +43,29 @@ a {
 
 input[type='text'] {
   @apply cursor-text;
+}
+
+@keyframes snot-slide {
+  to {
+    transform: translateX(-150px);
+  }
+}
+
+@keyframes pencil-slide {
+  to {
+    transform: translateX(-180px);
+  }
+}
+
+@keyframes tomato-surprised-slide {
+  to {
+    transform: translateX(-250px);
+  }
+}
+
+@theme {
+  --animate-snot-slide: snot-slide 1.5s steps(5) infinite;
+  --animate-pencil-slide: pencil-slide 1.5s steps(3) infinite;
+  --animate-tomato-surprised-slide: tomato-surprised-slide 0.5s steps(2)
+    infinite;
 }
