@@ -62,7 +62,7 @@
     "transformIgnorePatterns": [
       "node_modules/(?!.*@nestjs/config)"
     ],
-    "rootDir": "src",
+    "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
@@ -71,7 +71,7 @@
       "**/*.(t|j)s"
     ],
     "moduleNameMapper": {
-      "^@pomodoro/shared$": "<rootDir>/../../../packages/shared/src/index.ts"
+      "^@pomodoro/shared$": "<rootDir>/../../packages/shared/src/index.ts"
     },
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
