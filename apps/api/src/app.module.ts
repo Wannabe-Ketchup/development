@@ -2,7 +2,6 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PomodoroModule } from './pomodoro/pomodoro.module';
 import { HealthModule } from './health/health.module';
-import { LoggerModule } from './common/logger/logger.module';
 import { MusicModule } from './music/music.module';
 import { LoggerModule } from './common/logger.module';
 import { HttpLoggerMiddleware } from './common/middleware/http-logger.middleware';
