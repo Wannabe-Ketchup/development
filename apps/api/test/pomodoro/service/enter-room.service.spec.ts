@@ -1,12 +1,12 @@
 import { NotFoundException } from '@nestjs/common';
 import { ROOM_MODE } from '@pomodoro/shared';
-import { EnterRoomService } from './enter-room.service';
-import { RoomQueryService } from './room-query.service';
-import { RoomPresenceService } from './room-presence.service';
-import { RoomRepository } from '../repository/room.repository';
-import { Room } from '../domain/room.entity';
-import { Participant } from '../domain/participant.entity';
-import { CreateParticipantService } from './create-participant.service';
+import { EnterRoomService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/enter-room.service';
+import { RoomQueryService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-query.service';
+import { RoomPresenceService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-presence.service';
+import { RoomRepository } from '../../../src/pomodoro/service/../repository/room.repository';
+import { Room } from '../../../src/pomodoro/service/../domain/room.entity';
+import { Participant } from '../../../src/pomodoro/service/../domain/participant.entity';
+import { CreateParticipantService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/create-participant.service';
 
 describe('EnterRoomService.joinRoom', () => {
   const roomId = 'room-1';

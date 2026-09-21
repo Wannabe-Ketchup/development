@@ -1,6 +1,6 @@
-import { RoomPresenceService } from './room-presence.service';
-import { RoomRepository } from '../repository/room.repository';
-import { Room } from '../domain/room.entity';
+import { RoomPresenceService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-presence.service';
+import { RoomRepository } from '../../../src/pomodoro/service/../repository/room.repository';
+import { Room } from '../../../src/pomodoro/service/../domain/room.entity';
 
 describe('RoomPresenceService', () => {
   const roomId = 'room-1';

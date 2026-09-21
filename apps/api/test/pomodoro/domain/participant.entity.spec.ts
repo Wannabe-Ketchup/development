@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { Participant } from './participant.entity';
+import { Participant } from '../../../src/pomodoro/domain/../../../src/pomodoro/domain/participant.entity';
 
 describe('ParticipantTest', () => {
   it('참가자 생성 시 닉네임이 올바르게 설정된다.', () => {

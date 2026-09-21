@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { MusicQueryService } from './music-query.service';
-import { MusicRepository } from '../repository/music.repository';
-import { InMemoryMusicRepository } from '../repository/in-memory.music.repository';
+import { MusicQueryService } from '../../../src/music/service/music-query.service';
+import { MusicRepository } from '../../../src/music/repository/music.repository';
+import { InMemoryMusicRepository } from '../../../src/music/repository/in-memory.music.repository';
 
 describe('MusicQueryService (Integration)', () => {
   let musicQueryService: MusicQueryService;

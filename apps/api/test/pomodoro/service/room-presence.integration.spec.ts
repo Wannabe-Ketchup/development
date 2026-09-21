@@ -1,9 +1,9 @@
 import type { MessageEvent } from '@nestjs/common';
 import type { Room as RoomSnapshot } from '@pomodoro/shared';
-import { RoomPresenceService } from './service/room-presence.service';
-import { SseService } from './service/sse.service';
-import { RoomRepository } from './repository/room.repository';
-import { Room } from './domain/room.entity';
+import { RoomPresenceService } from '../../../src/pomodoro/service/room-presence.service';
+import { SseService } from '../../../src/pomodoro/service/sse.service';
+import { RoomRepository } from '../../../src/pomodoro/repository/room.repository';
+import { Room } from '../../../src/pomodoro/domain/room.entity';
 
 describe('RoomPresenceService + SseService 통합', () => {
   const roomId = 'room-1';
