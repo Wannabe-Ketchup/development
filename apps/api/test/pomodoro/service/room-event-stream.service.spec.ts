@@ -1,12 +1,12 @@
 import { NEVER, Subject, firstValueFrom } from 'rxjs';
 import { NotFoundException, type MessageEvent } from '@nestjs/common';
 import { ROOM_MODE } from '@pomodoro/shared';
-import { RoomEventStreamService } from './room-event-stream.service';
-import { SseService } from './sse.service';
-import { RoomPresenceService } from './room-presence.service';
-import { RoomQueryService } from './room-query.service';
-import { RoomDto } from '../dto/room.dto';
-import { Room } from '../domain/room.entity';
+import { RoomEventStreamService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-event-stream.service';
+import { SseService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/sse.service';
+import { RoomPresenceService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-presence.service';
+import { RoomQueryService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-query.service';
+import { RoomDto } from '../../../src/pomodoro/service/../dto/room.dto';
+import { Room } from '../../../src/pomodoro/service/../domain/room.entity';
 
 describe('RoomEventStreamService.streamEvents', () => {
   const roomId = 'room-1';

@@ -1,8 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 import { ROOM_MODE } from '@pomodoro/shared';
-import { Room } from './room.entity';
-import { Participant } from './participant.entity';
-import { Timer } from './timer.entity';
+import { Room } from '../../../src/pomodoro/domain/../../../src/pomodoro/domain/room.entity';
+import { Participant } from '../../../src/pomodoro/domain/../../../src/pomodoro/domain/participant.entity';
+import { Timer } from '../../../src/pomodoro/domain/../../../src/pomodoro/domain/timer.entity';
 
 describe('RoomTest', () => {
   it('방 생성 시 기본 모드는 IDLE 이다.', () => {

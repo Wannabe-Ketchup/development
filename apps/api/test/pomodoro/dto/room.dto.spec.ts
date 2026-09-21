@@ -1,7 +1,7 @@
 import { ROOM_MODE } from '@pomodoro/shared';
-import { RoomDto } from './room.dto';
-import { Room } from '../domain/room.entity';
-import { Participant } from '../domain/participant.entity';
+import { RoomDto } from '../../../src/pomodoro/dto/../../../src/pomodoro/dto/room.dto';
+import { Room } from '../../../src/pomodoro/dto/../domain/room.entity';
+import { Participant } from '../../../src/pomodoro/dto/../domain/participant.entity';
 
 describe('RoomDto.fromEntity', () => {
   it('방 도메인을 공유 타입 스냅샷으로 변환하면 참가자 목록이 배열로 변환된다', () => {

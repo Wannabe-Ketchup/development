@@ -1,4 +1,4 @@
-import { buildMusicUrls } from './load-s3-music.service';
+import { buildMusicUrls } from '../../../src/music/service/load-s3-music.service';
 
 describe('buildMusicUrls', () => {
   it('디렉터리를 제외한 음악 파일의 CDN URL을 생성한다', () => {

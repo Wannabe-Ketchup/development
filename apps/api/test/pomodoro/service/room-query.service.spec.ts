@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
-import { RoomQueryService } from './room-query.service';
-import { RoomRepository } from '../repository/room.repository';
-import { Room } from '../domain/room.entity';
+import { RoomQueryService } from '../../../src/pomodoro/service/room-query.service';
+import { RoomRepository } from '../../../src/pomodoro/repository/room.repository';
+import { Room } from '../../../src/pomodoro/domain/room.entity';
 
 describe('RoomQueryService.findExistingRoom', () => {
   const roomId = 'room-1';
