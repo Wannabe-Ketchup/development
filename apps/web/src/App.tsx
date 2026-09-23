@@ -1,7 +1,7 @@
-import Pomodoro from './features/pomodoro/page';
+import Home from './features/home/page';
 
 function App() {
-  return <Pomodoro />;
+  return <Home />;
 }
 
 export default App;
