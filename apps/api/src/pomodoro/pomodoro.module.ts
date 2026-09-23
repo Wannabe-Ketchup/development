@@ -8,6 +8,7 @@ import { RoomQueryService } from './service/room-query.service';
 import { RoomPresenceService } from './service/room-presence.service';
 import { RoomEventStreamService } from './service/room-event-stream.service';
 import { CreateParticipantService } from './service/create-participant.service';
+import { ChangeNicknameService } from './service/change-nickname.service';
 import { RoomRepository } from './repository/room.repository';
 import { InMemoryRoomRepository } from './repository/in-memory.room.repository';
 import { Room } from './domain/room.entity';
@@ -25,6 +26,7 @@ const DEV_SEED_ROOM_ID = '00000000-0000-4000-8000-000000000001';
     RoomPresenceService,
     RoomEventStreamService,
     CreateParticipantService,
+    ChangeNicknameService,
     { provide: RoomRepository, useClass: InMemoryRoomRepository },
   ],
   exports: [SseService],

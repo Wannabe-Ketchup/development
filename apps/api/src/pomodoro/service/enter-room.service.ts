@@ -6,7 +6,7 @@ import { JoinRoomResponse } from '../dto/join-room-response.dto';
 import { RoomDto } from '../dto/room.dto';
 import { CreateParticipantService } from './create-participant.service';
 
-const NICKNAME_ADJECTIVES = ['졸린', '배고픈', '느긋한', '즐거운'];
+const NICKNAME_ADJECTIVES = ['졸린', '배고픈', '느긋한', '즐거운', '멋진'];
 
 @Injectable()
 export class EnterRoomService {

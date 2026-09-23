@@ -1,10 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 import { ROOM_MODE } from '@pomodoro/shared';
-import { Room } from '../../../src/pomodoro/domain/../../../src/pomodoro/domain/room.entity';
-import { Participant } from '../../../src/pomodoro/domain/../../../src/pomodoro/domain/participant.entity';
-import { Timer } from '../../../src/pomodoro/domain/../../../src/pomodoro/domain/timer.entity';
+import { Room } from '../../../src/pomodoro/domain/room.entity';
+import { Participant } from '../../../src/pomodoro/domain/participant.entity';
 
-describe('RoomTest', () => {
+describe('Room', () => {
   it('방 생성 시 기본 모드는 IDLE 이다.', () => {
     // given
     const roomId = 'roomId';
@@ -65,8 +64,12 @@ describe('RoomTest', () => {
 
   it('참가자는 방의 정원이 비어있으면 방에 참가할 수 있다.', () => {
     // given
-    const room = createRoom();
-    const participant = createParticipant();
+    const roomId = 'roomId';
+    const participantId = 'A';
+    const nickname = '케첩';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const room = Room.create(roomId);
+    const participant = Participant.create(participantId, nickname, joinedAt);
 
     // when
     room.join(participant);
@@ -74,97 +77,166 @@ describe('RoomTest', () => {
     // then
     const expectedSize = 1;
     expect(room.participants.size).toBe(expectedSize);
-    expect(room.participants.get(participant.id)).toBe(participant);
+    expect(room.participants.get(participantId)).toBe(participant);
   });
 
-  it('방의 정원이 모두 찼을 때 새로운 참가자가 입장하면 예외를 발생한다.', () => {
+  it('방의 정원이 모두 찼을 때 새로운 참가자가 입장하면 예외가 발생한다.', () => {
     // given
-    const room = createRoom();
-    const participant1 = createParticipant('1', 'name1');
-    const participant2 = createParticipant('2', 'name2');
-    const participant3 = createParticipant('3', 'name3');
-    const participant4 = createParticipant('4', 'name4');
+    const roomId = 'roomId';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const room = Room.create(roomId);
+    const participant1 = Participant.create('1', 'name1', joinedAt);
+    const participant2 = Participant.create('2', 'name2', joinedAt);
+    const participant3 = Participant.create('3', 'name3', joinedAt);
+    const participant4 = Participant.create('4', 'name4', joinedAt);
     room.join(participant1);
     room.join(participant2);
     room.join(participant3);
     room.join(participant4);
 
-    const newParticipant = createParticipant('5', 'new');
+    const newParticipant = Participant.create('5', 'name5', joinedAt);
 
     // when & then
     expect(() => room.join(newParticipant)).toThrow(BadRequestException);
   });
 
-  it('방에 특정 닉네임을 가진 참가자가 존재하면 true를 반환한다', () => {
+  it('같은 방의 다른 참가자가 쓰지 않는 닉네임이면 변경할 수 있다.', () => {
     // given
-    const room = createRoom();
-    const participant = createParticipant('1', 'ketchup');
-    room.join(participant);
+    const roomId = 'roomId';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const participantId = 'A';
+    const room = Room.create(roomId);
+    room.join(Participant.create(participantId, '케첩', joinedAt));
+    room.join(Participant.create('B', '머스타드', joinedAt));
+    const newNickname = '마요';
 
     // when
-    const result = room.hasNickname('ketchup');
+    room.changeNickname(participantId, newNickname);
 
     // then
-    expect(result).toBe(true);
+    const expectedNickname = '마요';
+    expect(room.participants.get(participantId)?.nickname).toBe(
+      expectedNickname,
+    );
   });
 
-  it('방에 특정 닉네임을 가진 참가자가 없으면 false를 반환한다', () => {
+  it('같은 방의 다른 참가자가 쓰는 닉네임으로는 변경할 수 없다.', () => {
     // given
-    const room = createRoom();
-    const participant = createParticipant('1', 'ketchup');
-    room.join(participant);
+    const roomId = 'roomId';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const participantId = 'A';
+    const room = Room.create(roomId);
+    room.join(Participant.create(participantId, '케첩', joinedAt));
+    room.join(Participant.create('B', '머스타드', joinedAt));
+    const newNickname = '머스타드';
+
+    // when & then
+    const expectedMessage = '이미 사용 중인 닉네임입니다.';
+    expect(() => room.changeNickname(participantId, newNickname)).toThrow(
+      expectedMessage,
+    );
+  });
+
+  it('본인의 현재 닉네임으로 변경하는 경우 중복으로 처리하지 않는다.', () => {
+    // given
+    const roomId = 'roomId';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const participantId = 'A';
+    const room = Room.create(roomId);
+    room.join(Participant.create(participantId, '케첩', joinedAt));
+    room.join(Participant.create('B', '머스타드', joinedAt));
+    const newNickname = '케첩';
 
     // when
-    const result = room.hasNickname('mustard');
+    room.changeNickname(participantId, newNickname);
 
     // then
-    expect(result).toBe(false);
+    const expectedNickname = '케첩';
+    expect(room.participants.get(participantId)?.nickname).toBe(
+      expectedNickname,
+    );
   });
 
-  it('대소문자가 다를 경우 다른 닉네임으로 판단하여 false를 반환한다', () => {
+  it('중복된 닉네임 변경이 거절되면 두 참가자의 닉네임이 그대로 유지된다.', () => {
     // given
-    const room = createRoom();
-    const participant = createParticipant('1', 'ketchup');
-    room.join(participant);
+    const roomId = 'roomId';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const requesterId = 'A';
+    const ownerId = 'B';
+    const room = Room.create(roomId);
+    room.join(Participant.create(requesterId, '케첩', joinedAt));
+    room.join(Participant.create(ownerId, '머스타드', joinedAt));
+    const newNickname = '머스타드';
 
     // when
-    const result = room.hasNickname('Ketchup');
+    expect(() => room.changeNickname(requesterId, newNickname)).toThrow(
+      BadRequestException,
+    );
 
     // then
-    expect(result).toBe(false);
+    const expectedRequesterNickname = '케첩';
+    const expectedOwnerNickname = '머스타드';
+    expect(room.participants.get(requesterId)?.nickname).toBe(
+      expectedRequesterNickname,
+    );
+    expect(room.participants.get(ownerId)?.nickname).toBe(
+      expectedOwnerNickname,
+    );
   });
 
-  const createParticipant = (
-    id = 'participantId',
-    nickname = 'name',
-  ): Participant => {
-    const participant = Object.create(Participant.prototype) as Participant;
-    Object.assign(participant, {
-      id,
-      _nickname: nickname,
-      _statusMessage: '',
-      _currentCycle: 1,
-      _joinedAt: new Date().toISOString(),
-    });
-    return participant;
-  };
+  it('방에 없는 참가자의 닉네임은 변경할 수 없다.', () => {
+    // given
+    const roomId = 'roomId';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const room = Room.create(roomId);
+    room.join(Participant.create('A', '케첩', joinedAt));
+    const unknownParticipantId = 'Z';
+    const newNickname = '마요';
 
-  const createRoom = (
-    roomId = 'roomId',
-    participants = new Map<string, Participant>(),
-    timer = {} as Timer,
-    mode = ROOM_MODE.IDLE,
-    currentCycle = 1,
-  ): Room => {
-    const room = Object.create(Room.prototype) as Room;
-    Object.assign(room, {
-      roomId,
-      _participants: participants,
-      _timer: timer,
-      _mode: mode,
-      _currentCycle: currentCycle,
-      _capacity: 4,
-    });
-    return room;
-  };
+    // when & then
+    const expectedMessage = '방에 존재하지 않는 참가자입니다.';
+    expect(() =>
+      room.changeNickname(unknownParticipantId, newNickname),
+    ).toThrow(expectedMessage);
+  });
+
+  it('다른 방의 참가자가 쓰는 닉네임으로는 변경할 수 있다.', () => {
+    // given
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const participantId = 'B';
+    const room1 = Room.create('roomId1');
+    room1.join(Participant.create('A', '케첩', joinedAt));
+    const room2 = Room.create('roomId2');
+    room2.join(Participant.create(participantId, '머스타드', joinedAt));
+    const newNickname = '케첩';
+
+    // when
+    room2.changeNickname(participantId, newNickname);
+
+    // then
+    const expectedNickname = '케첩';
+    expect(room2.participants.get(participantId)?.nickname).toBe(
+      expectedNickname,
+    );
+  });
+
+  it('대소문자가 다른 닉네임은 다른 닉네임으로 취급한다.', () => {
+    // given
+    const roomId = 'roomId';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const participantId = 'A';
+    const room = Room.create(roomId);
+    room.join(Participant.create(participantId, 'ketchup', joinedAt));
+    room.join(Participant.create('B', 'mustard', joinedAt));
+    const newNickname = 'Mustard';
+
+    // when
+    room.changeNickname(participantId, newNickname);
+
+    // then
+    const expectedNickname = 'Mustard';
+    expect(room.participants.get(participantId)?.nickname).toBe(
+      expectedNickname,
+    );
+  });
 });

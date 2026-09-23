@@ -22,8 +22,26 @@
   --color-tomato-leaf: #2ae578;
   --color-lamp-on: #ffed92;
   --color-lamp-off: #ffffff;
+  --color-error: #f36673;
 
   --font-dearfromsol: 'DearFromsol';
+
+  --animate-shake: shake 0.3s ease-in-out;
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20%,
+    60% {
+      transform: translateX(-3px);
+    }
+    40%,
+    80% {
+      transform: translateX(3px);
+    }
+  }
 
   --cursor-default: url('./assets/cursor_default.svg') 4 4, default;
   --cursor-pointer: url('./assets/cursor_pointer.svg') 4 4, pointer;
@@ -53,4 +71,10 @@ input[type='text'] {
 
 .note-animation {
   animation: note-slide 1.5s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shake {
+    animation: none;
+  }
 }
