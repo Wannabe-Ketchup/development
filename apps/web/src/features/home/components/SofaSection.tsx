@@ -3,15 +3,11 @@ import Sofa from '@/assets/sofa.svg?react';
 import TomatoSleeping from '@/assets/tomato_sleeping.svg?react';
 import SnotBubble from '@/assets/snot_bubble.svg?react';
 import type { TomatoState } from '../hooks/tomatoReducer';
+import { useTomatoDrag } from '../hooks/useTomatoDrag';
 
 interface SofaSectionProps {
   tomatoStatus: TomatoState['status'];
-  handlers: {
-    onPointerDown: (e: React.PointerEvent) => void;
-    onPointerMove: (e: React.PointerEvent) => void;
-    onPointerUp: (e: React.PointerEvent) => void;
-    onPointerCancel: (e: React.PointerEvent) => void;
-  };
+  handlers: ReturnType<typeof useTomatoDrag>['handlers'];
 }
 
 export function SofaSection({ tomatoStatus, handlers }: SofaSectionProps) {
