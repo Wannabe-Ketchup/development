@@ -126,6 +126,7 @@ function Pomodoro() {
             {room.participants.map((participant, index) => (
               <Participant
                 key={participant.id}
+                roomId={roomId}
                 participant={participant}
                 translateX={getSeatTranslateX(
                   index,
@@ -133,6 +134,7 @@ function Pomodoro() {
                   SEAT_SPACING_PX,
                 )}
                 isPending={participant.id === selfParticipantId && !isConfirmed}
+                isSelf={participant.id === selfParticipantId}
               />
             ))}
           </div>

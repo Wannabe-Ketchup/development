@@ -1,5 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
-import type { Participant as ParticipantShape } from '@pomodoro/shared';
+import {
+  NICKNAME_ALLOWED_PATTERN,
+  NICKNAME_MAX_LENGTH,
+  NICKNAME_MIN_LENGTH,
+  type Participant as ParticipantShape,
+} from '@pomodoro/shared';
 
 export class Participant implements ParticipantShape {
   private constructor(
@@ -10,14 +15,34 @@ export class Participant implements ParticipantShape {
     private _joinedAt: string,
   ) {}
 
-  static create(id: string, nickname: string, joinedAt: string): Participant {
-    if (nickname.length > 10) {
-      throw new BadRequestException('닉네임은 10자를 초과할 수 없습니다.');
+  private static validateNickname(nickname: string): void {
+    if (
+      nickname.length < NICKNAME_MIN_LENGTH ||
+      nickname.length > NICKNAME_MAX_LENGTH
+    ) {
+      throw new BadRequestException(
+        `닉네임은 ${NICKNAME_MIN_LENGTH}자 이상 ${NICKNAME_MAX_LENGTH}자 이내입니다.`,
+      );
     }
+
+    if (!NICKNAME_ALLOWED_PATTERN.test(nickname)) {
+      throw new BadRequestException(
+        '닉네임은 한글, 영문, 숫자만 사용할 수 있습니다.',
+      );
+    }
+  }
+
+  static create(id: string, nickname: string, joinedAt: string): Participant {
+    Participant.validateNickname(nickname);
 
     const currentCycle = 0;
     const statusMessage = '';
     return new Participant(id, nickname, statusMessage, currentCycle, joinedAt);
+  }
+
+  public changeNickname(nickname: string): void {
+    Participant.validateNickname(nickname);
+    this._nickname = nickname;
   }
 
   get nickname(): string {

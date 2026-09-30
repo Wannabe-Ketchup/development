@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import {
   ROOM_MODE,
   type RoomMode,
@@ -42,10 +42,25 @@ export class Room {
     }
   }
 
-  hasNickname(targetNickname: string): boolean {
+  hasNickname(targetNickname: string, excludeParticipantId?: string): boolean {
     return [...this._participants.values()].some(
-      (participant) => participant.nickname === targetNickname,
+      (participant) =>
+        participant.id !== excludeParticipantId &&
+        participant.nickname === targetNickname,
     );
+  }
+
+  changeNickname(participantId: string, nickname: string): void {
+    const participant = this._participants.get(participantId);
+    if (!participant) {
+      throw new NotFoundException('방에 존재하지 않는 참가자입니다.');
+    }
+
+    if (this.hasNickname(nickname, participantId)) {
+      throw new BadRequestException('이미 사용 중인 닉네임입니다.');
+    }
+
+    participant.changeNickname(nickname);
   }
 
   join(participant: Participant): void {

@@ -1,19 +1,14 @@
-import type { Participant } from '@pomodoro/shared';
 import TomatoIcon from '@/assets/tomato.svg?react';
 import { cn } from '@/lib/cn';
 
 interface TomatoProps {
-  participant: Participant;
   isPending: boolean;
   className?: string;
 }
 
-export function Tomato({ participant, isPending, className }: TomatoProps) {
+export function Tomato({ isPending, className }: TomatoProps) {
   return (
     <div className={cn('flex flex-col items-center', className)}>
-      <span className="mb-1 rounded bg-white px-2 py-0.5 text-sm whitespace-nowrap">
-        {participant.nickname}
-      </span>
 
       <div className={cn('relative', isPending && 'opacity-40 grayscale')}>
         <TomatoIcon className="w-28 max-w-none" />
