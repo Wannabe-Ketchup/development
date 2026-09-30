@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Room } from '@pomodoro/shared';
-import wall from '@/assets/wall.png';
-import floor from '@/assets/floor.png';
+import wall1280 from '@/assets/wall-1280.webp?no-inline';
+import wall1920 from '@/assets/wall-1920.webp';
+import wall2560 from '@/assets/wall-2560.webp';
+import floor1280 from '@/assets/floor-1280.webp';
+import floor1920 from '@/assets/floor-1920.webp';
+import floor2560 from '@/assets/floor-2560.webp';
 import Desk from '@/assets/desk.svg?react';
 import Lamp from '@/assets/lamp.svg?react';
 import Shelf from '@/assets/shelf.svg?react';
+import { WALL_SIZES, FLOOR_SIZES } from './image-sizes';
 import { LPPlayer } from './components/LPPlayer';
 import { cn } from '@/lib/cn';
 import { useTheme } from './hooks/useTheme';
@@ -68,12 +73,16 @@ function Pomodoro() {
       <div className="grid h-full w-full grid-cols-1 grid-rows-[6fr_4fr] select-none">
         <img
           className="h-full min-h-0 w-full object-cover object-bottom"
-          src={wall}
+          src={wall2560}
+          srcSet={`${wall1280} 1280w, ${wall1920} 1920w, ${wall2560} 2560w`}
+          sizes={WALL_SIZES}
           alt="벽 이미지"
         />
         <img
           className="h-full min-h-0 w-full object-cover object-top"
-          src={floor}
+          src={floor2560}
+          srcSet={`${floor1280} 1280w, ${floor1920} 1920w, ${floor2560} 2560w`}
+          sizes={FLOOR_SIZES}
           alt="바닥 이미지"
         />
 
