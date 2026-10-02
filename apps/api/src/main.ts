@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { ConfigService } from '@nestjs/config';
 import { HttpExceptionLoggerFilter } from './common/filter/http-exception-logger.filter';
+import session from 'express-session';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -11,6 +12,21 @@ async function bootstrap() {
   const httpAdapter = app.get(HttpAdapterHost);
 
   app.set('trust proxy', 1);
+
+  app.use(
+    session({
+      secret: configService.getOrThrow<string>('SESSION_SECRET'),
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        sameSite: 'lax',
+        // 프로덕션 환경이면 HTTPS에서만 쿠키 전송
+        secure: configService.get('NODE_ENV') === 'production',
+        maxAge: 24 * 60 * 60 * 1000,
+      },
+    }),
+  );
 
   // 전역 예외 필터 등록
   app.useGlobalFilters(new HttpExceptionLoggerFilter(httpAdapter.httpAdapter));
