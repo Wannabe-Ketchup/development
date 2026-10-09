@@ -29,7 +29,7 @@ export class SessionGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<Request>();
     const now = Date.now();
 
-    // 세션이 유요하지않다면 예외를 던진다.
+    // 세션이 유효하지 않다면 예외를 던진다.
     if (!this.sessionService.isValid(req.session, now)) {
       throw new UnauthorizedException();
     }
