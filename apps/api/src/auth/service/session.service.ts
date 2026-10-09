@@ -7,7 +7,10 @@ import { Session } from '../domain/session';
 export class SessionService {
   private readonly logger = new Logger(SessionService.name);
 
-  isValid(reqSession: ExpressSession & Partial<SessionData>, now: number): boolean {
+  isValid(
+    reqSession: ExpressSession & Partial<SessionData>,
+    now: number,
+  ): boolean {
     if (!reqSession.participantId) {
       return false;
     }
@@ -15,13 +18,19 @@ export class SessionService {
     return !session.isExpired(now);
   }
 
-  issueSession(reqSession: ExpressSession & Partial<SessionData>, now: number): void {
+  issueSession(
+    reqSession: ExpressSession & Partial<SessionData>,
+    now: number,
+  ): void {
     if (!this.isValid(reqSession, now)) {
       this.create(reqSession, now);
     }
   }
 
-  updateLastAccessedAt(reqSession: ExpressSession & Partial<SessionData>, now: number): void {
+  updateLastAccessedAt(
+    reqSession: ExpressSession & Partial<SessionData>,
+    now: number,
+  ): void {
     if (!reqSession.participantId) {
       return;
     }
@@ -30,7 +39,10 @@ export class SessionService {
     Object.assign(reqSession, session);
   }
 
-  private create(reqSession: ExpressSession & Partial<SessionData>, now: number): void {
+  private create(
+    reqSession: ExpressSession & Partial<SessionData>,
+    now: number,
+  ): void {
     const participantId = randomUUID();
     const session = Session.create(participantId, now);
 
