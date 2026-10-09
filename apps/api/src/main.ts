@@ -5,6 +5,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { ConfigService } from '@nestjs/config';
 import { HttpExceptionLoggerFilter } from './common/filter/http-exception-logger.filter';
 import session from 'express-session';
+import { Session } from './auth/domain/session';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -23,7 +24,7 @@ async function bootstrap() {
         sameSite: 'lax',
         // 프로덕션 환경이면 HTTPS에서만 쿠키 전송
         secure: configService.get('NODE_ENV') === 'production',
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: Session.TTL_MS,
       },
     }),
   );
