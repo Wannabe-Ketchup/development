@@ -59,7 +59,11 @@ describe('useNicknameEditor', () => {
     expect(mockChangeNickname).toHaveBeenCalledTimes(
       expectedCallCountAfterSending,
     );
-    expect(mockChangeNickname).toHaveBeenLastCalledWith('room-1', 'p-1', '마요');
+    expect(mockChangeNickname).toHaveBeenLastCalledWith(
+      'room-1',
+      'p-1',
+      '마요',
+    );
   });
 
   it('요청 중에 여러 번 변경하면 마지막 값만 보낸다', async () => {

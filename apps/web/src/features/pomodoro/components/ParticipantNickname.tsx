@@ -46,7 +46,7 @@ export function ParticipantNickname({
       <div
         className={cn(
           'inline-flex h-9 items-center justify-center gap-2 rounded-[10px] border border-transparent bg-white/60 px-3.5',
-          error && 'border-error animate-shake',
+          error && 'animate-shake border-error',
         )}
       >
         {draft === null ? (
@@ -89,7 +89,7 @@ export function ParticipantNickname({
       {error && (
         <p
           role="alert"
-          className="text-error absolute top-full left-1/2 -translate-x-1/2 text-xs whitespace-nowrap"
+          className="absolute top-full left-1/2 -translate-x-1/2 text-xs whitespace-nowrap text-error"
         >
           {error}
         </p>

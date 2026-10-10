@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { Timer } from '@pomodoro/shared';
-import { formatRemainingTime, getRemainingTimeSec } from '../lib/remaining-time';
+import {
+  formatRemainingTime,
+  getRemainingTimeSec,
+} from '../lib/remaining-time';
 
 interface RoomTimerProps {
   timer: Timer;

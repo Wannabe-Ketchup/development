@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import type { Mock } from 'vitest';
 import { ParticipantNickname } from './ParticipantNickname';
 import { changeNickname } from '@/api/room';
