@@ -17,6 +17,10 @@ export default defineConfig({
   // CJS의 named export를 인식하지 못한다. 명시적으로 포함시켜 강제 처리한다.
   optimizeDeps: {
     include: ['@pomodoro/shared'],
+    // @squiggle-line 패키지는 ESM 빌드이나 Vite의 esbuild pre-bundling 과정에서
+    // JSX를 재변환하며 react/jsx-runtime의 export를 't'로 minify해 충돌이 발생함.
+    // exclude로 raw ESM 그대로 서빙하여 우회한다.
+    exclude: ['@squiggle-line/react', '@squiggle-line/core'],
   },
   server: {
     proxy: {
@@ -39,5 +43,6 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    setupFiles: ['./setupTests.ts'],
   },
 });
