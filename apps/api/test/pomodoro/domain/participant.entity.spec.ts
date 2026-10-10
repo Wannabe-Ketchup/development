@@ -204,4 +204,69 @@ describe('ParticipantTest', () => {
     const expectedNickname = currentNickname;
     expect(participant.nickname).toBe(expectedNickname);
   });
+
+  it('10자 이내의 상태메시지로 변경할 수 있다.', () => {
+    // given
+    const participantId = 'id';
+    const nickname = '케첩';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const participant = Participant.create(participantId, nickname, joinedAt);
+    const newStatusMessage = '가'.repeat(10);
+
+    // when
+    participant.changeStatusMessage(newStatusMessage);
+
+    // then
+    expect(participant.statusMessage).toBe(newStatusMessage);
+  });
+
+  it('상태메시지가 10자를 초과하면 변경할 수 없다.', () => {
+    // given
+    const participantId = 'id';
+    const nickname = '케첩';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const participant = Participant.create(participantId, nickname, joinedAt);
+    const newStatusMessage = '가'.repeat(11);
+
+    // when & then
+    const expectedMessage = '상태메시지는 10자 이내입니다.';
+    expect(() => participant.changeStatusMessage(newStatusMessage)).toThrow(
+      expectedMessage,
+    );
+  });
+
+  it('빈 문자로 상태메시지를 변경할 수 있다.', () => {
+    // given
+    const participantId = 'id';
+    const nickname = '케첩';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const participant = Participant.create(participantId, nickname, joinedAt);
+    participant.changeStatusMessage('기존 메시지');
+    const newStatusMessage = '';
+
+    // when
+    participant.changeStatusMessage(newStatusMessage);
+
+    // then
+    expect(participant.statusMessage).toBe(newStatusMessage);
+  });
+
+  it('상태메시지 변경이 거절되면 기존 상태메시지가 그대로 유지된다.', () => {
+    // given
+    const participantId = 'id';
+    const nickname = '케첩';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const participant = Participant.create(participantId, nickname, joinedAt);
+    const originalStatusMessage = '기존 메시지';
+    participant.changeStatusMessage(originalStatusMessage);
+    const invalidStatusMessage = '가'.repeat(11);
+
+    // when
+    expect(() => participant.changeStatusMessage(invalidStatusMessage)).toThrow(
+      BadRequestException,
+    );
+
+    // then
+    expect(participant.statusMessage).toBe(originalStatusMessage);
+  });
 });
