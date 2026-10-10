@@ -1,4 +1,4 @@
-import type { Room } from '@pomodoro/shared';
+import type { Room, CreateRoomResponse } from '@pomodoro/shared';
 
 export interface JoinRoomResponse {
   participant: { id: string; nickname: string };
@@ -48,4 +48,18 @@ export async function changeNickname(
     const body: ErrorResponse = await response.json()
     throw new Error(body.message);
   }
+}
+
+export async function createRoom(): Promise<CreateRoomResponse> {
+  const response = await fetch(`/api/pomodoro/room`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    throw new Error('방 생성에 실패했습니다.');
+  }
+
+  const data: CreateRoomResponse = await response.json();
+
+  return data;
 }

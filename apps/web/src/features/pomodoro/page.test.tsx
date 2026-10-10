@@ -4,11 +4,11 @@ import { ROOM_MODE } from '@pomodoro/shared';
 import type { Room } from '@pomodoro/shared';
 import Pomodoro from './page';
 import { enterRoom } from '@/api/room';
-import { useRoomId } from './lib/room-id';
+import { useRoomId } from '@/lib/room-id';
 import { useRoomSSE } from './hooks/useRoomSSE';
 
 vi.mock('@/api/room');
-vi.mock('./lib/room-id');
+vi.mock('@/lib/room-id');
 vi.mock('./hooks/useRoomSSE');
 
 const mockEnterRoom = enterRoom as unknown as Mock;

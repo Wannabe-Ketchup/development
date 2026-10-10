@@ -12,6 +12,8 @@ import { EnterRoomService } from '../service/enter-room.service';
 import { ChangeNicknameService } from '../service/change-nickname.service';
 import type { JoinRoomResponse } from '../dto/join-room-response.dto';
 import type { ChangeNicknameRequest } from '../dto/change-nickname-request.dto';
+import { CreateRoomService } from '../service/create-room.service';
+import type { CreateRoomResponse } from '@pomodoro/shared';
 
 @Controller('pomodoro')
 export class PomodoroController {
@@ -19,6 +21,7 @@ export class PomodoroController {
     private readonly timerService: TimerService,
     private readonly enterRoomService: EnterRoomService,
     private readonly changeNicknameService: ChangeNicknameService,
+    private readonly createRoomService: CreateRoomService,
   ) {}
 
   @Post('room/:roomId/participant')
@@ -41,5 +44,10 @@ export class PomodoroController {
       participantId,
       body.nickname,
     );
+  }
+
+  @Post('room')
+  createRoom(): CreateRoomResponse {
+    return { roomId: this.createRoomService.create() };
   }
 }
