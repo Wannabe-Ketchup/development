@@ -239,4 +239,23 @@ describe('Room', () => {
       expectedNickname,
     );
   });
+
+  it('방의 참가자는 상태메시지를 변경할 수 있다.', () => {
+    // given
+    const roomId = 'roomId';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const participantId = 'A';
+    const room = Room.create(roomId);
+    room.join(Participant.create(participantId, '케첩', joinedAt));
+    const newStatusMessage = '집중 중';
+
+    // when
+    room.changeStatusMessage(participantId, newStatusMessage);
+
+    // then
+    const expectedStatusMessage = '집중 중';
+    expect(room.participants.get(participantId)?.statusMessage).toBe(
+      expectedStatusMessage,
+    );
+  });
 });
