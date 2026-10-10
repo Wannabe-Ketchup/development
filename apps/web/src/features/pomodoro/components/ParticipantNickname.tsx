@@ -16,7 +16,7 @@ export function ParticipantNickname({
   nickname,
 }: ParticipantNicknameProps) {
   const {
-    nickname: displayedNickname,
+    value: displayedNickname,
     draft,
     error,
     startEditing,
@@ -51,7 +51,7 @@ export function ParticipantNickname({
       >
         {draft === null ? (
           <>
-            <span className="text-2xl leading-[normal] tracking-[2.4px]">
+            <span className="text-2xl leading-[normal] tracking-[10%]">
               {displayedNickname}
             </span>
             <button
