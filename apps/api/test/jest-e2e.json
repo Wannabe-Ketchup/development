@@ -11,6 +11,6 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "transformIgnorePatterns": [
-    "node_modules/(?!(\\.pnpm/)?@nestjs[+/]config)"
+    "node_modules/(?!(\\.pnpm/)?@nestjs[+/](config|event-emitter))"
   ]
 }

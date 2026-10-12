@@ -24,6 +24,7 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^12.0.0",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/event-emitter": "^12.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@pomodoro/shared": "workspace:*",
     "nest-winston": "^2.0.0",
@@ -63,7 +64,7 @@
       "ts"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!.*@nestjs/config)"
+      "node_modules/(?!.*@nestjs/(config|event-emitter))"
     ],
     "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
