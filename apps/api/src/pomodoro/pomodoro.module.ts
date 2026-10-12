@@ -11,6 +11,8 @@ import { CreateParticipantService } from './service/create-participant.service';
 import { ChangeNicknameService } from './service/change-nickname.service';
 import { RoomRepository } from './repository/room.repository';
 import { InMemoryRoomRepository } from './repository/in-memory.room.repository';
+import { TimerScheduler } from './scheduler/timer.scheduler';
+import { InMemoryTimerScheduler } from './scheduler/in-memory.timer.scheduler';
 import { Room } from './domain/room.entity';
 
 // TODO: 방 생성 기능이 실제로 만들어지면 이 개발용 시드는 제거한다.
@@ -28,6 +30,7 @@ const DEV_SEED_ROOM_ID = '00000000-0000-4000-8000-000000000001';
     CreateParticipantService,
     ChangeNicknameService,
     { provide: RoomRepository, useClass: InMemoryRoomRepository },
+    { provide: TimerScheduler, useClass: InMemoryTimerScheduler },
   ],
   exports: [SseService],
 })
