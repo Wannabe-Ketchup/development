@@ -33,9 +33,13 @@ export function useOptimisticEditor<T>({
     try {
       await onSave(next);
     } catch (cause) {
+      // 뒤이어 보낼 값이 있거나 사용자가 다시 입력 중이면 이 거절은 지나간 의도다.
       if (queuedRef.current === null) {
         setSentValue(null);
-        setEditing((current) => current ?? { draft: next, error: (cause as Error).message });
+        setEditing(
+          (current) =>
+            current ?? { draft: next, error: (cause as Error).message },
+        );
       }
     } finally {
       isSendingRef.current = false;
@@ -49,7 +53,7 @@ export function useOptimisticEditor<T>({
 
   const confirmEditing = () => {
     if (editing === null) return;
-    
+
     if (validate) {
       const error = validate(editing.draft);
       if (error) {
@@ -78,11 +82,15 @@ export function useOptimisticEditor<T>({
     draft: editing?.draft ?? null,
     error: editing?.error ?? null,
     startEditing: () => setEditing({ draft: displayedValue, error: null }),
-    changeDraft: (draft: T) => setEditing((current) => {
-      if (!current) return current;
-      const error = validate ? validate(draft) : null;
-      return { draft, error };
-    }),
+    changeDraft: (draft: T) =>
+      setEditing((current) => {
+        if (!current) return current;
+
+        const error = validate ? validate(draft) : null;
+        if (error) return { ...current, error };
+
+        return { draft, error: null };
+      }),
     cancelEditing: () => setEditing(null),
     confirmEditing,
   };
