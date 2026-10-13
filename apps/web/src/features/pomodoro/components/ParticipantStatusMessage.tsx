@@ -99,7 +99,8 @@ export function ParticipantStatusMessage({
             onClick={startEditing}
             className={cn(
               'absolute top-0 right-0 z-10 translate-x-1/2 -translate-y-1/2 rounded-full p-2 text-white',
-              'opacity-0 group-hover:opacity-100',
+              'opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100',
+              'group-focus-within:opacity-100',
               buttonBg,
             )}
           >
