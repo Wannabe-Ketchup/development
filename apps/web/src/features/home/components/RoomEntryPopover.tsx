@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { WobblySpeechBubble } from '@squiggle-line/react';
 import { EntryOptionButton } from './EntryOptionButton';
+import { cn } from '@/lib/cn';
 
 type Step = 'option' | 'input';
 
@@ -19,8 +20,11 @@ export function RoomEntryPopover() {
         borderRadius={16}
         strokeWidth={4}
         pathClassName="stroke-black fill-white"
+        key={step}
       >
-        <div className="flex flex-col gap-3 px-1">
+        <div
+          className={cn('flex flex-col gap-3 px-1', step === 'input' && 'w-70')}
+        >
           {step === 'option' ? (
             <>
               <div className="text-2xl text-nowrap">어디서 공부할까요?</div>
@@ -40,7 +44,7 @@ export function RoomEntryPopover() {
               <input
                 type="text"
                 placeholder="초대 링크(코드)를 입력하세요"
-                className="w-62 border-b-2 border-gray px-3 py-2 text-lg placeholder-gray outline-none"
+                className="w-full border-b-2 border-gray px-3 py-2 text-lg placeholder-gray outline-none"
               />
               <button className="w-full rounded-lg border-2 border-gray px-3 py-2 text-lg">
                 입장하기
