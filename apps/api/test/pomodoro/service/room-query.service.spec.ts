@@ -36,3 +36,43 @@ describe('RoomQueryService.findExistingRoom', () => {
     expect(() => service.findExistingRoom(roomId)).toThrow(NotFoundException);
   });
 });
+
+describe('RoomQueryService.exists', () => {
+  const roomId = 'room-1';
+
+  let findById: jest.Mock;
+  let service: RoomQueryService;
+
+  beforeEach(() => {
+    findById = jest.fn();
+    service = new RoomQueryService({
+      findById,
+      save: jest.fn(),
+      delete: jest.fn(),
+    });
+  });
+
+  it('존재하는 방이면 true를 반환한다', () => {
+    // given
+    findById.mockReturnValue(Room.create(roomId));
+
+    // when
+    const result = service.exists(roomId);
+
+    // then
+    const expected = true;
+    expect(result).toBe(expected);
+  });
+
+  it('존재하지 않는 방이면 false를 반환한다', () => {
+    // given
+    findById.mockReturnValue(undefined);
+
+    // when
+    const result = service.exists(roomId);
+
+    // then
+    const expected = false;
+    expect(result).toBe(expected);
+  });
+});
