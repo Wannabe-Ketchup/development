@@ -6,10 +6,10 @@ import { RoomPresenceService } from '../../../src/pomodoro/service/../../../src/
 import { RoomRepository } from '../../../src/pomodoro/service/../repository/room.repository';
 import { Room } from '../../../src/pomodoro/service/../domain/room.entity';
 import { Participant } from '../../../src/pomodoro/service/../domain/participant.entity';
-import { CreateParticipantService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/create-participant.service';
 
 describe('EnterRoomService.joinRoom', () => {
   const roomId = 'room-1';
+  const sessionParticipantId = 'session-participant-id';
 
   const createMockRoom = (
     roomOverrides: {
@@ -19,7 +19,7 @@ describe('EnterRoomService.joinRoom', () => {
   ) => {
     const hasNickname =
       roomOverrides.hasNickname ?? jest.fn().mockReturnValue(false);
-    const join = jest.fn();
+    const join = jest.fn<void, [Participant]>();
     const participants = roomOverrides.participants ?? new Map();
 
     const room = {
@@ -50,9 +50,6 @@ describe('EnterRoomService.joinRoom', () => {
   let save: jest.Mock;
   let roomRepository: RoomRepository;
 
-  let create: jest.Mock;
-  let createParticipantService: CreateParticipantService;
-
   let generateRandomNickname: jest.SpyInstance;
 
   let registerPendingParticipant: jest.Mock;
@@ -71,9 +68,6 @@ describe('EnterRoomService.joinRoom', () => {
     save = jest.fn();
     roomRepository = { save, findById: jest.fn(), delete: jest.fn() };
 
-    create = jest.fn();
-    createParticipantService = { create };
-
     registerPendingParticipant = jest.fn();
     roomPresenceService = {
       registerPendingParticipant,
@@ -82,7 +76,6 @@ describe('EnterRoomService.joinRoom', () => {
     service = new EnterRoomService(
       roomQueryService,
       roomRepository,
-      createParticipantService,
       roomPresenceService,
     );
 
@@ -97,20 +90,19 @@ describe('EnterRoomService.joinRoom', () => {
     const { room, join } = createMockRoom();
     findExistingRoom.mockReturnValue(room);
     generateRandomNickname.mockReturnValue('졸린토마토');
-    const participant = createMockParticipant('졸린토마토');
-    create.mockReturnValue(participant);
 
     // when
-    const result = service.joinRoom(roomId);
+    const result = service.joinRoom(roomId, sessionParticipantId);
 
     // then
-    expect(create).toHaveBeenCalledWith('졸린토마토', expect.any(String));
-    expect(create).toHaveBeenCalledTimes(1);
-    expect(join).toHaveBeenCalledWith(participant);
+    expect(join).toHaveBeenCalledTimes(1);
+    const joined = join.mock.calls[0][0];
+    expect(joined.id).toBe(sessionParticipantId);
+    expect(joined.nickname).toBe('졸린토마토');
     expect(save).toHaveBeenCalledWith(room);
     expect(result.participant).toEqual({
-      id: participant.id,
-      nickname: participant.nickname,
+      id: sessionParticipantId,
+      nickname: '졸린토마토',
     });
     expect(result.room).toEqual({
       roomId: room.roomId,
@@ -128,8 +120,9 @@ describe('EnterRoomService.joinRoom', () => {
     });
 
     // when / then
-    expect(() => service.joinRoom(roomId)).toThrow(NotFoundException);
-    expect(create).not.toHaveBeenCalled();
+    expect(() => service.joinRoom(roomId, sessionParticipantId)).toThrow(
+      NotFoundException,
+    );
     expect(save).not.toHaveBeenCalled();
   });
 
@@ -140,7 +133,7 @@ describe('EnterRoomService.joinRoom', () => {
       .mockReturnValueOnce(true) // '형용사A토마토'
       .mockReturnValueOnce(true) // '형용사B토마토'
       .mockReturnValueOnce(false); // '형용사C토마토'
-    const { room } = createMockRoom({ hasNickname });
+    const { room, join } = createMockRoom({ hasNickname });
     findExistingRoom.mockReturnValue(room);
 
     generateRandomNickname
@@ -148,16 +141,13 @@ describe('EnterRoomService.joinRoom', () => {
       .mockReturnValueOnce('형용사B토마토')
       .mockReturnValueOnce('형용사C토마토');
 
-    const participant = createMockParticipant('형용사C토마토');
-    create.mockReturnValue(participant);
-
     // when
-    service.joinRoom(roomId);
+    service.joinRoom(roomId, sessionParticipantId);
 
     // then
     expect(hasNickname).toHaveBeenCalledTimes(3);
-    expect(create).toHaveBeenCalledWith('형용사C토마토', expect.any(String));
-    expect(create).toHaveBeenCalledTimes(1);
+    expect(join).toHaveBeenCalledTimes(1);
+    expect(join.mock.calls[0][0].nickname).toBe('형용사C토마토');
   });
 
   it('새로 입장하는 참가자는 퇴장 타이머가 등록된다', () => {
@@ -165,20 +155,18 @@ describe('EnterRoomService.joinRoom', () => {
     const { room } = createMockRoom();
     findExistingRoom.mockReturnValue(room);
     generateRandomNickname.mockReturnValue('졸린토마토');
-    const participant = createMockParticipant('졸린토마토');
-    create.mockReturnValue(participant);
 
     // when
-    service.joinRoom(roomId);
+    service.joinRoom(roomId, sessionParticipantId);
 
     // then
     expect(registerPendingParticipant).toHaveBeenCalledWith(
       roomId,
-      participant.id,
+      sessionParticipantId,
     );
   });
 
-  it('이미 방에 참여 중인 participantId로 다시 입장을 요청하면 새 참가자를 만들지 않고 기존 상태를 그대로 반환한다', () => {
+  it('같은 로그인 세션이 다시 입장하면 새 참가자를 만들지 않고 기존 상태를 그대로 반환한다', () => {
     // given
     const existingParticipant = createMockParticipant('졸린토마토');
     const { room, join } = createMockRoom({
@@ -190,7 +178,6 @@ describe('EnterRoomService.joinRoom', () => {
     const result = service.joinRoom(roomId, existingParticipant.id);
 
     // then
-    expect(create).not.toHaveBeenCalled();
     expect(join).not.toHaveBeenCalled();
     expect(registerPendingParticipant).not.toHaveBeenCalled();
     expect(result.participant).toEqual({
@@ -199,23 +186,21 @@ describe('EnterRoomService.joinRoom', () => {
     });
   });
 
-  it('방에 없는 participantId로 입장을 요청하면 새 참가자로 취급해 정상 입장시킨다', () => {
+  it('방에 없는 로그인 세션이 입장하면 새 참가자로 취급해 정상 입장시킨다', () => {
     // given
     const { room, join } = createMockRoom();
     findExistingRoom.mockReturnValue(room);
     generateRandomNickname.mockReturnValue('졸린토마토');
-    const participant = createMockParticipant('졸린토마토');
-    create.mockReturnValue(participant);
 
     // when
     service.joinRoom(roomId, 'not-existing-participant-id');
 
     // then
-    expect(create).toHaveBeenCalledTimes(1);
-    expect(join).toHaveBeenCalledWith(participant);
+    expect(join).toHaveBeenCalledTimes(1);
+    expect(join.mock.calls[0][0].id).toBe('not-existing-participant-id');
     expect(registerPendingParticipant).toHaveBeenCalledWith(
       roomId,
-      participant.id,
+      'not-existing-participant-id',
     );
   });
 });
