@@ -13,11 +13,13 @@ import { ChangeStatusMessageService } from './service/change-status-message.serv
 import { RoomRepository } from './repository/room.repository';
 import { InMemoryRoomRepository } from './repository/in-memory.room.repository';
 import { Room } from './domain/room.entity';
+import { MetricsModule } from '../metrics/metrics.module';
 
 // TODO: 방 생성 기능이 실제로 만들어지면 이 개발용 시드는 제거한다.
 const DEV_SEED_ROOM_ID = '00000000-0000-4000-8000-000000000001';
 
 @Module({
+  imports: [MetricsModule],
   controllers: [PomodoroController, PomodoroSseController],
   providers: [
     SseService,
