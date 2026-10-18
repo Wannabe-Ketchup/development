@@ -30,7 +30,6 @@ export function Participant({
         <div className="absolute bottom-50.5 left-1/2 flex w-28 -translate-x-1/2 flex-col items-center gap-3">
           <ParticipantStatusMessage
             roomId={roomId}
-            participantId={participant.id}
             message={participant.statusMessage}
             isSelf={isSelf}
           />
@@ -39,7 +38,6 @@ export function Participant({
             {isSelf ? (
               <ParticipantNickname
                 roomId={roomId}
-                participantId={participant.id}
                 nickname={participant.nickname}
               />
             ) : (
