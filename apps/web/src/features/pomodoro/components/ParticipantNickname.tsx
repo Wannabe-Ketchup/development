@@ -6,13 +6,11 @@ import { useNicknameEditor } from '../hooks/useNicknameEditor';
 
 interface ParticipantNicknameProps {
   roomId: string;
-  participantId: string;
   nickname: string;
 }
 
 export function ParticipantNickname({
   roomId,
-  participantId,
   nickname,
 }: ParticipantNicknameProps) {
   const {
@@ -23,7 +21,7 @@ export function ParticipantNickname({
     changeDraft,
     cancelEditing,
     confirmEditing,
-  } = useNicknameEditor({ roomId, participantId, nickname });
+  } = useNicknameEditor({ roomId, nickname });
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {

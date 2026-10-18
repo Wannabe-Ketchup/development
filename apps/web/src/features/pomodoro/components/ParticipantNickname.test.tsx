@@ -14,13 +14,7 @@ vi.mock('@/api/room');
 const mockChangeNickname = changeNickname as unknown as Mock;
 
 const renderNickname = (nickname = '토마토') =>
-  render(
-    <ParticipantNickname
-      roomId="room-1"
-      participantId="p-1"
-      nickname={nickname}
-    />,
-  );
+  render(<ParticipantNickname roomId="room-1" nickname={nickname} />);
 
 const startEditing = () =>
   fireEvent.click(screen.getByRole('button', { name: '닉네임 수정' }));
@@ -108,7 +102,7 @@ describe('ParticipantNickname', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     // then
-    expect(mockChangeNickname).toHaveBeenCalledWith('room-1', 'p-1', '케첩');
+    expect(mockChangeNickname).toHaveBeenCalledWith('room-1', '케첩');
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
@@ -124,7 +118,7 @@ describe('ParticipantNickname', () => {
     fireEvent.click(screen.getByRole('button', { name: '닉네임 확인' }));
 
     // then
-    expect(mockChangeNickname).toHaveBeenCalledWith('room-1', 'p-1', '케첩');
+    expect(mockChangeNickname).toHaveBeenCalledWith('room-1', '케첩');
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
