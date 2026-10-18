@@ -6,14 +6,22 @@ import { AppModule } from '../../../src/app.module';
 import { SessionConfig } from '../../../src/auth/config/session.config';
 import { RoomRepository } from '../../../src/pomodoro/repository/room.repository';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
+import { S3Client } from '@aws-sdk/client-s3';
+import { LoadS3MusicService } from '../../../src/music/service/load-s3-music.service';
 
 describe('SessionGuard', () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
+    // S3는 외부 시스템이라 대체한다. 실제 클라이언트는 AWS 환경변수를 요구하고, 부트스트랩 때 S3를 호출한다.
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(S3Client)
+      .useValue({})
+      .overrideProvider(LoadS3MusicService)
+      .useValue({})
+      .compile();
 
     app = moduleFixture.createNestApplication();
     SessionConfig.of({
