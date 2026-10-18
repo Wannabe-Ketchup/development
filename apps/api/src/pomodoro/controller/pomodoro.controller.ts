@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ParticipantId } from '../../auth/decorator/participant-id.decorator';
 import { TimerService } from '../service/timer.service';
 import { EnterRoomService } from '../service/enter-room.service';
 import { ChangeNicknameService } from '../service/change-nickname.service';
@@ -27,16 +28,16 @@ export class PomodoroController {
   @Post('room/:roomId/participant')
   enterRoom(
     @Param('roomId') roomId: string,
-    @Body('participantId') participantId?: string,
+    @ParticipantId() participantId: string,
   ): JoinRoomResponse {
     return this.enterRoomService.joinRoom(roomId, participantId);
   }
 
-  @Patch('room/:roomId/participant/:participantId/nickname')
+  @Patch('room/:roomId/participant/nickname')
   @HttpCode(HttpStatus.NO_CONTENT)
   changeNickname(
     @Param('roomId') roomId: string,
-    @Param('participantId') participantId: string,
+    @ParticipantId() participantId: string,
     @Body() body: ChangeNicknameRequest,
   ): void {
     this.changeNicknameService.changeNickname(
@@ -46,11 +47,11 @@ export class PomodoroController {
     );
   }
 
-  @Patch('room/:roomId/participant/:participantId/status-message')
+  @Patch('room/:roomId/participant/status-message')
   @HttpCode(HttpStatus.NO_CONTENT)
   changeStatusMessage(
     @Param('roomId') roomId: string,
-    @Param('participantId') participantId: string,
+    @ParticipantId() participantId: string,
     @Body() body: ChangeStatusMessageRequest,
   ): void {
     this.changeStatusMessageService.changeStatusMessage(
