@@ -1,6 +1,9 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { WALL_SIZES, FLOOR_SIZES } from '../src/features/pomodoro/image-sizes.js';
+import {
+  WALL_SIZES,
+  FLOOR_SIZES,
+} from '../src/features/pomodoro/image-sizes.js';
 
 const DIST_DIR = join(import.meta.dirname, '..', 'dist');
 const ASSETS_DIR = join(DIST_DIR, 'assets');

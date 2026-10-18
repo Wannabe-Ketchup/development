@@ -10,8 +10,10 @@ import {
 import { TimerService } from '../service/timer.service';
 import { EnterRoomService } from '../service/enter-room.service';
 import { ChangeNicknameService } from '../service/change-nickname.service';
+import { ChangeStatusMessageService } from '../service/change-status-message.service';
 import type { JoinRoomResponse } from '../dto/join-room-response.dto';
 import type { ChangeNicknameRequest } from '../dto/change-nickname-request.dto';
+import type { ChangeStatusMessageRequest } from '../dto/change-status-message-request.dto';
 
 @Controller('pomodoro')
 export class PomodoroController {
@@ -19,6 +21,7 @@ export class PomodoroController {
     private readonly timerService: TimerService,
     private readonly enterRoomService: EnterRoomService,
     private readonly changeNicknameService: ChangeNicknameService,
+    private readonly changeStatusMessageService: ChangeStatusMessageService,
   ) {}
 
   @Post('room/:roomId/participant')
@@ -40,6 +43,20 @@ export class PomodoroController {
       roomId,
       participantId,
       body.nickname,
+    );
+  }
+
+  @Patch('room/:roomId/participant/:participantId/status-message')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  changeStatusMessage(
+    @Param('roomId') roomId: string,
+    @Param('participantId') participantId: string,
+    @Body() body: ChangeStatusMessageRequest,
+  ): void {
+    this.changeStatusMessageService.changeStatusMessage(
+      roomId,
+      participantId,
+      body.statusMessage,
     );
   }
 }

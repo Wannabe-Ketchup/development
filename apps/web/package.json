@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@pomodoro/shared": "workspace:*",
+    "@squiggle-line/core": "^0.2.0",
+    "@squiggle-line/react": "^0.2.0",
     "@tailwindcss/vite": "^4.3.3",
     "clsx": "^2.1.1",
     "react": "^19.2.8",

@@ -9,7 +9,6 @@ interface TomatoProps {
 export function Tomato({ isPending, className }: TomatoProps) {
   return (
     <div className={cn('flex flex-col items-center', className)}>
-
       <div className={cn('relative', isPending && 'opacity-40 grayscale')}>
         <TomatoIcon className="w-28 max-w-none" />
 

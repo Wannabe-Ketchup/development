@@ -2,6 +2,7 @@ import type { Participant as ParticipantData } from '@pomodoro/shared';
 import Chair from '@/assets/chair.svg?react';
 import { Tomato } from './Tomato';
 import { ParticipantNickname } from './ParticipantNickname';
+import { ParticipantStatusMessage } from './ParticipantStatusMessage';
 
 interface ParticipantProps {
   roomId: string;
@@ -25,8 +26,15 @@ export function Participant({
     >
       <div>
         <Chair className="absolute bottom-0 left-1/2 w-36 max-w-none -translate-x-1/2" />
-        {/* 의자(발밑) 기준 205px 위: 기존 두 좌표(60%+215px / 60%+10px)의 차이와 동일 */}
-        <div className="absolute bottom-51.25 left-1/2 flex w-28 -translate-x-1/2 flex-col items-center gap-4">
+
+        <div className="absolute bottom-50.5 left-1/2 flex w-28 -translate-x-1/2 flex-col items-center gap-3">
+          <ParticipantStatusMessage
+            roomId={roomId}
+            participantId={participant.id}
+            message={participant.statusMessage}
+            isSelf={isSelf}
+          />
+
           <div className="w-max">
             {isSelf ? (
               <ParticipantNickname

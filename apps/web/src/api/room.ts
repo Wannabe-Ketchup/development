@@ -23,7 +23,7 @@ export async function enterRoom(
 }
 
 // TODO: shared dto로 ErrorResponse 정의 필요
-interface ErrorResponse { 
+interface ErrorResponse {
   statusCode: number;
   message: string;
   error: string;
@@ -44,8 +44,29 @@ export async function changeNickname(
   );
 
   if (!response.ok) {
-    if (response.status >= 500) throw new Error('닉네임을 변경하지 못했습니다.')
-    const body: ErrorResponse = await response.json()
+    if (response.status >= 500)
+      throw new Error('닉네임을 변경하지 못했습니다.');
+    const body: ErrorResponse = await response.json();
     throw new Error(body.message);
+  }
+}
+
+export async function changeStatusMessage(
+  roomId: string,
+  participantId: string,
+  statusMessage: string,
+): Promise<void> {
+  const response = await fetch(
+    `/api/pomodoro/room/${roomId}/participant/${participantId}/status-message`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statusMessage }),
+    },
+  );
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.message || '상태메시지를 변경하지 못했습니다.');
   }
 }
