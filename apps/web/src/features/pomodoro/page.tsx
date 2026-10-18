@@ -94,7 +94,7 @@ function Pomodoro() {
         {/* roomId가 유효하고 방 정보를 받아온 뒤에만 타이머를 보여준다 */}
         {roomId && room && <RoomTimer timer={room.timer} />}
 
-        <div className="absolute top-[calc(60%+60px)] left-1/2 z-10 -translate-x-1/2">
+        <div className="absolute top-[calc(60%+74px)] left-1/2 z-10 -translate-x-1/2">
           <Desk />
           <Lamp
             className={cn(
@@ -131,7 +131,7 @@ function Pomodoro() {
 
         {/* 참여자마다 의자+캐릭터를 함께 렌더링한다. 책상(z-10)보다 아래(z-0)에 둬도, 캐릭터는 디자인상 책상과 겹치지 않아 의자 다리만 책상 뒤로 가려진다 */}
         {roomId && room && (
-          <div className="absolute top-[calc(60%+215px)] left-1/2 z-0 h-0 w-0">
+          <div className="absolute top-[calc(60%+232px)] left-1/2 z-0 h-0 w-0">
             {room.participants.map((participant, index) => (
               <Participant
                 key={participant.id}
