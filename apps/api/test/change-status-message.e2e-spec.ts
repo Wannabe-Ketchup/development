@@ -2,10 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { SessionConfig } from './../src/auth/config/session.config';
 import { AppModule } from './../src/app.module';
 import { RoomRepository } from './../src/pomodoro/repository/room.repository';
 import { Room } from './../src/pomodoro/domain/room.entity';
-import { Participant } from './../src/pomodoro/domain/participant.entity';
 
 describe('상태메시지 수정 (e2e)', () => {
   let app: INestApplication<App>;
@@ -16,6 +16,10 @@ describe('상태메시지 수정 (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    SessionConfig.of({
+      secret: 'test-session-secret',
+      isProduction: false,
+    }).apply(app);
     await app.init();
   });
 
@@ -23,58 +27,53 @@ describe('상태메시지 수정 (e2e)', () => {
     await app.close();
   });
 
-  it('방의 참가자가 요청하면 204를 반환한다.', () => {
+  it('방의 참가자가 요청하면 204를 반환한다.', async () => {
     // given
     const roomId = 'roomId';
-    const participantId = 'A';
-    const joinedAt = '2026-09-02T00:00:00.000Z';
-    const room = Room.create(roomId);
-    room.join(Participant.create(participantId, '케첩', joinedAt));
-    app.get(RoomRepository).save(room);
+    app.get(RoomRepository).save(Room.create(roomId));
     const newStatusMessage = '집중 중';
+
+    const agent = request.agent(app.getHttpServer());
+    await agent.post('/auth/login/guest').expect(204);
+    await agent.post(`/pomodoro/room/${roomId}/participant`).expect(201);
 
     // when & then
     const expectedStatus = 204;
-    return request(app.getHttpServer())
-      .patch(
-        `/pomodoro/room/${roomId}/participant/${participantId}/status-message`,
-      )
+    return agent
+      .patch(`/pomodoro/room/${roomId}/participant/status-message`)
       .send({ statusMessage: newStatusMessage })
       .expect(expectedStatus);
   });
 
-  it('존재하지 않는 방에 요청하면 404를 반환한다.', () => {
+  it('존재하지 않는 방에 요청하면 404를 반환한다.', async () => {
     // given
     const unknownRoomId = 'unknownRoomId';
-    const participantId = 'A';
     const newStatusMessage = '집중 중';
+
+    const agent = request.agent(app.getHttpServer());
+    await agent.post('/auth/login/guest').expect(204);
 
     // when & then
     const expectedStatus = 404;
-    return request(app.getHttpServer())
-      .patch(
-        `/pomodoro/room/${unknownRoomId}/participant/${participantId}/status-message`,
-      )
+    return agent
+      .patch(`/pomodoro/room/${unknownRoomId}/participant/status-message`)
       .send({ statusMessage: newStatusMessage })
       .expect(expectedStatus);
   });
 
-  it('방에 없는 참가자로 요청하면 404를 반환한다.', () => {
+  it('방에 없는 참가자로 요청하면 404를 반환한다.', async () => {
     // given
     const roomId = 'roomId';
-    const joinedAt = '2026-09-02T00:00:00.000Z';
-    const room = Room.create(roomId);
-    room.join(Participant.create('A', '케첩', joinedAt));
-    app.get(RoomRepository).save(room);
-    const unknownParticipantId = 'unknownParticipantId';
+    app.get(RoomRepository).save(Room.create(roomId));
     const newStatusMessage = '집중 중';
+
+    const agent = request.agent(app.getHttpServer());
+    await agent.post('/auth/login/guest').expect(204);
 
     // when & then
     const expectedStatus = 404;
-    return request(app.getHttpServer())
-      .patch(
-        `/pomodoro/room/${roomId}/participant/${unknownParticipantId}/status-message`,
-      )
+    return agent
+      .patch(`/pomodoro/room/${roomId}/participant/status-message`)
       .send({ statusMessage: newStatusMessage })
       .expect(expectedStatus);
   });
