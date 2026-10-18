@@ -1,18 +1,14 @@
 import type { Room } from '@pomodoro/shared';
+import { api } from './http';
 
 export interface JoinRoomResponse {
   participant: { id: string; nickname: string };
   room: Room;
 }
 
-export async function enterRoom(
-  roomId: string,
-  participantId?: string,
-): Promise<JoinRoomResponse> {
-  const response = await fetch(`/api/pomodoro/room/${roomId}/participant`, {
+export async function enterRoom(roomId: string): Promise<JoinRoomResponse> {
+  const response = await api(`/api/pomodoro/room/${roomId}/participant`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(participantId ? { participantId } : {}),
   });
 
   if (!response.ok) {
@@ -31,11 +27,10 @@ interface ErrorResponse {
 
 export async function changeNickname(
   roomId: string,
-  participantId: string,
   nickname: string,
 ): Promise<void> {
-  const response = await fetch(
-    `/api/pomodoro/room/${roomId}/participant/${participantId}/nickname`,
+  const response = await api(
+    `/api/pomodoro/room/${roomId}/participant/nickname`,
     {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -53,11 +48,10 @@ export async function changeNickname(
 
 export async function changeStatusMessage(
   roomId: string,
-  participantId: string,
   statusMessage: string,
 ): Promise<void> {
-  const response = await fetch(
-    `/api/pomodoro/room/${roomId}/participant/${participantId}/status-message`,
+  const response = await api(
+    `/api/pomodoro/room/${roomId}/participant/status-message`,
     {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
