@@ -16,7 +16,6 @@ import { useTheme } from './hooks/useTheme';
 import { useRoomSSE } from './hooks/useRoomSSE';
 import { useRoomId } from './lib/room-id';
 import { enterRoom } from '@/api/room';
-import { getParticipantId, saveParticipantId } from './lib/participant-storage';
 import { getSeatTranslateX } from './lib/seat-layout';
 import { Participant } from './components/Participant';
 import { RoomTimer } from './components/RoomTimer';
@@ -38,12 +37,10 @@ function Pomodoro() {
     if (!roomId) return;
 
     let cancelled = false;
-    const storedParticipantId = getParticipantId(roomId) ?? undefined;
 
-    enterRoom(roomId, storedParticipantId)
+    enterRoom(roomId)
       .then((response) => {
         if (cancelled) return;
-        saveParticipantId(roomId, response.participant.id);
         setSelfParticipantId(response.participant.id);
         setRoom(response.room);
       })
@@ -63,7 +60,7 @@ function Pomodoro() {
 
   const { status: sseStatus } = useRoomSSE(
     roomId ?? undefined,
-    selfParticipantId ?? undefined,
+    selfParticipantId !== null,
     handleRoomState,
   );
 
