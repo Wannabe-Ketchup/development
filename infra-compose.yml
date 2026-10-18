@@ -13,6 +13,49 @@ services:
       - ketchup-network
     restart: always
 
+  prometheus:
+    image: prom/prometheus:v3.13.4
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+    ports:
+      - '127.0.0.1:9090:9090'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    mem_limit: 256m
+    networks:
+      - ketchup-network
+    restart: always
+
+  grafana:
+    image: grafana/grafana:13.2.4
+    container_name: grafana
+    profiles:
+      - dashboard
+    ports:
+      - '127.0.0.1:3001:3000'
+    env_file:
+      - ./grafana/.env
+    environment:
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    mem_limit: 384m
+    depends_on:
+      - prometheus
+    networks:
+      - ketchup-network
+    restart: unless-stopped
+
 networks:
   ketchup-network:
     name: ketchup-network
+
+volumes:
+  prometheus_data:
+  grafana_data:
