@@ -115,6 +115,7 @@ export function RoomEntryPopover() {
             <>
               <input
                 type="text"
+                autoFocus
                 placeholder="초대 코드를 입력하세요"
                 value={inviteCode}
                 onChange={(event) => {
