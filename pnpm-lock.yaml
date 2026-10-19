@@ -132,12 +132,9 @@ importers:
       '@pomodoro/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@squiggle-line/core':
-        specifier: ^0.2.0
-        version: 0.2.0
       '@squiggle-line/react':
-        specifier: ^0.2.0
-        version: 0.2.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 0.3.0
+        version: 0.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0)(terser@5.49.2))
@@ -1246,8 +1243,8 @@ packages:
   '@squiggle-line/core@0.2.0':
     resolution: {integrity: sha512-O2kQyDIJ1QSlRBtEZjF0VRyzX6ih8kP7AYwucMEFN6ajUWlefa1Oj5n3ifZNe7C9iqVpJGdI/9GeX3BpbCQw4w==}
 
-  '@squiggle-line/react@0.2.0':
-    resolution: {integrity: sha512-dWQeqfd8FvO/WW0+0oV5ozkrMPkDA2k6yRX03nfudhf8PXumE2aNLR6fsuvQztndbIilFb1noXOnDvvqTcTSrg==}
+  '@squiggle-line/react@0.3.0':
+    resolution: {integrity: sha512-ueuSDNLJ9OfMZi4dRD1VFY7bvTOaNM0eKLOJ3wZzsfQ60Vls+/QTguksbyHsg+wO+S4AHkbkBcvBdAuQvAGZsg==}
     peerDependencies:
       react: '>=19.0.0'
       react-dom: '>=19.0.0'
@@ -5674,7 +5671,7 @@ snapshots:
 
   '@squiggle-line/core@0.2.0': {}
 
-  '@squiggle-line/react@0.2.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@squiggle-line/react@0.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@squiggle-line/core': 0.2.0
       react: 19.2.8

@@ -20,12 +20,9 @@ const openInviteCodeInput = () => {
 };
 
 const enterWithCode = (code: string) => {
-  fireEvent.change(
-    screen.getByPlaceholderText('초대 링크(코드)를 입력하세요'),
-    {
-      target: { value: code },
-    },
-  );
+  fireEvent.change(screen.getByPlaceholderText('초대 코드를 입력하세요'), {
+    target: { value: code },
+  });
   fireEvent.click(screen.getByRole('button', { name: '입장하기' }));
 };
 
@@ -51,7 +48,7 @@ describe('RoomEntryPopover', () => {
   it('입력창에서 Enter를 여러 번 누르면 누를 때마다 흔들기를 요청한다', () => {
     // given
     openInviteCodeInput();
-    const input = screen.getByPlaceholderText('초대 링크(코드)를 입력하세요');
+    const input = screen.getByPlaceholderText('초대 코드를 입력하세요');
 
     // when
     fireEvent.keyDown(input, { key: 'Enter' });
