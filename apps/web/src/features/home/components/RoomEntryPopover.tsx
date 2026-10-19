@@ -138,7 +138,7 @@ export function RoomEntryPopover() {
                 </button>
                 <button
                   onClick={handleEnterRoom}
-                  className="flex-1 rounded-lg border-2 border-gray px-3 py-2 text-lg"
+                  className="flex-1 rounded-lg border-2 border-black bg-black px-3 py-2 text-lg text-white"
                 >
                   입장하기
                 </button>
