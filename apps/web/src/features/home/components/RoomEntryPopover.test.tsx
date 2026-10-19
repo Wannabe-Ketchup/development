@@ -119,4 +119,75 @@ describe('RoomEntryPopover', () => {
     const expectedRequestCount = 1;
     expect(mockExistsRoom).toHaveBeenCalledTimes(expectedRequestCount);
   });
+
+  it('초대 코드 입력 화면에서 뒤로 가면 선택지 화면으로 돌아간다', () => {
+    // given
+    openInviteCodeInput();
+
+    // when
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }));
+
+    // then
+    const expectedTitle = '어디서 공부할까요?';
+    expect(screen.getByText(expectedTitle)).toBeTruthy();
+  });
+
+  it('입력창에서 Escape를 누르면 선택지 화면으로 돌아간다', () => {
+    // given
+    openInviteCodeInput();
+
+    // when
+    fireEvent.keyDown(screen.getByPlaceholderText('초대 코드를 입력하세요'), {
+      key: 'Escape',
+    });
+
+    // then
+    const expectedTitle = '어디서 공부할까요?';
+    expect(screen.getByText(expectedTitle)).toBeTruthy();
+  });
+
+  it('에러 문구가 표시된 상태에서 뒤로 가면 에러 문구가 사라진다', () => {
+    // given
+    openInviteCodeInput();
+    fireEvent.click(screen.getByRole('button', { name: '입장하기' }));
+
+    // when
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }));
+
+    // then
+    const clearedMessage = '초대 코드를 입력해 주세요.';
+    expect(screen.queryByText(clearedMessage)).toBeNull();
+  });
+
+  it('뒤로 갔다가 다시 들어오면 입력했던 초대 코드가 남아 있다', () => {
+    // given
+    openInviteCodeInput();
+    fireEvent.change(screen.getByPlaceholderText('초대 코드를 입력하세요'), {
+      target: { value: 'room-1' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }));
+
+    // when
+    fireEvent.click(
+      screen.getByRole('button', { name: '초대받은 방 입장하기' }),
+    );
+
+    // then
+    const expectedCode = 'room-1';
+    expect(screen.getByDisplayValue(expectedCode)).toBeTruthy();
+  });
+
+  it('방을 확인하는 중에는 뒤로 갈 수 없다', () => {
+    // given
+    mockExistsRoom.mockReturnValue(new Promise(() => {}));
+    openInviteCodeInput();
+    enterWithCode('room-1');
+
+    // when
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }));
+
+    // then
+    const expectedPlaceholder = '초대 코드를 입력하세요';
+    expect(screen.getByPlaceholderText(expectedPlaceholder)).toBeTruthy();
+  });
 });

@@ -64,6 +64,13 @@ export function RoomEntryPopover() {
     }
   };
 
+  const handleBack = () => {
+    if (isPending) return;
+
+    setStep('option');
+    setError(null);
+  };
+
   return (
     <div
       ref={ref}
@@ -116,15 +123,25 @@ export function RoomEntryPopover() {
                 }}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') handleEnterRoom();
+                  if (event.key === 'Escape') handleBack();
                 }}
                 className="w-full border-b-2 border-gray px-3 py-2 text-lg placeholder-gray outline-none"
               />
-              <button
-                onClick={handleEnterRoom}
-                className="w-full rounded-lg border-2 border-gray px-3 py-2 text-lg"
-              >
-                입장하기
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="rounded-lg border-2 border-gray px-3 py-2 text-lg text-nowrap text-gray"
+                >
+                  뒤로가기
+                </button>
+                <button
+                  onClick={handleEnterRoom}
+                  className="flex-1 rounded-lg border-2 border-gray px-3 py-2 text-lg"
+                >
+                  입장하기
+                </button>
+              </div>
             </>
           )}
         </div>
