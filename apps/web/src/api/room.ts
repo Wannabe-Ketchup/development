@@ -80,3 +80,23 @@ export async function existsRoom(roomId: string): Promise<ExistsRoomResponse> {
 
   return response.json() as Promise<ExistsRoomResponse>;
 }
+
+export async function changeStatusMessage(
+  roomId: string,
+  participantId: string,
+  statusMessage: string,
+): Promise<void> {
+  const response = await fetch(
+    `/api/pomodoro/room/${roomId}/participant/${participantId}/status-message`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statusMessage }),
+    },
+  );
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.message || '상태메시지를 변경하지 못했습니다.');
+  }
+}

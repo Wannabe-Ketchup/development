@@ -63,6 +63,15 @@ export class Room {
     participant.changeNickname(nickname);
   }
 
+  changeStatusMessage(participantId: string, statusMessage: string): void {
+    const participant = this._participants.get(participantId);
+    if (!participant) {
+      throw new NotFoundException('방에 존재하지 않는 참가자입니다.');
+    }
+
+    participant.changeStatusMessage(statusMessage);
+  }
+
   join(participant: Participant): void {
     this.validateCapacity();
     this._participants.set(participant.id, participant);

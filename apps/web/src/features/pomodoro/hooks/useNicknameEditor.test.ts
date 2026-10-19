@@ -153,6 +153,6 @@ describe('useNicknameEditor', () => {
 
     // then
     const expectedNickname = '케첩';
-    await waitFor(() => expect(result.current.nickname).toBe(expectedNickname));
+    await waitFor(() => expect(result.current.value).toBe(expectedNickname));
   });
 });

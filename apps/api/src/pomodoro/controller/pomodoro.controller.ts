@@ -11,11 +11,13 @@ import {
 import { TimerService } from '../service/timer.service';
 import { EnterRoomService } from '../service/enter-room.service';
 import { ChangeNicknameService } from '../service/change-nickname.service';
+import { ChangeStatusMessageService } from '../service/change-status-message.service';
 import type { JoinRoomResponse } from '../dto/join-room-response.dto';
 import type { ChangeNicknameRequest } from '../dto/change-nickname-request.dto';
 import { CreateRoomService } from '../service/create-room.service';
 import { RoomQueryService } from '../service/room-query.service';
 import type { CreateRoomResponse, ExistsRoomResponse } from '@pomodoro/shared';
+import type { ChangeStatusMessageRequest } from '../dto/change-status-message-request.dto';
 
 @Controller('pomodoro')
 export class PomodoroController {
@@ -25,6 +27,7 @@ export class PomodoroController {
     private readonly changeNicknameService: ChangeNicknameService,
     private readonly createRoomService: CreateRoomService,
     private readonly roomQueryService: RoomQueryService,
+    private readonly changeStatusMessageService: ChangeStatusMessageService,
   ) {}
 
   @Get('room/:roomId/exists')
@@ -57,5 +60,19 @@ export class PomodoroController {
   @Post('room')
   createRoom(): CreateRoomResponse {
     return { roomId: this.createRoomService.create() };
+  }
+
+  @Patch('room/:roomId/participant/:participantId/status-message')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  changeStatusMessage(
+    @Param('roomId') roomId: string,
+    @Param('participantId') participantId: string,
+    @Body() body: ChangeStatusMessageRequest,
+  ): void {
+    this.changeStatusMessageService.changeStatusMessage(
+      roomId,
+      participantId,
+      body.statusMessage,
+    );
   }
 }

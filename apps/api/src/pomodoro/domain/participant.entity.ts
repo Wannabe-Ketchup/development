@@ -3,6 +3,7 @@ import {
   NICKNAME_ALLOWED_PATTERN,
   NICKNAME_MAX_LENGTH,
   NICKNAME_MIN_LENGTH,
+  STATUS_MESSAGE_MAX_LENGTH,
   type Participant as ParticipantShape,
 } from '@pomodoro/shared';
 
@@ -43,6 +44,19 @@ export class Participant implements ParticipantShape {
   public changeNickname(nickname: string): void {
     Participant.validateNickname(nickname);
     this._nickname = nickname;
+  }
+
+  private static validateStatusMessage(statusMessage: string): void {
+    if (statusMessage.length > STATUS_MESSAGE_MAX_LENGTH) {
+      throw new BadRequestException(
+        `상태메시지는 ${STATUS_MESSAGE_MAX_LENGTH}자 이내입니다.`,
+      );
+    }
+  }
+
+  public changeStatusMessage(statusMessage: string): void {
+    Participant.validateStatusMessage(statusMessage);
+    this._statusMessage = statusMessage;
   }
 
   get nickname(): string {

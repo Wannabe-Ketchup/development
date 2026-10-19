@@ -9,6 +9,7 @@ import { RoomPresenceService } from './service/room-presence.service';
 import { RoomEventStreamService } from './service/room-event-stream.service';
 import { CreateParticipantService } from './service/create-participant.service';
 import { ChangeNicknameService } from './service/change-nickname.service';
+import { ChangeStatusMessageService } from './service/change-status-message.service';
 import { RoomRepository } from './repository/room.repository';
 import { InMemoryRoomRepository } from './repository/in-memory.room.repository';
 import { CreateRoomService } from './service/create-room.service';
@@ -25,6 +26,7 @@ import { CreateRoomService } from './service/create-room.service';
     CreateParticipantService,
     ChangeNicknameService,
     CreateRoomService,
+    ChangeStatusMessageService,
     { provide: RoomRepository, useClass: InMemoryRoomRepository },
   ],
   exports: [SseService],
