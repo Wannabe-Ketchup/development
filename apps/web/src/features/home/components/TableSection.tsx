@@ -1,21 +1,23 @@
 import { forwardRef } from 'react';
 import { WobblyBox } from '@squiggle-line/react';
-import RoundTable from '@/assets/round_table.svg?react';
-import TomatoStudying from '@/assets/tomato_studying.svg?react';
-import Pencil from '@/assets/pencil.svg?react';
+import RoundTableSvg from '@/assets/round_table.svg?react';
+import TomatoStudyingSvg from '@/assets/tomato_studying.svg?react';
+import PencilSvg from '@/assets/pencil.svg?react';
 import type { TomatoState } from '../hooks/tomatoReducer';
 import { RoomEntryPopover } from './RoomEntryPopover';
 
 interface TableSectionProps {
   tomatoStatus: TomatoState['status'];
+  onCancel: () => void;
 }
 
 export const TableSection = forwardRef<HTMLDivElement, TableSectionProps>(
-  ({ tomatoStatus }, ref) => {
+  ({ tomatoStatus, onCancel }, ref) => {
     return (
       <div className="relative pt-17" ref={ref}>
         {tomatoStatus === 'dragging' && (
           <WobblyBox
+            aria-hidden="true"
             className="pointer-events-none"
             style={{
               position: 'absolute',
@@ -38,14 +40,14 @@ export const TableSection = forwardRef<HTMLDivElement, TableSectionProps>(
         )}
         {tomatoStatus === 'studying' && (
           <div className="absolute inset-x-0 -top-5 mx-auto w-fit">
-            <TomatoStudying />
+            <TomatoStudyingSvg aria-hidden="true" />
             <div className="absolute -right-5 -bottom-1 z-10 size-15 overflow-hidden">
-              <Pencil className="animate-pencil-slide" />
+              <PencilSvg aria-hidden="true" className="animate-pencil-slide" />
             </div>
-            <RoomEntryPopover />
+            <RoomEntryPopover onClose={onCancel} />
           </div>
         )}
-        <RoundTable className="relative" />
+        <RoundTableSvg aria-hidden="true" className="relative" />
       </div>
     );
   },

@@ -64,15 +64,26 @@ export function useTomatoDrag() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      dispatch({ type: 'ACTIVATE' });
+    }
+  };
+
+  const cancel = () => dispatch({ type: 'CANCEL' });
+
   return {
     tomatoState: state,
     tableRef,
+    cancel,
     handlers: {
       onPointerDown: handlePointerDown,
       onPointerMove: handlePointerMove,
       onPointerUp: handlePointerUp,
       onPointerCancel: handlePointerCancel,
       onLostPointerCapture: handleLostPointerCapture,
+      onKeyDown: handleKeyDown,
     },
   };
 }

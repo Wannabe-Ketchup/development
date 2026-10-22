@@ -1,7 +1,8 @@
+import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/cn';
-import Sofa from '@/assets/sofa.svg?react';
-import TomatoSleeping from '@/assets/tomato_sleeping.svg?react';
-import SnotBubble from '@/assets/snot_bubble.svg?react';
+import SofaSvg from '@/assets/sofa.svg?react';
+import TomatoSleepingSvg from '@/assets/tomato_sleeping.svg?react';
+import SnotBubbleSvg from '@/assets/snot_bubble.svg?react';
 import type { TomatoState } from '../hooks/tomatoReducer';
 import { useTomatoDrag } from '../hooks/useTomatoDrag';
 
@@ -11,10 +12,25 @@ interface SofaSectionProps {
 }
 
 export function SofaSection({ tomatoStatus, handlers }: SofaSectionProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const prevStatus = useRef(tomatoStatus);
+
+  useEffect(() => {
+    if (prevStatus.current !== 'sleeping' && tomatoStatus === 'sleeping') {
+      buttonRef.current?.focus();
+    }
+    prevStatus.current = tomatoStatus;
+  }, [tomatoStatus]);
+
   return (
     <div className="relative">
-      <Sofa />
-      <div
+      <SofaSvg aria-hidden="true" />
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-label="공부 시작"
+        aria-hidden={tomatoStatus !== 'sleeping' || undefined}
+        tabIndex={tomatoStatus === 'sleeping' ? 0 : -1}
         className={cn(
           'absolute top-1/2 left-1/2 -translate-x-1/6 -translate-y-1/2 cursor-grab active:cursor-grabbing',
           tomatoStatus === 'sleeping'
@@ -23,11 +39,11 @@ export function SofaSection({ tomatoStatus, handlers }: SofaSectionProps) {
         )}
         {...handlers}
       >
-        <TomatoSleeping />
+        <TomatoSleepingSvg />
         <div className="absolute top-7 left-9 size-7.5 overflow-hidden">
-          <SnotBubble className="animate-snot-slide" />
+          <SnotBubbleSvg aria-hidden="true" className="animate-snot-slide" />
         </div>
-      </div>
+      </button>
     </div>
   );
 }
