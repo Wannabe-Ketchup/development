@@ -1,5 +1,5 @@
 import type { Participant as ParticipantData } from '@pomodoro/shared';
-import Chair from '@/assets/chair.svg?react';
+import ChairSvg from '@/assets/chair.svg?react';
 import { Tomato } from './Tomato';
 import { ParticipantNickname } from './ParticipantNickname';
 import { ParticipantStatusMessage } from './ParticipantStatusMessage';
@@ -20,22 +20,20 @@ export function Participant({
   isSelf,
 }: ParticipantProps) {
   return (
-    <div
+    <li
+      aria-label={isSelf ? `나, ${participant.nickname}` : participant.nickname}
       className="relative transition-transform duration-300 ease-out"
       style={{ transform: `translateX(${translateX}px)` }}
     >
       <div>
-        <Chair className="absolute bottom-0 left-1/2 w-36 max-w-none -translate-x-1/2" />
-
+        <ChairSvg
+          aria-hidden="true"
+          className="absolute bottom-0 left-1/2 w-36 max-w-none -translate-x-1/2"
+        />
         <div className="absolute bottom-50.5 left-1/2 flex w-28 -translate-x-1/2 flex-col items-center gap-3">
-          <ParticipantStatusMessage
-            roomId={roomId}
-            participantId={participant.id}
-            message={participant.statusMessage}
-            isSelf={isSelf}
-          />
-
-          <div className="w-max">
+          {/* DOM 순서: 닉네임→상태 (스크린 리더용)
+              시각 순서: 상태→닉네임→토마토 (order로 제어) */}
+          <div className="order-2 w-max">
             {isSelf ? (
               <ParticipantNickname
                 roomId={roomId}
@@ -50,9 +48,17 @@ export function Participant({
               </div>
             )}
           </div>
-          <Tomato isPending={isPending} />
+
+          <ParticipantStatusMessage
+            roomId={roomId}
+            participantId={participant.id}
+            message={participant.statusMessage}
+            isSelf={isSelf}
+            className="order-1"
+          />
+          <Tomato isPending={isPending} className="order-3" />
         </div>
       </div>
-    </div>
+    </li>
   );
 }

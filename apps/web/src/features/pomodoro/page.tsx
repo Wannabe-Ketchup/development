@@ -6,12 +6,10 @@ import wall2560 from '@/assets/wall-2560.webp';
 import floor1280 from '@/assets/floor-1280.webp';
 import floor1920 from '@/assets/floor-1920.webp';
 import floor2560 from '@/assets/floor-2560.webp';
-import Desk from '@/assets/desk.svg?react';
-import Lamp from '@/assets/lamp.svg?react';
-import Shelf from '@/assets/shelf.svg?react';
+import DeskSvg from '@/assets/desk.svg?react';
+import ShelfSvg from '@/assets/shelf.svg?react';
 import { WALL_SIZES, FLOOR_SIZES } from './image-sizes';
 import { LPPlayer } from './components/LPPlayer';
-import { cn } from '@/lib/cn';
 import { useTheme } from './hooks/useTheme';
 import { useRoomSSE } from './hooks/useRoomSSE';
 import { useRoomId } from '@/lib/room-id';
@@ -20,6 +18,7 @@ import { getParticipantId, saveParticipantId } from './lib/participant-storage';
 import { getSeatTranslateX } from './lib/seat-layout';
 import { Participant } from './components/Participant';
 import { RoomTimer } from './components/RoomTimer';
+import { Lamp } from './components/Lamp';
 
 const SEAT_SPACING_PX = 182;
 
@@ -76,14 +75,14 @@ function Pomodoro() {
           src={wall2560}
           srcSet={`${wall1280} 1280w, ${wall1920} 1920w, ${wall2560} 2560w`}
           sizes={WALL_SIZES}
-          alt="벽 이미지"
+          alt=""
         />
         <img
           className="h-full min-h-0 w-full object-cover object-top"
           src={floor2560}
           srcSet={`${floor1280} 1280w, ${floor1920} 1920w, ${floor2560} 2560w`}
           sizes={FLOOR_SIZES}
-          alt="바닥 이미지"
+          alt=""
         />
 
         {theme === 'dark' && <div className="absolute inset-0 bg-black/60" />}
@@ -95,17 +94,11 @@ function Pomodoro() {
         {roomId && room && <RoomTimer timer={room.timer} />}
 
         <div className="absolute top-[calc(60%+74px)] left-1/2 z-10 -translate-x-1/2">
-          <Desk />
-          <Lamp
-            className={cn(
-              'pointer-events-none absolute bottom-18 -left-38 cursor-pointer *:pointer-events-auto [&_.lamp-outline]:opacity-0 hover:[&_.lamp-outline]:opacity-100',
-              theme === 'dark' ? 'text-lamp-off' : 'text-lamp-on',
-            )}
-            onClick={toggleTheme}
-          />
+          <DeskSvg aria-hidden="true" />
+          <Lamp theme={theme} onToggle={toggleTheme} />
         </div>
         <div className="absolute bottom-[40%] left-[calc(50%+428px)]">
-          <Shelf />
+          <ShelfSvg aria-hidden="true" />
           <LPPlayer />
         </div>
 
@@ -131,7 +124,10 @@ function Pomodoro() {
 
         {/* 참여자마다 의자+캐릭터를 함께 렌더링한다. 책상(z-10)보다 아래(z-0)에 둬도, 캐릭터는 디자인상 책상과 겹치지 않아 의자 다리만 책상 뒤로 가려진다 */}
         {roomId && room && (
-          <div className="absolute top-[calc(60%+232px)] left-1/2 z-0 h-0 w-0">
+          <ul
+            aria-label="참가자 목록"
+            className="absolute top-[calc(60%+232px)] left-1/2 z-0 h-0 w-0"
+          >
             {room.participants.map((participant, index) => (
               <Participant
                 key={participant.id}
@@ -146,7 +142,7 @@ function Pomodoro() {
                 isSelf={participant.id === selfParticipantId}
               />
             ))}
-          </div>
+          </ul>
         )}
 
         {/* 입장은 됐지만 실시간 연결(SSE)이 끊긴 경우 */}

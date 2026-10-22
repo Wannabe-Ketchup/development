@@ -1,4 +1,4 @@
-import TomatoIcon from '@/assets/tomato.svg?react';
+import TomatoSvg from '@/assets/tomato.svg?react';
 import { cn } from '@/lib/cn';
 
 interface TomatoProps {
@@ -10,7 +10,7 @@ export function Tomato({ isPending, className }: TomatoProps) {
   return (
     <div className={cn('flex flex-col items-center', className)}>
       <div className={cn('relative', isPending && 'opacity-40 grayscale')}>
-        <TomatoIcon className="w-28 max-w-none" />
+        <TomatoSvg aria-hidden="true" className="w-28 max-w-none" />
 
         {isPending && (
           <div
