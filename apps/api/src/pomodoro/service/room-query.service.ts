@@ -15,4 +15,8 @@ export class RoomQueryService {
 
     return room;
   }
+
+  exists(roomId: string): boolean {
+    return this.roomRepository.findById(roomId) !== undefined;
+  }
 }
