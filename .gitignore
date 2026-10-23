@@ -27,8 +27,8 @@ lerna-debug.log*
 .tmp
 
 # local-only
-.claude/
+.claude/settings.local.json
 CONTRIBUTING.md
-docs/
 .idea/
 .agents/
+.harness
