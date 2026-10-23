@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { WobblyBox } from '@squiggle-line/react';
 import RoundTable from '@/assets/round_table.svg?react';
 import TomatoStudying from '@/assets/tomato_studying.svg?react';
 import Pencil from '@/assets/pencil.svg?react';
@@ -13,30 +14,27 @@ export const TableSection = forwardRef<HTMLDivElement, TableSectionProps>(
   ({ tomatoStatus }, ref) => {
     return (
       <div className="relative pt-17" ref={ref}>
-        {/* TODO: 추후 squiggle 라이브러리 배포 시 테두리 교체 */}
         {tomatoStatus === 'dragging' && (
-          <svg
-            className="pointer-events-none absolute"
+          <WobblyBox
+            className="pointer-events-none"
             style={{
-              inset: -60,
-              width: 'calc(100% + 120px)',
-              height: 'calc(100% + 120px)',
+              position: 'absolute',
+              display: 'block',
+              inset: -48,
+              width: 'calc(100% + 96px)',
+              height: 'calc(100% + 96px)',
             }}
-            overflow="visible"
+            wiggle={2}
+            padding={12}
+            borderRadius={11}
+            strokeWidth={4}
+            dashLength={18}
+            dashGap={18}
+            strokeDashoffset={20}
+            pathClassName="stroke-gray"
           >
-            <rect
-              x="2"
-              y="2"
-              width="calc(100% - 4px)"
-              height="calc(100% - 4px)"
-              rx="11"
-              fill="none"
-              stroke="#bababa"
-              strokeWidth="4"
-              strokeDasharray="18 18"
-              strokeLinecap="round"
-            />
-          </svg>
+            <div className="size-full" />
+          </WobblyBox>
         )}
         {tomatoStatus === 'studying' && (
           <div className="absolute inset-x-0 -top-5 mx-auto w-fit">
