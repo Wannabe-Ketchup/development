@@ -14,8 +14,10 @@ import { InMemoryRoomRepository } from './repository/in-memory.room.repository';
 import { TimerScheduler } from './scheduler/timer.scheduler';
 import { InMemoryTimerScheduler } from './scheduler/in-memory.timer.scheduler';
 import { CreateRoomService } from './service/create-room.service';
+import { MetricsModule } from '../metrics/metrics.module';
 
 @Module({
+  imports: [MetricsModule],
   controllers: [PomodoroController, PomodoroSseController],
   providers: [
     SseService,

@@ -9,6 +9,7 @@ import { HttpLoggerMiddleware } from './common/middleware/http-logger.middleware
 import { AlsModule } from './common/als.module';
 import { AlsMiddleware } from './common/middleware/als.middleware';
 import { AuthModule } from './auth/auth.module';
+import { MetricsModule } from './metrics/metrics.module';
 import { APP_GUARD } from '@nestjs/core';
 import { SessionGuard } from './auth/guard/session.guard';
 
@@ -22,6 +23,7 @@ import { SessionGuard } from './auth/guard/session.guard';
     AlsModule,
     LoggerModule,
     AuthModule,
+    MetricsModule,
   ],
   providers: [
     // @Public()이 없는 모든 핸들러는 유효한 로그인 세션이 있어야 한다.
