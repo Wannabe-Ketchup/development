@@ -1,6 +1,7 @@
 import { type KeyboardEvent } from 'react';
-import EditIcon from '@/assets/edit.svg?react';
-import OkIcon from '@/assets/ok.svg?react';
+import EditSvg from '@/assets/edit.svg?react';
+import OkSvg from '@/assets/ok.svg?react';
+import { IconButton } from '@/components/IconButton';
 import { cn } from '@/lib/cn';
 import { useNicknameEditor } from '../hooks/useNicknameEditor';
 
@@ -52,14 +53,13 @@ export function ParticipantNickname({
             <span className="text-2xl leading-[normal] tracking-[10%]">
               {displayedNickname}
             </span>
-            <button
-              type="button"
-              aria-label="닉네임 수정"
+            <IconButton
+              label="닉네임 수정"
+              icon={EditSvg}
+              iconClassName="size-4"
               onClick={startEditing}
               className="-m-2 p-2"
-            >
-              <EditIcon className="size-4" />
-            </button>
+            />
           </>
         ) : (
           <>
@@ -72,15 +72,14 @@ export function ParticipantNickname({
               onBlur={handleBlur}
               className="field-sizing-content min-w-0 bg-transparent text-2xl leading-[normal] tracking-[2.4px] outline-none"
             />
-            <button
-              type="button"
-              aria-label="닉네임 확인"
+            <IconButton
+              label="닉네임 확인"
+              icon={OkSvg}
+              iconClassName="size-4"
               onMouseDown={(event) => event.preventDefault()}
               onClick={confirmEditing}
               className="-m-2 p-2"
-            >
-              <OkIcon className="size-4" />
-            </button>
+            />
           </>
         )}
       </div>

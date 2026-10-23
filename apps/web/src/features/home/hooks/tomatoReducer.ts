@@ -7,7 +7,8 @@ export type TomatoAction =
   | { type: 'DRAG_START'; pos: { x: number; y: number } }
   | { type: 'DRAG_MOVE'; pos: { x: number; y: number } }
   | { type: 'DROP'; isOverTable: boolean }
-  | { type: 'CANCEL' };
+  | { type: 'CANCEL' }
+  | { type: 'ACTIVATE' };
 
 export const initialTomatoState: TomatoState = { status: 'sleeping' };
 
@@ -26,5 +27,8 @@ export function tomatoReducer(
       return { status: action.isOverTable ? 'studying' : 'sleeping' };
     case 'CANCEL':
       return { status: 'sleeping' };
+    case 'ACTIVATE':
+      if (state.status !== 'sleeping') return state;
+      return { status: 'studying' };
   }
 }

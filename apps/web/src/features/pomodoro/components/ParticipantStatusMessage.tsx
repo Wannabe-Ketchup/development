@@ -2,6 +2,7 @@ import { type KeyboardEvent } from 'react';
 import { WobblySpeechBubble } from '@squiggle-line/react';
 import EditIcon from '@/assets/edit.svg?react';
 import OkIcon from '@/assets/ok.svg?react';
+import { IconButton } from '@/components/IconButton';
 import { cn } from '@/lib/cn';
 import { useStatusMessageEditor } from '../hooks/useStatusMessageEditor';
 
@@ -9,12 +10,14 @@ interface ParticipantStatusMessageProps {
   roomId: string;
   message: string;
   isSelf: boolean;
+  className?: string;
 }
 
 export function ParticipantStatusMessage({
   roomId,
   message,
   isSelf,
+  className,
 }: ParticipantStatusMessageProps) {
   const {
     value: statusMessage,
@@ -55,7 +58,12 @@ export function ParticipantStatusMessage({
   };
 
   return (
-    <div className="group relative inline-flex flex-col items-center">
+    <div
+      className={cn(
+        'group relative inline-flex flex-col items-center',
+        className,
+      )}
+    >
       <WobblySpeechBubble
         key={isEditing ? 'edit' : 'view'}
         className={cn(
@@ -92,8 +100,9 @@ export function ParticipantStatusMessage({
 
       {isSelf &&
         (!isEditing ? (
-          <button
-            type="button"
+          <IconButton
+            label="상태 메시지 수정"
+            icon={EditIcon}
             onClick={startEditing}
             className={cn(
               'absolute top-0 right-0 z-10 translate-x-1/2 -translate-y-1/2 rounded-full p-2 text-white',
@@ -101,21 +110,19 @@ export function ParticipantStatusMessage({
               'group-focus-within:opacity-100',
               buttonBg,
             )}
-          >
-            <EditIcon />
-          </button>
+          />
         ) : (
-          <button
-            type="button"
+          <IconButton
+            label="상태 메시지 확인"
+            icon={OkIcon}
+            iconClassName="size-4 text-white"
             onMouseDown={(e) => e.preventDefault()}
             onClick={confirmEditing}
             className={cn(
               'absolute top-0 right-0 z-10 translate-x-1/2 -translate-y-1/2 rounded-full p-2',
               buttonBg,
             )}
-          >
-            <OkIcon className="size-4 text-white" />
-          </button>
+          />
         ))}
 
       {error && (

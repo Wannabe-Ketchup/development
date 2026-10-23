@@ -132,20 +132,6 @@ describe('RoomEntryPopover', () => {
     expect(screen.getByText(expectedTitle)).toBeTruthy();
   });
 
-  it('입력창에서 Escape를 누르면 선택지 화면으로 돌아간다', () => {
-    // given
-    openInviteCodeInput();
-
-    // when
-    fireEvent.keyDown(screen.getByPlaceholderText('초대 코드를 입력하세요'), {
-      key: 'Escape',
-    });
-
-    // then
-    const expectedTitle = '어디서 공부할까요?';
-    expect(screen.getByText(expectedTitle)).toBeTruthy();
-  });
-
   it('에러 문구가 표시된 상태에서 뒤로 가면 에러 문구가 사라진다', () => {
     // given
     openInviteCodeInput();
@@ -189,5 +175,45 @@ describe('RoomEntryPopover', () => {
     // then
     const expectedPlaceholder = '초대 코드를 입력하세요';
     expect(screen.getByPlaceholderText(expectedPlaceholder)).toBeTruthy();
+  });
+
+  it('방 선택 화면에서 Escape를 누르면 토마토가 휴식을 취하는 상태로 돌아간다', () => {
+    // given
+    const handleClose = vi.fn();
+    render(<RoomEntryPopover onClose={handleClose} />);
+    const container = screen.getByText('어디서 공부할까요?').closest('div')!;
+
+    // when
+    fireEvent.keyDown(container, { key: 'Escape' });
+
+    // then
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('초대 코드 입력 화면에서 Escape를 누르면 토마토가 휴식을 취하는 상태로 돌아간다', () => {
+    // given
+    const handleClose = vi.fn();
+    render(<RoomEntryPopover onClose={handleClose} />);
+    fireEvent.click(
+      screen.getByRole('button', { name: '초대받은 방 입장하기' }),
+    );
+
+    // when
+    fireEvent.keyDown(screen.getByPlaceholderText('초대 코드를 입력하세요'), {
+      key: 'Escape',
+    });
+
+    // then
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('방 선택 화면이 열리면 첫 번째 버튼에 포커스가 이동한다', () => {
+    // given / when
+    render(<RoomEntryPopover />);
+
+    // then
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: '새로운 방 만들기' }),
+    );
   });
 });

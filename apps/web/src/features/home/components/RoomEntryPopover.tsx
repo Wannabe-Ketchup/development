@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { WobblySpeechBubble } from '@squiggle-line/react';
 import { EntryOptionButton } from './EntryOptionButton';
 import { createRoom, existsRoom } from '@/api/room';
@@ -8,12 +8,17 @@ import { goToRoom } from '@/lib/room-id';
 
 type Step = 'option' | 'input';
 
-export function RoomEntryPopover() {
+interface RoomEntryPopoverProps {
+  onClose?: () => void;
+}
+
+export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
   const [step, setStep] = useState<Step>('option');
   const [inviteCode, setInviteCode] = useState('');
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { ref, shake } = useShake<HTMLDivElement>();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleCreateRoom = async () => {
     if (isPending) return;
@@ -34,6 +39,7 @@ export function RoomEntryPopover() {
   const rejectEntry = (message: string) => {
     setError(message);
     shake();
+    inputRef.current?.focus();
   };
 
   const handleEnterRoom = async () => {
@@ -72,15 +78,23 @@ export function RoomEntryPopover() {
   };
 
   return (
+    // oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- intentional event delegation for Escape key
     <div
       ref={ref}
       className="absolute -top-3 left-1/2 -translate-x-1/2 -translate-y-full"
+      onKeyDown={(e) => {
+        if (step === 'option' && e.key === 'Escape') {
+          onClose?.();
+        }
+      }}
     >
-      {error && (
-        <div className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full text-nowrap text-error">
-          {error}
-        </div>
-      )}
+      <div
+        id="room-entry-error"
+        role="alert"
+        className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full text-nowrap text-error"
+      >
+        {error ?? ''}
+      </div>
       <WobblySpeechBubble
         frequency={500}
         wiggle={3}
@@ -98,24 +112,39 @@ export function RoomEntryPopover() {
           className={cn('flex flex-col gap-3 px-1', step === 'input' && 'w-70')}
         >
           {step === 'option' ? (
-            <>
-              <div className="text-2xl text-nowrap">어디서 공부할까요?</div>
-              <EntryOptionButton onClick={handleCreateRoom}>
-                {isPending ? '방 만드는 중...' : '새로운 방 만들기'}
-              </EntryOptionButton>
-              <EntryOptionButton
-                onClick={() => {
-                  setStep('input');
-                }}
-              >
-                초대받은 방 입장하기
-              </EntryOptionButton>
-            </>
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- action buttons, not form controls
+            <div role="group" aria-labelledby="room-entry-title">
+              <div id="room-entry-title" className="mb-3 text-2xl text-nowrap">
+                어디서 공부할까요?
+              </div>
+              <div className="flex flex-col gap-3">
+                <EntryOptionButton
+                  autoFocus
+                  aria-disabled={isPending || undefined}
+                  aria-busy={isPending || undefined}
+                  onClick={handleCreateRoom}
+                >
+                  {isPending ? '방 만드는 중...' : '새로운 방 만들기'}
+                </EntryOptionButton>
+                <EntryOptionButton
+                  aria-disabled={isPending || undefined}
+                  aria-busy={isPending || undefined}
+                  onClick={() => {
+                    setStep('input');
+                  }}
+                >
+                  초대받은 방 입장하기
+                </EntryOptionButton>
+              </div>
+            </div>
           ) : (
             <>
               <input
+                ref={inputRef}
                 type="text"
                 autoFocus
+                aria-invalid={!!error || undefined}
+                aria-describedby={error ? 'room-entry-error' : undefined}
                 placeholder="초대 코드를 입력하세요"
                 value={inviteCode}
                 onChange={(event) => {
@@ -124,7 +153,7 @@ export function RoomEntryPopover() {
                 }}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') handleEnterRoom();
-                  if (event.key === 'Escape') handleBack();
+                  if (event.key === 'Escape') onClose?.();
                 }}
                 className="w-full border-b-2 border-gray px-3 py-2 text-lg placeholder-gray outline-none"
               />
@@ -137,6 +166,8 @@ export function RoomEntryPopover() {
                   뒤로가기
                 </button>
                 <button
+                  aria-disabled={isPending || undefined}
+                  aria-busy={isPending || undefined}
                   onClick={handleEnterRoom}
                   className="flex-1 rounded-lg border-2 border-black bg-black px-3 py-2 text-lg text-white"
                 >

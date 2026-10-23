@@ -9,7 +9,11 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install chromium",
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@pomodoro/shared": "workspace:*",
@@ -22,6 +26,7 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",
