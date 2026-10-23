@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RoomRepository } from '../repository/room.repository';
 import { RoomQueryService } from './room-query.service';
-import { RoomPresenceService } from './room-presence.service';
+import { RoomPresenceTracker } from './room-presence.tracker';
 import { JoinRoomResponse } from '../dto/join-room-response.dto';
 import { RoomDto } from '../dto/room.dto';
 import { CreateParticipantService } from './create-participant.service';
@@ -14,7 +14,7 @@ export class EnterRoomService {
     private readonly roomQueryService: RoomQueryService,
     private readonly roomRepository: RoomRepository,
     private readonly createParticipantService: CreateParticipantService,
-    private readonly roomPresenceService: RoomPresenceService,
+    private readonly roomPresenceTracker: RoomPresenceTracker,
   ) {}
 
   joinRoom(roomId: string, participantId?: string): JoinRoomResponse {
@@ -46,7 +46,7 @@ export class EnterRoomService {
     room.join(participant);
 
     this.roomRepository.save(room);
-    this.roomPresenceService.registerPendingParticipant(roomId, participant.id);
+    this.roomPresenceTracker.registerPendingParticipant(roomId, participant.id);
 
     return {
       participant: { id: participant.id, nickname: participant.nickname },

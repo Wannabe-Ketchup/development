@@ -3,7 +3,7 @@ import { NotFoundException, type MessageEvent } from '@nestjs/common';
 import { ROOM_MODE } from '@pomodoro/shared';
 import { RoomEventStreamService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-event-stream.service';
 import { SseService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/sse.service';
-import { RoomPresenceService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-presence.service';
+import { RoomPresenceTracker } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-presence.tracker';
 import { RoomQueryService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-query.service';
 import { RoomDto } from '../../../src/pomodoro/service/../dto/room.dto';
 import { Room } from '../../../src/pomodoro/service/../domain/room.entity';
@@ -27,8 +27,9 @@ describe('RoomEventStreamService.streamEvents', () => {
   let findExistingRoom: jest.Mock;
   let roomQueryService: RoomQueryService;
 
-  let confirmParticipant: jest.Mock;
-  let roomPresenceService: RoomPresenceService;
+  let connectParticipant: jest.Mock;
+  let disconnectParticipant: jest.Mock;
+  let roomPresenceTracker: RoomPresenceTracker;
 
   let subscribe: jest.Mock;
   let emit: jest.Mock;
@@ -46,10 +47,12 @@ describe('RoomEventStreamService.streamEvents', () => {
       .spyOn(RoomDto, 'fromEntity')
       .mockReturnValue(roomSnapshot as unknown as RoomDto);
 
-    confirmParticipant = jest.fn();
-    roomPresenceService = {
-      confirmParticipant,
-    } as unknown as RoomPresenceService;
+    connectParticipant = jest.fn();
+    disconnectParticipant = jest.fn();
+    roomPresenceTracker = {
+      connectParticipant,
+      disconnectParticipant,
+    } as unknown as RoomPresenceTracker;
 
     subscribe = jest.fn();
     emit = jest.fn();
@@ -62,7 +65,7 @@ describe('RoomEventStreamService.streamEvents', () => {
 
     service = new RoomEventStreamService(
       sseService,
-      roomPresenceService,
+      roomPresenceTracker,
       roomQueryService,
     );
   });
@@ -77,14 +80,11 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   it('최초로 확정된 참가자의 스트림을 요청하면 방 전체에 최신 상태가 즉시 브로드캐스트된다', () => {
     // given
-    confirmParticipant.mockReturnValue(true);
+    connectParticipant.mockReturnValue(true);
     subscribe.mockReturnValue(NEVER);
 
     // when
-    // 구독 여부와 무관하게, streamEvents() 호출 자체가 브로드캐스트를 트리거해야 한다.
-    // (구독 시점에 브로드캐스트하는 방식은 구독이 완전히 연결되기 전에 실행돼
-    //  본인이 자기 방송을 못 받는 문제가 있어서 이렇게 바꿨다 — 아래 테스트로 검증)
-    service.streamEvents(roomId, participantId);
+    service.streamEvents(roomId, participantId).subscribe();
 
     // then
     expect(emit).toHaveBeenCalledWith(roomId, roomStateEvent);
@@ -92,7 +92,7 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   it('최초로 확정된 참가자 본인도 자신의 스트림에서 최신 상태를 받는다', async () => {
     // given
-    confirmParticipant.mockReturnValue(true);
+    connectParticipant.mockReturnValue(true);
     subscribe.mockReturnValue(NEVER);
     const personalMessageEvent = {
       type: 'room_state',
@@ -111,7 +111,7 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   it('재연결/재사용된 참가자는 방송을 트리거하지 않는다', () => {
     // given
-    confirmParticipant.mockReturnValue(false);
+    connectParticipant.mockReturnValue(false);
     subscribe.mockReturnValue(NEVER);
     createOwnSnapshotEvent.mockReturnValue({
       type: 'room_state',
@@ -119,7 +119,7 @@ describe('RoomEventStreamService.streamEvents', () => {
     });
 
     // when
-    service.streamEvents(roomId, participantId);
+    service.streamEvents(roomId, participantId).subscribe();
 
     // then
     expect(emit).not.toHaveBeenCalled();
@@ -127,7 +127,7 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   it('재연결/재사용된 참가자는 개인 전용 스냅샷만 받고, 방 전체에 브로드캐스트되지 않는다', async () => {
     // given
-    confirmParticipant.mockReturnValue(false);
+    connectParticipant.mockReturnValue(false);
     subscribe.mockReturnValue(NEVER);
     const personalMessageEvent = {
       type: 'room_state',
@@ -147,7 +147,7 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   it('재연결/재사용된 참가자도 그 이후 방에서 발생하는 브로드캐스트는 계속 수신한다', () => {
     // given
-    confirmParticipant.mockReturnValue(false);
+    connectParticipant.mockReturnValue(false);
     createOwnSnapshotEvent.mockReturnValue({
       type: 'room_state',
       data: roomSnapshot,

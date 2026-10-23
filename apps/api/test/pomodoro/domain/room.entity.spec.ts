@@ -100,6 +100,26 @@ describe('Room', () => {
     expect(() => room.join(newParticipant)).toThrow(BadRequestException);
   });
 
+  it('정원이 찬 방에서 참가자가 나가면 새 참가자가 들어올 수 있다 (CAP-02)', () => {
+    // given
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const room = Room.create('roomId');
+    room.join(Participant.create('1', 'name1', joinedAt));
+    room.join(Participant.create('2', 'name2', joinedAt));
+    room.join(Participant.create('3', 'name3', joinedAt));
+    room.join(Participant.create('4', 'name4', joinedAt));
+    const newParticipant = Participant.create('5', 'name5', joinedAt);
+
+    // when
+    room.leave('1');
+    room.join(newParticipant);
+
+    // then
+    const expectedSize = 4;
+    expect(room.participants.size).toBe(expectedSize);
+    expect(room.participants.get('5')).toBe(newParticipant);
+  });
+
   it('같은 방의 다른 참가자가 쓰지 않는 닉네임이면 변경할 수 있다.', () => {
     // given
     const roomId = 'roomId';

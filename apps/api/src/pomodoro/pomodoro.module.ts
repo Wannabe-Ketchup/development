@@ -5,7 +5,8 @@ import { SseService } from './service/sse.service';
 import { TimerService } from './service/timer.service';
 import { EnterRoomService } from './service/enter-room.service';
 import { RoomQueryService } from './service/room-query.service';
-import { RoomPresenceService } from './service/room-presence.service';
+import { RoomPresenceTracker } from './service/room-presence.tracker';
+import { LeaveRoomService } from './service/leave-room.service';
 import { RoomEventStreamService } from './service/room-event-stream.service';
 import { CreateParticipantService } from './service/create-participant.service';
 import { ChangeNicknameService } from './service/change-nickname.service';
@@ -25,7 +26,8 @@ import { MetricsModule } from '../metrics/metrics.module';
     TimerService,
     EnterRoomService,
     RoomQueryService,
-    RoomPresenceService,
+    RoomPresenceTracker,
+    LeaveRoomService,
     RoomEventStreamService,
     CreateParticipantService,
     ChangeNicknameService,

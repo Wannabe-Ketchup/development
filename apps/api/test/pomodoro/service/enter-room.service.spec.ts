@@ -2,7 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { ROOM_MODE } from '@pomodoro/shared';
 import { EnterRoomService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/enter-room.service';
 import { RoomQueryService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-query.service';
-import { RoomPresenceService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-presence.service';
+import { RoomPresenceTracker } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-presence.tracker';
 import { RoomRepository } from '../../../src/pomodoro/service/../repository/room.repository';
 import { Room } from '../../../src/pomodoro/service/../domain/room.entity';
 import { Participant } from '../../../src/pomodoro/service/../domain/participant.entity';
@@ -56,7 +56,7 @@ describe('EnterRoomService.joinRoom', () => {
   let generateRandomNickname: jest.SpyInstance;
 
   let registerPendingParticipant: jest.Mock;
-  let roomPresenceService: RoomPresenceService;
+  let roomPresenceTracker: RoomPresenceTracker;
 
   let service: EnterRoomService;
 
@@ -75,15 +75,15 @@ describe('EnterRoomService.joinRoom', () => {
     createParticipantService = { create };
 
     registerPendingParticipant = jest.fn();
-    roomPresenceService = {
+    roomPresenceTracker = {
       registerPendingParticipant,
-    };
+    } as unknown as RoomPresenceTracker;
 
     service = new EnterRoomService(
       roomQueryService,
       roomRepository,
       createParticipantService,
-      roomPresenceService,
+      roomPresenceTracker,
     );
 
     generateRandomNickname = jest.spyOn(
