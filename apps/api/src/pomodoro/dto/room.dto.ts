@@ -15,7 +15,14 @@ export class RoomDto implements Room {
       room.roomId,
       room.mode,
       room.currentCycle,
-      room.timer,
+      {
+        status: room.timer.status,
+        focusTimeSec: room.timer.focusTimeSec,
+        breakTimeSec: room.timer.breakTimeSec,
+        totalCycle: room.timer.totalCycle,
+        timerStartedAt: room.timer.timerStartedAt,
+        remainingTimeSec: room.timer.remainingTimeSec,
+      },
       [...room.participants.values()].map((participant) => ({
         id: participant.id,
         nickname: participant.nickname,
