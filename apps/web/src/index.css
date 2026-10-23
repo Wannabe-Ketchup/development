@@ -26,23 +26,6 @@
 
   --font-dearfromsol: 'DearFromsol';
 
-  --animate-shake: shake 0.3s ease-in-out;
-
-  @keyframes shake {
-    0%,
-    100% {
-      transform: translateX(0);
-    }
-    20%,
-    60% {
-      transform: translateX(-3px);
-    }
-    40%,
-    80% {
-      transform: translateX(3px);
-    }
-  }
-
   --cursor-default: url('./assets/cursor_default.svg') 4 4, default;
   --cursor-pointer: url('./assets/cursor_pointer.svg') 4 4, pointer;
   --cursor-grab: url('./assets/cursor_grab.svg') 4 4, grab;
@@ -87,7 +70,23 @@ input[type='text'] {
   }
 }
 
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-3px);
+  }
+  40%,
+  80% {
+    transform: translateX(3px);
+  }
+}
+
 @theme {
+  --animate-shake: shake 0.3s ease-in-out 2;
   --animate-snot-slide: snot-slide 1.5s steps(5) infinite;
   --animate-pencil-slide: pencil-slide 1.5s steps(3) infinite;
   --animate-tomato-surprised-slide: tomato-surprised-slide 0.5s steps(2)

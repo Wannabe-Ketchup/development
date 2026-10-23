@@ -14,7 +14,7 @@ import { LPPlayer } from './components/LPPlayer';
 import { cn } from '@/lib/cn';
 import { useTheme } from './hooks/useTheme';
 import { useRoomSSE } from './hooks/useRoomSSE';
-import { useRoomId } from './lib/room-id';
+import { useRoomId } from '@/lib/room-id';
 import { enterRoom } from '@/api/room';
 import { getParticipantId, saveParticipantId } from './lib/participant-storage';
 import { getSeatTranslateX } from './lib/seat-layout';

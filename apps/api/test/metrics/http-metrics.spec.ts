@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   Param,
 } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { Registry } from 'prom-client';
@@ -38,7 +39,12 @@ describe('HTTP 요청 메트릭', () => {
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [MetricsModule, PomodoroModule, HealthModule],
+      imports: [
+        EventEmitterModule.forRoot(),
+        MetricsModule,
+        PomodoroModule,
+        HealthModule,
+      ],
       controllers: [MetricsTestController],
     }).compile();
 

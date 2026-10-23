@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PomodoroModule } from './pomodoro/pomodoro.module';
 import { HealthModule } from './health/health.module';
 import { MusicModule } from './music/music.module';
@@ -15,6 +16,7 @@ import { MetricsModule } from './metrics/metrics.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    EventEmitterModule.forRoot(),
     PomodoroModule,
     HealthModule,
     MusicModule,
