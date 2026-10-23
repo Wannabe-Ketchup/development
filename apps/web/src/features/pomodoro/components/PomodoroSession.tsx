@@ -3,6 +3,7 @@ import type { RoomMode } from '@pomodoro/shared';
 import { formatSessionLabel } from '../lib/session-label';
 import { PausePomodoroButton } from './PausePomodoroButton';
 import { SessionLabel } from './SessionLabel';
+import { SquigglePill } from './SquigglePill';
 import { StartPomodoroButton } from './StartPomodoroButton';
 
 interface PomodoroSessionProps {
@@ -20,11 +21,14 @@ export function PomodoroSession({
   return (
     <div className="flex items-center gap-9">
       <SessionLabel label={formatSessionLabel(currentCycle, mode)} />
-      {mode === ROOM_MODE.IDLE ? (
-        <StartPomodoroButton roomId={roomId} />
-      ) : (
-        <PausePomodoroButton />
-      )}
+      {/* 알약 테두리는 새로 마운트되면 크기를 잰 다음 프레임에야 그려져 깜빡이므로, 테두리는 유지하고 안의 버튼만 바꾼다 */}
+      <SquigglePill>
+        {mode === ROOM_MODE.IDLE ? (
+          <StartPomodoroButton roomId={roomId} />
+        ) : (
+          <PausePomodoroButton />
+        )}
+      </SquigglePill>
     </div>
   );
 }
