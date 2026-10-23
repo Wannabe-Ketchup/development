@@ -19,6 +19,7 @@ import { enterRoom } from '@/api/room';
 import { getSeatTranslateX } from './lib/seat-layout';
 import { Participant } from './components/Participant';
 import { RoomTimer } from './components/RoomTimer';
+import { PomodoroSession } from './components/PomodoroSession';
 
 const SEAT_SPACING_PX = 182;
 
@@ -90,6 +91,17 @@ function Pomodoro() {
       <div className="absolute inset-0">
         {/* roomId가 유효하고 방 정보를 받아온 뒤에만 타이머를 보여준다 */}
         {roomId && room && <RoomTimer timer={room.timer} />}
+
+        {/* 방 입장이 끝난 뒤에만 시작 버튼/회차 라벨을 보여준다 */}
+        {roomId && room && selfParticipantId && (
+          <div className="absolute top-9 left-1/2 -translate-x-1/2">
+            <PomodoroSession
+              roomId={roomId}
+              mode={room.mode}
+              currentCycle={room.currentCycle}
+            />
+          </div>
+        )}
 
         <div className="absolute top-[calc(60%+74px)] left-1/2 z-10 -translate-x-1/2">
           <Desk />
