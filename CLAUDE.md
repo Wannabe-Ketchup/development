@@ -56,4 +56,4 @@ pnpm + Turborepo 모노레포. Node 24 (`.nvmrc`).
 - api와 web이 공유하는 타입은 `@pomodoro/shared`에만 정의한다.
 - 실제 개인정보나 비밀값은 코드·테스트·문서에 넣지 않고 더미 값을 쓴다.
 - 규칙은 **새로 작성하거나 수정하는 코드**에 적용한다. 규칙에 맞지 않는 기존 코드를 작업 범위 밖에서 고치지 않는다(필요하면 후속 작업으로 제안한다).
-- `.claude/`, `docs/`, `.harness/`는 gitignore된 로컬 전용 파일이다. 커밋에 넣지 않는다.
+- `.harness/`와 `.claude/settings.local.json`은 gitignore된 로컬 전용 파일이다. 커밋에 넣지 않는다.
