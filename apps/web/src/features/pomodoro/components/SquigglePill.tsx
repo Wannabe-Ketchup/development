@@ -17,8 +17,8 @@ export function SquigglePill({ children }: SquigglePillProps) {
       strokeWidth={4}
       pathClassName="fill-white stroke-black"
       frequency={500}
-      wiggle={5}
-      smoothen={12}
+      wiggle={20}
+      smoothen={30}
     >
       {children}
     </WobblyBox>
