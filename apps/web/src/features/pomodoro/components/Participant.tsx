@@ -37,7 +37,6 @@ export function Participant({
             {isSelf ? (
               <ParticipantNickname
                 roomId={roomId}
-                participantId={participant.id}
                 nickname={participant.nickname}
               />
             ) : (
@@ -51,7 +50,6 @@ export function Participant({
 
           <ParticipantStatusMessage
             roomId={roomId}
-            participantId={participant.id}
             message={participant.statusMessage}
             isSelf={isSelf}
             className="order-1"

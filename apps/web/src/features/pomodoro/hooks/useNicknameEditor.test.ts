@@ -9,8 +9,7 @@ const mockChangeNickname = changeNickname as unknown as Mock;
 
 const renderEditor = (nickname = '토마토') =>
   renderHook(
-    ({ nickname }) =>
-      useNicknameEditor({ roomId: 'room-1', participantId: 'p-1', nickname }),
+    ({ nickname }) => useNicknameEditor({ roomId: 'room-1', nickname }),
     { initialProps: { nickname } },
   );
 
@@ -59,11 +58,7 @@ describe('useNicknameEditor', () => {
     expect(mockChangeNickname).toHaveBeenCalledTimes(
       expectedCallCountAfterSending,
     );
-    expect(mockChangeNickname).toHaveBeenLastCalledWith(
-      'room-1',
-      'p-1',
-      '마요',
-    );
+    expect(mockChangeNickname).toHaveBeenLastCalledWith('room-1', '마요');
   });
 
   it('요청 중에 여러 번 변경하면 마지막 값만 보낸다', async () => {
@@ -89,11 +84,7 @@ describe('useNicknameEditor', () => {
     // then
     const expectedCallCount = 2;
     expect(mockChangeNickname).toHaveBeenCalledTimes(expectedCallCount);
-    expect(mockChangeNickname).toHaveBeenLastCalledWith(
-      'room-1',
-      'p-1',
-      '머스타드',
-    );
+    expect(mockChangeNickname).toHaveBeenLastCalledWith('room-1', '머스타드');
   });
 
   it('뒤이어 보낼 값이 있으면 앞선 거절은 알리지 않는다', async () => {

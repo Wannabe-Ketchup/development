@@ -86,7 +86,7 @@ describe('Pomodoro 페이지', () => {
     mockUseRoomSSE.mockImplementation(
       (
         _roomId: string,
-        _participantId: string,
+        _isEntered: boolean,
         onRoomState: (nextRoom: Room) => void,
       ) => {
         emitRoomState = onRoomState;

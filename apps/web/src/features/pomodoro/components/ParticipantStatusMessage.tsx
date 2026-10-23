@@ -8,7 +8,6 @@ import { useStatusMessageEditor } from '../hooks/useStatusMessageEditor';
 
 interface ParticipantStatusMessageProps {
   roomId: string;
-  participantId: string;
   message: string;
   isSelf: boolean;
   className?: string;
@@ -16,7 +15,6 @@ interface ParticipantStatusMessageProps {
 
 export function ParticipantStatusMessage({
   roomId,
-  participantId,
   message,
   isSelf,
   className,
@@ -29,7 +27,7 @@ export function ParticipantStatusMessage({
     changeDraft,
     cancelEditing,
     confirmEditing,
-  } = useStatusMessageEditor({ roomId, participantId, statusMessage: message });
+  } = useStatusMessageEditor({ roomId, statusMessage: message });
 
   const isEmpty = !statusMessage;
   const isEditing = draft !== null;

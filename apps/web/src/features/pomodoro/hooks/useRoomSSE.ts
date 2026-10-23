@@ -4,19 +4,20 @@ import type { Room, SseEventPayload } from '@pomodoro/shared';
 
 type SSEStatus = 'connecting' | 'connected' | 'error';
 
+// 방 입장이 끝난 뒤에만 연결한다. 입장 전에 연결하면 서버가 참가자를 찾지 못해 거절한다.
 export function useRoomSSE(
   roomId: string | undefined,
-  participantId: string | undefined,
+  isEntered: boolean,
   onRoomState: (room: Room) => void,
 ) {
   const [status, setStatus] = useState<SSEStatus>('connecting');
 
   useEffect(() => {
-    if (!roomId || !participantId) return;
+    if (!roomId || !isEntered) return;
 
     setStatus('connecting');
 
-    const connection = createRoomSseConnection(roomId, participantId, {
+    const connection = createRoomSseConnection(roomId, {
       onOpen: () => {
         setStatus('connected');
       },
@@ -37,7 +38,7 @@ export function useRoomSSE(
     return () => {
       connection.close();
     };
-  }, [roomId, participantId, onRoomState]);
+  }, [roomId, isEntered, onRoomState]);
 
   return { status };
 }
