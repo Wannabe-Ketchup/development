@@ -5,16 +5,20 @@ import OkIcon from '@/assets/ok.svg?react';
 import { cn } from '@/lib/cn';
 import { useStatusMessageEditor } from '../hooks/useStatusMessageEditor';
 
+const BREAK_STATUS_MESSAGE = '휴식 중…';
+
 interface ParticipantStatusMessageProps {
   roomId: string;
   message: string;
   isSelf: boolean;
+  isBreak: boolean;
 }
 
 export function ParticipantStatusMessage({
   roomId,
   message,
   isSelf,
+  isBreak,
 }: ParticipantStatusMessageProps) {
   const {
     value: statusMessage,
@@ -28,15 +32,22 @@ export function ParticipantStatusMessage({
 
   const isEmpty = !statusMessage;
   const isEditing = draft !== null;
+  // 고치던 중에 휴식이 시작되면 입력하던 내용을 마저 저장할 수 있게 입력창을 유지한다
+  const isShowingBreak = isBreak && !isEditing;
+  const isPlaceholder = isEmpty && !isEditing && !isShowingBreak;
+  const canStartEditing = isSelf && !isBreak && !isEditing;
 
-  if (!isSelf && isEmpty) {
+  if (!isSelf && isEmpty && !isShowingBreak) {
     return null;
   }
 
-  const displayMessage =
-    isEmpty && !isEditing ? '지금 무엇을\n하고있나요?' : statusMessage;
+  const displayMessage = (() => {
+    if (isShowingBreak) return BREAK_STATUS_MESSAGE;
+    if (isPlaceholder) return '지금 무엇을\n하고있나요?';
+    return statusMessage;
+  })();
 
-  const textColor = isEmpty && !isEditing ? 'text-gray' : 'text-black';
+  const textColor = isPlaceholder ? 'text-gray' : 'text-black';
   const buttonBg = isEmpty || isEditing ? 'bg-gray/40' : 'bg-black/60';
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -65,7 +76,7 @@ export function ParticipantStatusMessage({
         )}
         pathClassName={cn(
           'fill-white',
-          isEmpty || isEditing ? 'stroke-gray' : 'stroke-black',
+          isPlaceholder || isEditing ? 'stroke-gray' : 'stroke-black',
         )}
         frequency={500}
         wiggle={5}
@@ -90,33 +101,33 @@ export function ParticipantStatusMessage({
         )}
       </WobblySpeechBubble>
 
-      {isSelf &&
-        (!isEditing ? (
-          <button
-            type="button"
-            onClick={startEditing}
-            className={cn(
-              'absolute top-0 right-0 z-10 translate-x-1/2 -translate-y-1/2 rounded-full p-2 text-white',
-              'opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100',
-              'group-focus-within:opacity-100',
-              buttonBg,
-            )}
-          >
-            <EditIcon />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={confirmEditing}
-            className={cn(
-              'absolute top-0 right-0 z-10 translate-x-1/2 -translate-y-1/2 rounded-full p-2',
-              buttonBg,
-            )}
-          >
-            <OkIcon className="size-4 text-white" />
-          </button>
-        ))}
+      {canStartEditing && (
+        <button
+          type="button"
+          onClick={startEditing}
+          className={cn(
+            'absolute top-0 right-0 z-10 translate-x-1/2 -translate-y-1/2 rounded-full p-2 text-white',
+            'opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100',
+            'group-focus-within:opacity-100',
+            buttonBg,
+          )}
+        >
+          <EditIcon />
+        </button>
+      )}
+      {isEditing && (
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={confirmEditing}
+          className={cn(
+            'absolute top-0 right-0 z-10 translate-x-1/2 -translate-y-1/2 rounded-full p-2',
+            buttonBg,
+          )}
+        >
+          <OkIcon className="size-4 text-white" />
+        </button>
+      )}
 
       {error && (
         <p

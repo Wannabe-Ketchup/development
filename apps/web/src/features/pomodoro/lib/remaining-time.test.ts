@@ -90,4 +90,23 @@ describe('getRemainingTimeSec', () => {
     // then
     expect(result).toBe(0);
   });
+
+  it('클라이언트 시계가 시작 시각보다 이르면 남은 시간은 단계 길이를 넘지 않는다', () => {
+    // given
+    const timer: Timer = {
+      status: 'RUNNING',
+      focusTimeSec: 1500,
+      breakTimeSec: 300,
+      totalCycle: 4,
+      timerStartedAt: new Date('2026-01-01T00:00:10.000Z').toISOString(),
+      remainingTimeSec: 1500,
+    };
+    const now = new Date('2026-01-01T00:00:00.000Z');
+
+    // when
+    const result = getRemainingTimeSec(timer, now);
+
+    // then
+    expect(result).toBe(1500);
+  });
 });
