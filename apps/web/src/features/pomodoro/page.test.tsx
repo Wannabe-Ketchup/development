@@ -125,4 +125,49 @@ describe('Pomodoro 페이지', () => {
       expect(screen.getByTestId('sse-error')).toBeTruthy();
     });
   });
+
+  it("휴식 중인 방에 입장하면 참여자의 상태 메시지 자리에 '휴식 중…'이 보인다", async () => {
+    // given
+    const breakRoom: Room = { ...room, mode: ROOM_MODE.BREAK };
+    mockEnterRoom.mockResolvedValue({
+      participant: selfParticipant,
+      room: breakRoom,
+    });
+
+    // when
+    render(<Pomodoro />);
+
+    // then
+    const expectedMessage = '휴식 중…';
+    await waitFor(() => {
+      expect(screen.getAllByText(expectedMessage).length).toBeGreaterThan(0);
+    });
+  });
+
+  it.each([
+    ['집중', ROOM_MODE.FOCUS],
+    ['대기', ROOM_MODE.IDLE],
+  ])(
+    '%s 중인 방에 입장하면 참여자의 원래 상태 메시지가 보인다',
+    async (_, mode) => {
+      // given
+      const statusMessage = '공부중';
+      const roomInMode: Room = {
+        ...room,
+        mode,
+        participants: [{ ...existingParticipant, statusMessage }],
+      };
+      mockEnterRoom.mockResolvedValue({
+        participant: selfParticipant,
+        room: roomInMode,
+      });
+
+      // when
+      render(<Pomodoro />);
+
+      // then
+      expect(await screen.findByText(statusMessage)).toBeTruthy();
+      expect(screen.queryByText('휴식 중…')).toBeNull();
+    },
+  );
 });
