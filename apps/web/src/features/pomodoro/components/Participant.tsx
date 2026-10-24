@@ -10,6 +10,7 @@ interface ParticipantProps {
   translateX: number;
   isPending: boolean;
   isSelf: boolean;
+  isBreak: boolean;
 }
 
 export function Participant({
@@ -18,6 +19,7 @@ export function Participant({
   translateX,
   isPending,
   isSelf,
+  isBreak,
 }: ParticipantProps) {
   return (
     <div
@@ -32,6 +34,7 @@ export function Participant({
             roomId={roomId}
             message={participant.statusMessage}
             isSelf={isSelf}
+            isBreak={isBreak}
           />
 
           <div className="w-max">

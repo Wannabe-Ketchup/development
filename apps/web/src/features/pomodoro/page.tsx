@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Room } from '@pomodoro/shared';
+import { ROOM_MODE, type Room } from '@pomodoro/shared';
 import wall1280 from '@/assets/wall-1280.webp?no-inline';
 import wall1920 from '@/assets/wall-1920.webp';
 import wall2560 from '@/assets/wall-2560.webp';
@@ -153,6 +153,7 @@ function Pomodoro() {
                 )}
                 isPending={participant.id === selfParticipantId && !isConfirmed}
                 isSelf={participant.id === selfParticipantId}
+                isBreak={room.mode === ROOM_MODE.BREAK}
               />
             ))}
           </div>
