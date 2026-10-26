@@ -22,5 +22,9 @@ export function getRemainingTimeSec(timer: Timer, now: Date): number {
     (now.getTime() - new Date(timer.timerStartedAt).getTime()) / 1000,
   );
 
-  return Math.max(0, timer.remainingTimeSec - elapsedSec);
+  // 클라이언트 시계가 서버보다 늦으면 경과 시간이 음수가 되므로 단계 길이를 넘지 않게 자른다
+  return Math.min(
+    timer.remainingTimeSec,
+    Math.max(0, timer.remainingTimeSec - elapsedSec),
+  );
 }
