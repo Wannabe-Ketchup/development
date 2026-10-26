@@ -1,6 +1,6 @@
 # 뽀모도로 인터랙션 흐름
 
-출처: `.harness/2026-10-19-icon-only-button.md`, `.harness/2026-10-21-a11y-user-scenarios.md`
+출처: `.harness/2026-10-19-icon-only-button.md`, `.harness/2026-10-21-a11y-user-scenarios.md`, `.harness/2026-10-23-pomodoro-how-to-use-tour.md`
 마지막 수정: 2026-10-23
 
 ---
@@ -48,3 +48,26 @@ e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-B. 음악 재�
 | 2    | button "...모드로 전환"   | click | `aria-label`이 반대 전환 라벨로 바뀌어 다음 동작을 즉시 안내한다 |
 
 e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-C. 조명(테마) 전환`
+
+---
+
+## P-D. How to use 투어로 사용법을 익힌다
+
+대상: 키보드 사용자 / 스크린 리더 사용자 (오버레이 클릭 단계는 마우스/터치 사용자)
+진입 조건: 뽀모도로 화면 진입. 단계별로 SSE 연결 상태가 달라진다
+
+| 단계 | 포커스 위치 (role "name") | 동작                              | 예상 결과 / ARIA 발화                                                                                                                                         |
+| ---- | ------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | (초기 진입, SSE 미완료)   | `/pomodoro?roomId=r1` 접속        | button "how to use"가 접근성 트리에 노출되지 않는다                                                                                                           |
+| 2    | —                         | SSE 연결 완료(`isConfirmed=true`) | button "how to use"가 좌하단에 노출된다                                                                                                                       |
+| 3    | button "how to use"       | Enter / Space                     | dialog "뽀모도로 사용법"이 열리고 스포트라이트가 타이머 영역을 하이라이트한다. `aria-expanded`가 `"true"`로 바뀐다                                            |
+| 4    | (자동 포커스)             | —                                 | 첫 활성 버튼 button "다음"으로 포커스가 이동한다                                                                                                              |
+| 5    | aria-live 영역            | 스텝 진입/전환 시 SR 발화         | "6단계 중 1단계. 시작·중지 버튼으로 타이머를 조작하고, 남은 시간과 현재 세션을 확인할 수 있어요." → "다음" 클릭 시마다 "6단계 중 N단계. {설명}"으로 교체 발화 |
+| 6    | button "다음"             | click / Enter 반복                | 참가자 목록 → 내 상태 메시지 → 내 닉네임 → 조명 → LP 플레이어 순으로 스포트라이트와 설명이 전환되고 스텝 번호 N/6도 함께 바뀐다                               |
+| 7    | button "이전"             | click / Enter                     | 바로 이전 스텝으로 돌아가고 스포트라이트·설명·번호가 함께 되돌아간다                                                                                          |
+| 8    | button "다음"             | Tab                               | 비활성 버튼은 건너뛰고 이동한다(첫 스텝 "이전", 마지막 스텝 "다음"은 disabled). 비모달이라 포커스를 가두지 않는다                                             |
+| 9    | 투어 내 임의 버튼         | Escape                            | dialog가 사라지고 button "how to use"로 포커스가 복원되며 `aria-expanded`가 `"false"`로 바뀐다                                                                |
+| 10   | 오버레이 어두운 영역      | click                             | dialog가 사라지고 button "how to use"로 포커스가 복원된다                                                                                                     |
+| 11   | (투어 내 포커스)          | SSE 에러 이벤트 발생              | dialog가 자동으로 닫히고 button "how to use"도 미노출로 바뀌며, 에러 오버레이 `[data-testid="sse-error"]`에 "실시간 연결에 실패했습니다." 안내가 노출된다     |
+
+e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-D. How to use 투어로 사용법을 익힌다`
