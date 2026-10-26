@@ -3,6 +3,7 @@ import { WobblySpeechBubble } from '@squiggle-line/react';
 import EditIcon from '@/assets/edit.svg?react';
 import OkIcon from '@/assets/ok.svg?react';
 import { cn } from '@/lib/cn';
+import { usePreventDragSelection } from '../hooks/usePreventDragSelection';
 import { useStatusMessageEditor } from '../hooks/useStatusMessageEditor';
 
 interface ParticipantStatusMessageProps {
@@ -25,6 +26,7 @@ export function ParticipantStatusMessage({
     cancelEditing,
     confirmEditing,
   } = useStatusMessageEditor({ roomId, statusMessage: message });
+  const { isPointerDown, onPointerDown } = usePreventDragSelection();
 
   const isEmpty = !statusMessage;
   const isEditing = draft !== null;
@@ -83,7 +85,11 @@ export function ParticipantStatusMessage({
             onChange={(e) => changeDraft(e.target.value)}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
-            className="field-sizing-content min-w-0 bg-transparent text-center outline-none"
+            onPointerDown={onPointerDown}
+            className={cn(
+              'field-sizing-content min-w-0 bg-transparent text-center outline-none',
+              isPointerDown && 'selection:bg-transparent',
+            )}
           />
         ) : (
           displayMessage
