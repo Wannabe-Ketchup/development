@@ -12,8 +12,9 @@ describe('Timer', () => {
     it.each<{ status: TimerStatus; timerStartedAt: string | null }>([
       { status: 'RUNNING', timerStartedAt: null },
       { status: 'IDLE', timerStartedAt: '2026-10-17T09:00:00.000Z' },
+      { status: 'PAUSED', timerStartedAt: '2026-10-17T09:00:00.000Z' },
     ])(
-      '진행 중인데 시작 시각이 없거나, 대기 중인데 시작 시각이 있는 타이머는 만들 수 없다 ($status, 시작 시각 $timerStartedAt)',
+      '진행 중인데 시작 시각이 없거나, 대기·일시정지 중인데 시작 시각이 있는 타이머는 만들 수 없다 ($status, 시작 시각 $timerStartedAt)',
       ({ status, timerStartedAt }) => {
         // when & then
         expect(() =>

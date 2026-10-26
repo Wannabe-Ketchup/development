@@ -12,11 +12,20 @@ import {
 } from '@pomodoro/shared';
 import { AppModule } from '../../../src/app.module';
 import { SessionConfig } from '../../../src/auth/config/session.config';
+import { Clock } from '../../../src/common/clock/clock';
 import { LoadS3MusicService } from '../../../src/music/service/load-s3-music.service';
 import { RoomRepository } from '../../../src/pomodoro/repository/room.repository';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
 import { Participant } from '../../../src/pomodoro/domain/participant.entity';
 import { Timer } from '../../../src/pomodoro/domain/timer.entity';
+
+const NOW = new Date('2026-10-17T09:10:00.000Z');
+
+class FixedClock extends Clock {
+  now(): Date {
+    return NOW;
+  }
+}
 
 function restoreRoom(props: {
   roomId: string;
@@ -60,6 +69,8 @@ describe('PomodoroController', () => {
       .useValue({})
       .overrideProvider(LoadS3MusicService)
       .useValue({})
+      .overrideProvider(Clock)
+      .useClass(FixedClock)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -154,4 +165,91 @@ describe('PomodoroController', () => {
         .expect(409);
     });
   });
+
+  describe.each([
+    {
+      action: 'pomodoro-pause',
+      okName: '진행 중인 방의 참가자가 일시정지하면 204를 응답한다',
+      conflictName: '이미 일시정지 중인 방이면 409를 응답한다',
+      okStatus: 'RUNNING' as const,
+      conflictStatus: 'PAUSED' as const,
+    },
+    {
+      action: 'pomodoro-resume',
+      okName: '일시정지 중인 방의 참가자가 재개하면 204를 응답한다',
+      conflictName: '진행 중인 방이면 409를 응답한다',
+      okStatus: 'PAUSED' as const,
+      conflictStatus: 'RUNNING' as const,
+    },
+  ])(
+    'POST /pomodoro/room/:roomId/participant/$action',
+    ({ action, okName, conflictName, okStatus, conflictStatus }) => {
+      // 진행 중 타이머는 고정 시각(09:10) 기준으로 집중 15분이 남아 있다
+      function timerOf(status: 'RUNNING' | 'PAUSED'): Timer {
+        return Timer.restore({
+          status,
+          focusTimeSec: FOCUS_DURATION_SECONDS,
+          breakTimeSec: BREAK_DURATION_SECONDS,
+          totalCycle: CYCLE_COUNT,
+          timerStartedAt:
+            status === 'RUNNING' ? '2026-10-17T09:00:00.000Z' : null,
+          remainingTimeSec: FOCUS_DURATION_SECONDS,
+        });
+      }
+
+      async function enterRoomWith(
+        status: 'RUNNING' | 'PAUSED',
+      ): Promise<{ agent: ReturnType<typeof request.agent>; roomId: string }> {
+        const roomId = 'room-1';
+        const agent = request.agent(app.getHttpServer());
+        await agent.post('/auth/login/guest').expect(204);
+        app.get(RoomRepository).save(
+          restoreRoom({
+            roomId,
+            participantIds: [],
+            mode: ROOM_MODE.IDLE,
+            currentCycle: 0,
+            timer: idleTimer(),
+          }),
+        );
+        const enterResponse = await agent
+          .post(`/pomodoro/room/${roomId}/participant`)
+          .expect(201);
+        // 세션의 참가자 id는 서버가 발급하므로 입장 응답에서 받아 원하는 상태의 방을 만든다
+        const { participant } = enterResponse.body as {
+          participant: { id: string };
+        };
+        app.get(RoomRepository).save(
+          restoreRoom({
+            roomId,
+            participantIds: [participant.id],
+            mode: ROOM_MODE.FOCUS,
+            currentCycle: 1,
+            timer: timerOf(status),
+          }),
+        );
+        return { agent, roomId };
+      }
+
+      it(okName, async () => {
+        // given
+        const { agent, roomId } = await enterRoomWith(okStatus);
+
+        // when & then
+        await agent
+          .post(`/pomodoro/room/${roomId}/participant/${action}`)
+          .expect(204);
+      });
+
+      it(conflictName, async () => {
+        // given
+        const { agent, roomId } = await enterRoomWith(conflictStatus);
+
+        // when & then
+        await agent
+          .post(`/pomodoro/room/${roomId}/participant/${action}`)
+          .expect(409);
+      });
+    },
+  );
 });
