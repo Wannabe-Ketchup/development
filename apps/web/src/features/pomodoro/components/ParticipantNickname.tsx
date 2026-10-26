@@ -41,7 +41,10 @@ export function ParticipantNickname({
   };
 
   return (
-    <div className="relative inline-flex flex-col items-center">
+    <div
+      data-tour-id="self-nickname"
+      className="relative inline-flex flex-col items-center"
+    >
       <div
         className={cn(
           'inline-flex h-9 items-center justify-center gap-2 rounded-[10px] border border-transparent bg-white/60 px-3.5',

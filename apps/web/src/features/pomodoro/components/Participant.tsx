@@ -22,6 +22,7 @@ export function Participant({
   return (
     <li
       aria-label={isSelf ? `나, ${participant.nickname}` : participant.nickname}
+      data-tour-id={isSelf ? 'self-participant' : undefined}
       className="relative transition-transform duration-300 ease-out"
       style={{ transform: `translateX(${translateX}px)` }}
     >

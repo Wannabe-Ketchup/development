@@ -12,6 +12,7 @@ export function Lamp({ theme, onToggle }: LampProps) {
 
   return (
     <IconButton
+      data-tour-id="lamp"
       label={label}
       icon={LampSvg}
       iconClassName={cn(

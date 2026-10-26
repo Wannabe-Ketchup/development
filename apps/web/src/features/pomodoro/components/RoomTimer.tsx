@@ -20,7 +20,10 @@ export function RoomTimer({ timer }: RoomTimerProps) {
   }, [timer.status]);
 
   return (
-    <div className="absolute top-[calc(60%-410px)] left-1/2 -translate-x-1/2 text-9xl font-bold text-nowrap tabular-nums">
+    <div
+      data-tour-id="timer"
+      className="absolute top-[calc(60%-410px)] left-1/2 -translate-x-1/2 text-9xl font-bold text-nowrap tabular-nums"
+    >
       {formatRemainingTime(getRemainingTimeSec(timer, now))}
     </div>
   );

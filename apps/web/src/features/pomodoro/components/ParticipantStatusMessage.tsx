@@ -59,6 +59,7 @@ export function ParticipantStatusMessage({
 
   return (
     <div
+      data-tour-id={isSelf ? 'self-status' : undefined}
       className={cn(
         'group relative inline-flex flex-col items-center',
         className,

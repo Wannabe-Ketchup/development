@@ -8,7 +8,7 @@ export function LPPlayer() {
   const label = playState === 'playing' ? '음악 중지' : '음악 재생';
 
   return (
-    <div className="absolute top-23.5 left-0">
+    <div data-tour-id="lp-player" className="absolute top-23.5 left-0">
       {playState === 'playing' && <NoteAnimation />}
       <IconButton
         label={label}
