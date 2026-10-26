@@ -10,7 +10,7 @@ export function GuideSection({ tomatoStatus }: GuideSectionProps) {
   return (
     <div
       className={cn(
-        'flex flex-col items-center gap-6 select-none',
+        'flex flex-col items-center gap-6',
         tomatoStatus === 'sleeping' ? 'visible' : 'invisible',
       )}
     >
