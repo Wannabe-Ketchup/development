@@ -1,7 +1,30 @@
 import { describe, it, expect } from 'vitest';
-import { getSeatTranslateX } from './seat-layout';
+import { getSeatsWidthPx, getSeatTranslateX } from './seat-layout';
 
 const SEAT_SPACING_PX = 100;
+const SEAT_WIDTH_PX = 40;
+
+describe('getSeatsWidthPx', () => {
+  it('참가자가 1명이면 좌석 너비 하나와 같다', () => {
+    expect(getSeatsWidthPx(1, SEAT_SPACING_PX, SEAT_WIDTH_PX)).toBe(
+      SEAT_WIDTH_PX,
+    );
+  });
+
+  it('참가자가 늘 때마다 좌석 간격만큼 너비가 늘어난다', () => {
+    // given / when
+    const two = getSeatsWidthPx(2, SEAT_SPACING_PX, SEAT_WIDTH_PX);
+    const four = getSeatsWidthPx(4, SEAT_SPACING_PX, SEAT_WIDTH_PX);
+
+    // then
+    expect(two).toBe(SEAT_SPACING_PX + SEAT_WIDTH_PX);
+    expect(four).toBe(3 * SEAT_SPACING_PX + SEAT_WIDTH_PX);
+  });
+
+  it('참가자가 없으면 0이다', () => {
+    expect(getSeatsWidthPx(0, SEAT_SPACING_PX, SEAT_WIDTH_PX)).toBe(0);
+  });
+});
 
 describe('getSeatTranslateX', () => {
   it('참가자가 1명이면 정중앙(0)에 위치한다', () => {
