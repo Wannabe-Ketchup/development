@@ -95,10 +95,14 @@ export class Room {
     this._participants.delete(participantId);
   }
 
-  startPomodoro(participantId: string, now: Date): void {
+  private validateParticipant(participantId: string): void {
     if (!this._participants.has(participantId)) {
       throw new NotFoundException('방에 존재하지 않는 참가자입니다.');
     }
+  }
+
+  startPomodoro(participantId: string, now: Date): void {
+    this.validateParticipant(participantId);
     if (this.isRunning()) {
       throw new ConflictException('이미 진행 중인 뽀모도로입니다.');
     }
@@ -106,6 +110,18 @@ export class Room {
     this._mode = ROOM_MODE.FOCUS;
     this._currentCycle = 1;
     this._timer = this._timer.startFocus(now);
+  }
+
+  // 모드와 회차는 그대로 두고 타이머만 멈춘다
+  pausePomodoro(participantId: string, now: Date): void {
+    this.validateParticipant(participantId);
+    this._timer = this._timer.pause(now);
+  }
+
+  // 모드와 회차는 그대로 두고 타이머만 다시 흐르게 한다
+  resumePomodoro(participantId: string, now: Date): void {
+    this.validateParticipant(participantId);
+    this._timer = this._timer.resume(now);
   }
 
   // 휴식은 집중이 실제로 처리된 시각이 아니라 끝나기로 예정된 시각에 시작한다

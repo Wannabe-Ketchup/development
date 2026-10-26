@@ -13,6 +13,8 @@ import { EnterRoomService } from '../service/enter-room.service';
 import { ChangeNicknameService } from '../service/change-nickname.service';
 import { ChangeStatusMessageService } from '../service/change-status-message.service';
 import { StartPomodoroService } from '../service/start-pomodoro.service';
+import { PausePomodoroService } from '../service/pause-pomodoro.service';
+import { ResumePomodoroService } from '../service/resume-pomodoro.service';
 import type { JoinRoomResponse } from '../dto/join-room-response.dto';
 import type { ChangeNicknameRequest } from '../dto/change-nickname-request.dto';
 import { CreateRoomService } from '../service/create-room.service';
@@ -29,6 +31,8 @@ export class PomodoroController {
     private readonly roomQueryService: RoomQueryService,
     private readonly changeStatusMessageService: ChangeStatusMessageService,
     private readonly startPomodoroService: StartPomodoroService,
+    private readonly pausePomodoroService: PausePomodoroService,
+    private readonly resumePomodoroService: ResumePomodoroService,
   ) {}
 
   @Get('room/:roomId/exists')
@@ -84,5 +88,23 @@ export class PomodoroController {
     @ParticipantId() participantId: string,
   ): void {
     this.startPomodoroService.startPomodoro(roomId, participantId);
+  }
+
+  @Post('room/:roomId/participant/pomodoro-pause')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  pausePomodoro(
+    @Param('roomId') roomId: string,
+    @ParticipantId() participantId: string,
+  ): void {
+    this.pausePomodoroService.pausePomodoro(roomId, participantId);
+  }
+
+  @Post('room/:roomId/participant/pomodoro-resume')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  resumePomodoro(
+    @Param('roomId') roomId: string,
+    @ParticipantId() participantId: string,
+  ): void {
+    this.resumePomodoroService.resumePomodoro(roomId, participantId);
   }
 }

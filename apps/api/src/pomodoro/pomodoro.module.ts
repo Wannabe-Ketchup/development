@@ -9,6 +9,8 @@ import { RoomEventStreamService } from './service/room-event-stream.service';
 import { ChangeNicknameService } from './service/change-nickname.service';
 import { ChangeStatusMessageService } from './service/change-status-message.service';
 import { StartPomodoroService } from './service/start-pomodoro.service';
+import { PausePomodoroService } from './service/pause-pomodoro.service';
+import { ResumePomodoroService } from './service/resume-pomodoro.service';
 import { FinishFocusService } from './service/finish-focus.service';
 import { FinishBreakService } from './service/finish-break.service';
 import { PomodoroTimerListener } from './controller/pomodoro-timer.listener';
@@ -34,6 +36,8 @@ import { MetricsModule } from '../metrics/metrics.module';
     CreateRoomService,
     ChangeStatusMessageService,
     StartPomodoroService,
+    PausePomodoroService,
+    ResumePomodoroService,
     FinishFocusService,
     FinishBreakService,
     PomodoroTimerListener,
