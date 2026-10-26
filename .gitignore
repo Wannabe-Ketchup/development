@@ -32,3 +32,6 @@ CONTRIBUTING.md
 .idea/
 .agents/
 .harness
+.DS_Store
+.github/.DS_Store
+apps/.DS_Store
