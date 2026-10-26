@@ -99,6 +99,7 @@ function Pomodoro() {
               roomId={roomId}
               mode={room.mode}
               currentCycle={room.currentCycle}
+              timerStatus={room.timer.status}
             />
           </div>
         )}
