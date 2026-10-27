@@ -1,6 +1,7 @@
 import type { Participant as ParticipantData } from '@pomodoro/shared';
 import ChairSvg from '@/assets/chair.svg?react';
 import { Tomato } from './Tomato';
+import { getTomatoStage } from '../lib/tomato-stage';
 import { ParticipantNickname } from './ParticipantNickname';
 import { ParticipantStatusMessage } from './ParticipantStatusMessage';
 
@@ -55,7 +56,11 @@ export function Participant({
             isSelf={isSelf}
             className="order-1"
           />
-          <Tomato isPending={isPending} className="order-3" />
+          <Tomato
+            stage={getTomatoStage(participant.completedCycles)}
+            isPending={isPending}
+            className="order-3"
+          />
         </div>
       </div>
     </li>
