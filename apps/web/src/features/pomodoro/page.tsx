@@ -12,6 +12,7 @@ import { WALL_SIZES, FLOOR_SIZES } from './image-sizes';
 import { LPPlayer } from './components/LPPlayer';
 import { useTheme } from './hooks/useTheme';
 import { useRoomSSE } from './hooks/useRoomSSE';
+import { useSessionChangeAlarm } from './hooks/useSessionChangeAlarm';
 import { useRoomId } from '@/lib/room-id';
 import { enterRoom } from '@/api/room';
 import { getSeatsWidthPx, getSeatTranslateX } from './lib/seat-layout';
@@ -75,6 +76,8 @@ function Pomodoro() {
     selfParticipantId !== null,
     handleRoomState,
   );
+
+  useSessionChangeAlarm(room?.mode, room?.currentCycle);
 
   const canShowTour =
     !!roomId &&
