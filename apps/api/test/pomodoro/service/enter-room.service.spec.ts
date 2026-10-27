@@ -40,7 +40,7 @@ describe('EnterRoomService.joinRoom', () => {
       id: 'participant-1',
       nickname,
       statusMessage: '',
-      currentCycle: 0,
+      completedCycles: 0,
       joinedAt: '2026-09-02T00:00:00.000Z',
     }) as unknown as Participant;
 

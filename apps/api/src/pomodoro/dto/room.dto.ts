@@ -27,7 +27,7 @@ export class RoomDto implements Room {
         id: participant.id,
         nickname: participant.nickname,
         statusMessage: participant.statusMessage,
-        currentCycle: participant.currentCycle,
+        completedCycles: participant.completedCycles,
       })),
     );
   }

@@ -16,7 +16,7 @@ describe('ParticipantTest', () => {
     expect(participant.nickname).toBe(expectedNickname);
   });
 
-  it('참가자 생성 시 현재 사이클은 0이다.', () => {
+  it('참가자를 새로 만들면 마친 바퀴 수는 0이다', () => {
     // given
     const participantId = 'id';
     const nickname = '케첩';
@@ -26,8 +26,8 @@ describe('ParticipantTest', () => {
     const participant = Participant.create(participantId, nickname, joinedAt);
 
     // then
-    const expectedCycle = 0;
-    expect(participant.currentCycle).toBe(expectedCycle);
+    const expectedCompletedCycles = 0;
+    expect(participant.completedCycles).toBe(expectedCompletedCycles);
   });
 
   it('참가자 생성 시 상태 메시지는 비어있다.', () => {
