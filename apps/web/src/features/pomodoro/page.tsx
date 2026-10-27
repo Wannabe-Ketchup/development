@@ -18,6 +18,7 @@ import { getSeatsWidthPx, getSeatTranslateX } from './lib/seat-layout';
 import { Participant } from './components/Participant';
 import { RoomTimer } from './components/RoomTimer';
 import { Lamp } from './components/Lamp';
+import { DeskProps } from './components/DeskProps';
 import { HowToUseButton } from './components/HowToUseButton';
 import { CoachMarkTour } from './components/CoachMarkTour';
 import { useCoachMarkTour } from './hooks/useCoachMarkTour';
@@ -128,8 +129,18 @@ function Pomodoro() {
           </div>
         )}
 
+        {/* 소품은 책상 래퍼(z-10) 안에서 책상 다음에 그려 책상 위에 보이게 한다. 참여자 목록(z-0) 안에 두면 책상에 가려진다 */}
         <div className="absolute top-[calc(60%+74px)] left-1/2 z-10 -translate-x-1/2">
           <DeskSvg aria-hidden="true" />
+          {room && (
+            <DeskProps
+              mode={room.mode}
+              participantIds={room.participants.map(
+                (participant) => participant.id,
+              )}
+              seatSpacingPx={SEAT_SPACING_PX}
+            />
+          )}
           <Lamp theme={theme} onToggle={toggleTheme} />
         </div>
         <div className="absolute bottom-[40%] left-[calc(50%+428px)]">

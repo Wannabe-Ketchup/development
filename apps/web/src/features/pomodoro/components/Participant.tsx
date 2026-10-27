@@ -1,5 +1,7 @@
 import type { Participant as ParticipantData } from '@pomodoro/shared';
 import ChairSvg from '@/assets/chair.svg?react';
+import { cn } from '@/lib/cn';
+import { SEAT_MOVE_TRANSITION_CLASS } from '../lib/seat-layout';
 import { Tomato } from './Tomato';
 import { ParticipantNickname } from './ParticipantNickname';
 import { ParticipantStatusMessage } from './ParticipantStatusMessage';
@@ -23,7 +25,7 @@ export function Participant({
     <li
       aria-label={isSelf ? `나, ${participant.nickname}` : participant.nickname}
       data-tour-id={isSelf ? 'self-participant' : undefined}
-      className="relative transition-transform duration-300 ease-out"
+      className={cn('relative', SEAT_MOVE_TRANSITION_CLASS)}
       style={{ transform: `translateX(${translateX}px)` }}
     >
       <div>
