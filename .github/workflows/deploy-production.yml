@@ -1,0 +1,206 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+  # 롤백: 이전에 배포했던 커밋 SHA를 넣어 그 이미지와 web 빌드로 되돌린다.
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 되돌릴 커밋 SHA (40자 전체)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/wannabe-ketchup/pomodoro-api
+  TARGET_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Validate rollback SHA
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if ! [[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "커밋 SHA 40자 전체를 입력하세요: $TARGET_SHA"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_SHA }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      # 롤백은 이미 배포됐던 커밋이라 lint·test를 건너뛰고 web 빌드만 다시 만든다.
+      - if: github.event_name == 'push'
+        run: pnpm lint
+      - run: pnpm build
+      - if: github.event_name == 'push'
+        run: pnpm test
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+          retention-days: 1
+
+  image:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_SHA }}
+          fetch-depth: 2
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # staging → main 머지 커밋은 두 번째 부모(staging HEAD)의 이미지를 재사용한다.
+      # 코드가 다르거나(main에 직접 들어간 커밋) 이미지가 아직 없으면 새로 빌드한다.
+      - name: Resolve image source
+        id: source
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if ! docker buildx imagetools inspect "$IMAGE:$TARGET_SHA" >/dev/null 2>&1; then
+              echo "롤백할 이미지가 없습니다: $IMAGE:$TARGET_SHA"
+              exit 1
+            fi
+            echo "mode=retag" >> "$GITHUB_OUTPUT"
+            echo "from=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          parent=$(git rev-parse -q --verify HEAD^2 || true)
+          if [ -n "$parent" ] && git diff --quiet "$parent" HEAD \
+            && docker buildx imagetools inspect "$IMAGE:$parent" >/dev/null 2>&1; then
+            echo "staging 이미지 재사용: $parent"
+            echo "mode=retag" >> "$GITHUB_OUTPUT"
+            echo "from=$parent" >> "$GITHUB_OUTPUT"
+          else
+            echo "재사용할 staging 이미지가 없어 새로 빌드합니다."
+            echo "mode=build" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Retag existing image
+        if: steps.source.outputs.mode == 'retag'
+        run: |
+          docker buildx imagetools create \
+            -t "$IMAGE:$TARGET_SHA" \
+            -t "$IMAGE:production" \
+            "$IMAGE:${{ steps.source.outputs.from }}"
+
+      - name: Build and push image
+        if: steps.source.outputs.mode == 'build'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.TARGET_SHA }}
+            ${{ env.IMAGE }}:production
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: image
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_SHA }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: web-dist
+
+      - name: Copy compose file to host
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: production/app-compose.yml
+          target: ${{ secrets.APP_DIR }}
+          strip_components: 1
+
+      - name: Pull image and restart on host
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          command_timeout: 15m
+          script_stop: true
+          script: |
+            cd "${{ secrets.APP_DIR }}"
+            trap 'docker logout ghcr.io >/dev/null 2>&1' EXIT
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            TAG=${{ env.TARGET_SHA }} docker compose -f app-compose.yml pull
+            TAG=${{ env.TARGET_SHA }} docker compose -f app-compose.yml up -d --wait --wait-timeout 120
+            docker image prune -af \
+              --filter "until=168h" \
+              --filter "label=org.opencontainers.image.source=https://github.com/Wannabe-Ketchup/development"
+
+      - name: Verify API reachable from host
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script_stop: true
+          script: |
+            cd "${{ secrets.APP_DIR }}"
+            code=$(curl -s --max-time 5 -o /dev/null -w '%{http_code}' http://localhost:3000/health || true)
+            if [ "$code" = "200" ]; then
+              echo "API reachable from host"
+              exit 0
+            fi
+            echo "API not reachable from host: HTTP $code"
+            TAG=${{ env.TARGET_SHA }} docker compose -f app-compose.yml logs --tail 50 nest
+            exit 1
+
+      - name: Copy web build to host
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: 'web-dist/*'
+          target: ${{ secrets.WEB_DIR }}
+          strip_components: 1
+          overwrite: true
