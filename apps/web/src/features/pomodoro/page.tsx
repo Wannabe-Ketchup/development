@@ -92,7 +92,7 @@ function Pomodoro() {
   return (
     <div className="relative h-dvh w-dvw overflow-hidden">
       {/* 배경 레이어 */}
-      <div className="grid h-full w-full grid-cols-1 grid-rows-[6fr_4fr] select-none">
+      <div className="grid h-full w-full grid-cols-1 grid-rows-[6fr_4fr]">
         <img
           className="h-full min-h-0 w-full object-cover object-bottom"
           src={wall2560}
