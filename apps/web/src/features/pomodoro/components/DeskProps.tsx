@@ -9,8 +9,8 @@ import {
 } from '../lib/seat-layout';
 
 const DESK_PROP_BY_MODE = {
-  [ROOM_MODE.FOCUS]: { Svg: LaptopSvg, testId: 'desk-prop-laptop' },
-  [ROOM_MODE.BREAK]: { Svg: CoffeeSvg, testId: 'desk-prop-coffee' },
+  [ROOM_MODE.FOCUS]: { Prop: LaptopProp, testId: 'desk-prop-laptop' },
+  [ROOM_MODE.BREAK]: { Prop: CoffeeProp, testId: 'desk-prop-coffee' },
 } as const;
 
 interface DeskPropsProps {
@@ -29,7 +29,7 @@ export function DeskProps({
 }: DeskPropsProps) {
   if (mode === ROOM_MODE.IDLE) return null;
 
-  const { Svg: PropSvg, testId } = DESK_PROP_BY_MODE[mode];
+  const { Prop, testId } = DESK_PROP_BY_MODE[mode];
 
   return (
     <div
@@ -45,9 +45,21 @@ export function DeskProps({
             transform: `translateX(${getSeatTranslateX(index, participantIds.length, seatSpacingPx)}px)`,
           }}
         >
-          <PropSvg className="absolute bottom-0 left-0 max-w-none -translate-x-1/2" />
+          <Prop />
         </div>
       ))}
     </div>
   );
+}
+
+function LaptopProp() {
+  return (
+    <LaptopSvg className="absolute bottom-0 left-0 max-w-none -translate-x-1/2" />
+  );
+}
+
+// 손잡이 때문에 잔 중심(x≈40)이 SVG 가운데(x=51)보다 왼쪽에 있다.
+// SVG 가운데가 아니라 잔 중심을 좌석 가운데에 맞춘다.
+function CoffeeProp() {
+  return <CoffeeSvg className="absolute bottom-0 -left-10 max-w-none" />;
 }
