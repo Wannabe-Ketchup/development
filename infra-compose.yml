@@ -51,14 +51,14 @@ services:
   grafana:
     image: grafana/grafana:13.2.4
     container_name: grafana
-    profiles:
-      - dashboard
     ports:
       - '127.0.0.1:3001:3000'
     env_file:
       - ./grafana/.env
     environment:
       - GF_USERS_ALLOW_SIGN_UP=false
+      # nginx를 거쳐 접속하므로 리다이렉트·링크가 외부 주소를 쓰게 한다.
+      - GF_SERVER_ROOT_URL=https://monitoring.zizon-tomato.cloud
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/etc/grafana/dashboards:ro

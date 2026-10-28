@@ -41,7 +41,11 @@ GitHub Actions를 쓸 수 없는 급한 상황이면 운영 서버에 접속해 
 
 로그는 운영 서버 Promtail이 Nest 로그 파일(`logs/*.log`)을 읽어 staging Loki로 보낸다. staging nginx는 `/loki/api/v1/push` 한 경로만 운영 서버 IP에 열며, Loki의 조회 API는 밖으로 열지 않는다. Promtail은 어디까지 보냈는지 기록해 두므로 재시작해도 이어서 보내고, Loki가 잠시 멈추면 재시도한다. 원본 로그 파일은 운영 서버에 30일 동안 남는다. Grafana에서는 Explore에서 Loki를 고르고 `{env="production", job="nest"}`처럼 조회하며, `level`은 라벨로, `traceId`는 `trace_id` structured metadata로 들어 있어 `{env="production"} | trace_id="<값>"`으로 한 요청의 로그를 모아 볼 수 있다. nginx 로그는 Loki로 보내지 않는다.
 
-메트릭과 로그는 모두 15일 동안 보관한다. Grafana는 staging 서버에서 `127.0.0.1:3001`로만 열려 있으므로 SSH 터널로 접속한다.
+메트릭과 로그는 모두 15일 동안 보관한다. Grafana는 `https://monitoring.zizon-tomato.cloud`로 접속하며, staging nginx가 같은 서버의 Grafana로 넘긴다. 회원가입은 막혀 있고 `grafana/.env`의 관리자 비밀번호로 로그인한다.
+
+## 인증서
+
+두 서버 모두 certbot `--standalone`으로 Let's Encrypt 인증서를 받는다. staging 인증서 하나(`/etc/letsencrypt/live/zizon-tomato.cloud/`)에 `zizon-tomato.cloud`와 `monitoring.zizon-tomato.cloud`가 함께 들어 있다. standalone 방식은 발급·갱신 때 certbot이 80번 포트를 직접 열어야 하는데, 평소에는 nginx 컨테이너가 80번을 쓰고 있다. 그래서 발급할 때 `--pre-hook "docker stop nginx" --post-hook "docker start nginx"`를 함께 넘겨 renewal 설정에 저장해 두고, 자동 갱신 때도 nginx를 잠깐 내렸다가 올리게 한다. 갱신 중 몇 초 동안 사이트가 끊긴다. 훅이 저장됐는지는 `/etc/letsencrypt/renewal/<도메인>.conf`의 `pre_hook`, `post_hook` 줄로 확인하고, `sudo certbot renew --dry-run`으로 갱신을 미리 시험한다.
 
 ## 서버 IP
 
@@ -57,13 +61,21 @@ GitHub Actions를 쓸 수 없는 급한 상황이면 운영 서버에 접속해 
 
 ### staging 서버
 
-staging 서버의 `/home/ubuntu/wannabe-ketchup`은 git clone이 아니라 필요한 파일만 복사해 둔 디렉터리다. `app-compose.yml`은 워크플로가 복사하고, 나머지 infra 파일은 저장소에서 직접 복사한다. 복사할 것은 `infra-compose.yml`, `nginx/nginx.conf`, `prometheus/`, `loki/`, `grafana/provisioning/`, `grafana/dashboards/`이다. 저장소에 없는 `grafana/.env`는 서버에서 만들어 `GF_SECURITY_ADMIN_PASSWORD`를 넣는다.
+staging 서버의 `/home/ubuntu/wannabe-ketchup`은 git clone이 아니라 필요한 파일만 복사해 둔 디렉터리다. `app-compose.yml`은 워크플로가 복사하고, 나머지 infra 파일은 저장소에서 직접 복사한다. 복사할 것은 `infra-compose.yml`, `nginx/nginx.conf`, `prometheus/`, `loki/`, `grafana/provisioning/`, `grafana/dashboards/`이다. 저장소에 없는 `grafana/.env`는 서버에서 만들어 `GF_SECURITY_ADMIN_PASSWORD`에 긴 비밀번호를 넣는다. Grafana가 인터넷에 공개되므로 이 비밀번호가 유일한 보호 수단이다.
 
-그다음 `docker compose -f infra-compose.yml --profile dashboard up -d`로 nginx를 다시 만들고 Prometheus, Loki, Grafana를 띄운다. Grafana는 `dashboard` 프로필에 묶여 있어 `--profile dashboard` 없이 실행하면 뜨지 않는다. 이후 설정 파일만 바꿨을 때는 compose 정의가 그대로라 컨테이너가 다시 만들어지지 않으므로 `docker compose -f infra-compose.yml --profile dashboard restart <서비스 이름>`으로 다시 읽힌다.
+파일을 올리기 전에 `monitoring.zizon-tomato.cloud`의 DNS A 레코드를 staging 서버 IP로 추가하고, 기존 인증서에 서브도메인을 더한다. 인증서가 서브도메인을 담고 있지 않으면 새 nginx 설정의 Grafana 블록은 인증서 경고를 낸다.
+
+```bash
+sudo certbot certonly --standalone --expand \
+  -d zizon-tomato.cloud -d monitoring.zizon-tomato.cloud \
+  --pre-hook "docker stop nginx" --post-hook "docker start nginx"
+```
+
+그다음 `docker compose -f infra-compose.yml up -d`로 Prometheus, Loki, Grafana를 띄우고, 바뀐 nginx 설정을 읽도록 `docker compose -f infra-compose.yml up -d --force-recreate nginx`로 nginx를 다시 만든다. 이후 설정 파일만 바꿨을 때는 compose 정의가 그대로라 컨테이너가 다시 만들어지지 않으므로 `docker compose -f infra-compose.yml restart <서비스 이름>`으로 다시 읽힌다.
 
 ### 운영 서버
 
-운영 서버의 `APP_DIR`에 `production/` 아래 파일을 그대로 둔다. `app-compose.yml`과 `infra-compose.yml`이 같은 `./logs`를 공유해야 Promtail이 Nest 로그를 읽을 수 있으므로 두 파일은 같은 디렉터리에 있어야 한다. 인증서는 `/etc/letsencrypt/live/wannabe-ketchup.com/`에 둔다.
+운영 서버의 `APP_DIR`에 `production/` 아래 파일을 그대로 둔다. `app-compose.yml`과 `infra-compose.yml`이 같은 `./logs`를 공유해야 Promtail이 Nest 로그를 읽을 수 있으므로 두 파일은 같은 디렉터리에 있어야 한다. 인증서는 nginx를 띄우기 전에 `sudo certbot certonly --standalone -d wannabe-ketchup.com --pre-hook "docker stop nginx" --post-hook "docker start nginx"`로 받는다. nginx 컨테이너가 아직 없을 때는 훅이 실패해도 발급은 진행되며, 훅은 renewal 설정에 저장돼 이후 자동 갱신에 쓰인다.
 
 비밀값은 커밋하지 않는 `.env`에 두고, 루트 `.env.example`의 항목을 운영 값으로 채운다.
 
