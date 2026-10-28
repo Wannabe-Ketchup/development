@@ -9,7 +9,7 @@
 | staging    | 루트의 `app-compose.yml`, `infra-compose.yml`, `nginx/`, `prometheus/`, `loki/`, `grafana/` | nest, nginx, prometheus, loki, grafana |
 | production | `production/` 아래 전부                                                                     | nest, nginx, promtail                  |
 
-compose 파일은 두 개로 나뉜다. `app-compose.yml`은 Nest 하나이고 GitHub Actions가 배포할 때마다 갱신한다. `infra-compose.yml`은 nginx와 모니터링 구성요소이며 자동 배포에 포함되지 않아 서버에서 직접 반영한다. infra가 `ketchup-network`를 만들고 app이 그 네트워크에 붙으므로 서버를 처음 띄울 때는 infra를 먼저 올린다.
+compose 파일은 두 개로 나뉜다. `app-compose.yml`은 Nest 하나이고 GitHub Actions가 배포할 때마다 갱신한다. `infra-compose.yml`은 nginx와 모니터링 구성요소이며 자동 배포에 포함되지 않아 서버에서 직접 반영한다. infra가 `ketchup-network`를 만들고 app이 그 네트워크에 붙으므로 서버를 처음 띄울 때는 infra를 먼저 올린다. 두 파일이 같은 디렉터리에 있어 compose는 둘을 한 프로젝트로 보고, infra를 실행할 때 nest를 "orphan container"라고 경고한다. 이 경고는 무시하며, `--remove-orphans`를 붙이면 nest가 삭제되므로 쓰지 않는다.
 
 ## 자동 배포 흐름
 
