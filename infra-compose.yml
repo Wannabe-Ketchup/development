@@ -21,7 +21,9 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=15d'
+      # 90일과 3GB 중 먼저 닿는 쪽 기준으로 오래된 데이터부터 지운다.
+      - '--storage.tsdb.retention.time=90d'
+      - '--storage.tsdb.retention.size=3GB'
     ports:
       - '127.0.0.1:9090:9090'
     volumes:

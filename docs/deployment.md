@@ -41,7 +41,7 @@ GitHub Actions를 쓸 수 없는 급한 상황이면 운영 서버에 접속해 
 
 로그는 운영 서버 Promtail이 Nest 로그 파일(`logs/*.log`)을 읽어 staging Loki로 보낸다. staging nginx는 `/loki/api/v1/push` 한 경로만 운영 서버 IP에 열며, Loki의 조회 API는 밖으로 열지 않는다. Promtail은 어디까지 보냈는지 기록해 두므로 재시작해도 이어서 보내고, Loki가 잠시 멈추면 재시도한다. 원본 로그 파일은 운영 서버에 30일 동안 남는다. Grafana에서는 Explore에서 Loki를 고르고 `{env="production", job="nest"}`처럼 조회하며, `level`은 라벨로, `traceId`는 `trace_id` structured metadata로 들어 있어 `{env="production"} | trace_id="<값>"`으로 한 요청의 로그를 모아 볼 수 있다. nginx 로그는 Loki로 보내지 않는다.
 
-메트릭과 로그는 모두 15일 동안 보관한다. Grafana는 `https://monitoring.zizon-tomato.cloud`로 접속하며, staging nginx가 같은 서버의 Grafana로 넘긴다. 회원가입은 막혀 있고 `grafana/.env`의 관리자 비밀번호로 로그인한다.
+메트릭과 로그는 모두 90일 동안 보관한다. Prometheus는 90일 전이라도 3GB를 넘으면 오래된 데이터부터 지운다. Loki는 용량 기준 삭제가 없으므로 staging 디스크 사용량(`df -h`)을 가끔 확인한다. Grafana는 `https://monitoring.zizon-tomato.cloud`로 접속하며, staging nginx가 같은 서버의 Grafana로 넘긴다. 회원가입은 막혀 있고 `grafana/.env`의 관리자 비밀번호로 로그인한다.
 
 ## 인증서
 
