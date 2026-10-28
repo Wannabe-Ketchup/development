@@ -5,3 +5,16 @@ scrape_configs:
   - job_name: nest
     static_configs:
       - targets: ['nest:3000']
+        labels:
+          env: staging
+
+  # 운영 서버 nginx는 /api/metrics를 이 서버 IP에만 연다.
+  # job 라벨을 nest로 맞춰 대시보드가 env 라벨로만 환경을 구분하게 한다.
+  - job_name: nest-production
+    scheme: https
+    metrics_path: /api/metrics
+    static_configs:
+      - targets: ['wannabe-ketchup.com']
+        labels:
+          job: nest
+          env: production
