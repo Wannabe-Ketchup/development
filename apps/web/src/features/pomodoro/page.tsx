@@ -130,7 +130,7 @@ function Pomodoro() {
         )}
 
         {/* 소품은 책상 래퍼(z-10) 안에서 책상 다음에 그려 책상 위에 보이게 한다. 참여자 목록(z-0) 안에 두면 책상에 가려진다 */}
-        <div className="absolute top-[calc(60%+74px)] left-1/2 z-10 -translate-x-1/2">
+        <div className="absolute top-[calc(60%+59px)] left-1/2 z-10 -translate-x-1/2">
           <DeskSvg aria-hidden="true" />
           {room && (
             <DeskProps

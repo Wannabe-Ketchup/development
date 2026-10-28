@@ -35,7 +35,7 @@ export function DeskProps({
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute top-12.5 left-1/2"
+      className="pointer-events-none absolute top-8.75 left-1/2"
     >
       {participantIds.map((participantId, index) => (
         <div
@@ -55,17 +55,18 @@ export function DeskProps({
 
 function LaptopProp() {
   return (
-    <LaptopSvg className="absolute bottom-0 left-0 max-w-none -translate-x-1/2" />
+    <LaptopSvg className="absolute bottom-0 left-0 h-18 w-27.75 max-w-none -translate-x-1/2" />
   );
 }
 
 // 손잡이 때문에 잔 중심(x≈40)이 SVG 가운데(x=51)보다 왼쪽에 있다.
 // SVG 가운데가 아니라 잔 중심을 좌석 가운데에 맞춘다.
+// 잔과 김은 잔 중심을 기준으로 함께 85%로 줄이고, 맥북보다 4px 앞에 놓는다.
 function CoffeeProp() {
   return (
-    <>
+    <div className="absolute top-1 left-0 scale-85">
       <CoffeeSvg className="absolute bottom-0 -left-10 max-w-none" />
       <SteamAnimation />
-    </>
+    </div>
   );
 }
