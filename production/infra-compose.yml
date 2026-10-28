@@ -1,0 +1,40 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/logs:/var/log/nginx
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      # nginx.conf의 root(React 빌드)를 같은 경로로 마운트한다.
+      - /home/ubuntu/wannabe-ketchup/dist:/home/ubuntu/wannabe-ketchup/dist:ro
+    networks:
+      - ketchup-network
+    restart: always
+
+  # Nest 로그 파일을 모니터링 서버(staging)의 Loki로 보낸다.
+  promtail:
+    image: grafana/promtail:3.6.11
+    container_name: promtail
+    command:
+      - '-config.file=/etc/promtail/promtail.yml'
+    environment:
+      - GOMEMLIMIT=100MiB
+    volumes:
+      - ./promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - ./logs:/var/log/nest:ro
+      - promtail_data:/var/lib/promtail
+    mem_limit: 128m
+    networks:
+      - ketchup-network
+    restart: always
+
+networks:
+  ketchup-network:
+    name: ketchup-network
+
+volumes:
+  promtail_data:
