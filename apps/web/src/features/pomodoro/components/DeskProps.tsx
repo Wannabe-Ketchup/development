@@ -7,6 +7,7 @@ import {
   getSeatTranslateX,
   SEAT_MOVE_TRANSITION_CLASS,
 } from '../lib/seat-layout';
+import { SteamAnimation } from './SteamAnimation';
 
 const DESK_PROP_BY_MODE = {
   [ROOM_MODE.FOCUS]: { Prop: LaptopProp, testId: 'desk-prop-laptop' },
@@ -61,5 +62,10 @@ function LaptopProp() {
 // 손잡이 때문에 잔 중심(x≈40)이 SVG 가운데(x=51)보다 왼쪽에 있다.
 // SVG 가운데가 아니라 잔 중심을 좌석 가운데에 맞춘다.
 function CoffeeProp() {
-  return <CoffeeSvg className="absolute bottom-0 -left-10 max-w-none" />;
+  return (
+    <>
+      <CoffeeSvg className="absolute bottom-0 -left-10 max-w-none" />
+      <SteamAnimation />
+    </>
+  );
 }

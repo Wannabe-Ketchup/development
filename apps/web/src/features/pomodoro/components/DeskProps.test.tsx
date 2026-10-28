@@ -37,6 +37,20 @@ describe('DeskProps', () => {
     expect(screen.queryByTestId('desk-prop-laptop')).toBeNull();
   });
 
+  it('휴식 세션이면 커피마다 김이 피어오른다', () => {
+    // when
+    render(
+      <DeskProps
+        mode={ROOM_MODE.BREAK}
+        participantIds={PARTICIPANT_IDS}
+        seatSpacingPx={SEAT_SPACING_PX}
+      />,
+    );
+
+    // then
+    expect(screen.getAllByTestId('desk-prop-steam')).toHaveLength(3);
+  });
+
   it('대기 상태면 소품이 놓이지 않는다', () => {
     // when
     render(
