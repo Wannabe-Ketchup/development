@@ -4,11 +4,12 @@ pnpm + Turborepo 모노레포. Node 24 (`.nvmrc`).
 
 ## 구조
 
-| 경로              | 내용                                                                 |
-| ----------------- | -------------------------------------------------------------------- |
-| `apps/api`        | `@pomodoro/api`: NestJS 11 API 서버 (:3000)                          |
-| `apps/web`        | `@pomodoro/web`: React 19 + Vite (:5173). `/api` 요청은 api로 프록시 |
-| `packages/shared` | `@pomodoro/shared`: api와 web이 함께 쓰는 요청·응답 타입과 상수      |
+| 경로              | 내용                                                                    |
+| ----------------- | ----------------------------------------------------------------------- |
+| `apps/api`        | `@pomodoro/api`: NestJS 11 API 서버 (:3000)                             |
+| `apps/web`        | `@pomodoro/web`: React 19 + Vite (:5173). `/api` 요청은 api로 프록시    |
+| `packages/shared` | `@pomodoro/shared`: api와 web이 함께 쓰는 요청·응답 타입과 상수         |
+| `production/`     | 운영 서버 compose·nginx·Promtail 설정. 배포·롤백은 `docs/deployment.md` |
 
 ## 명령
 
