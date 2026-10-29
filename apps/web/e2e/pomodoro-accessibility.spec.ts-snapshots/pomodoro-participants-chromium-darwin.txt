@@ -1,0 +1,8 @@
+- list "참가자 목록":
+  - listitem "나, 토마토1":
+    - text: 토마토1
+    - button "닉네임 수정"
+    - text: 지금 무엇을 하고있나요?
+    - button "상태 메시지 수정"
+  - listitem "토마토2": 토마토2 열심히!
+  - listitem "토마토3"

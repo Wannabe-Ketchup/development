@@ -1,1 +1,108 @@
 @import 'tailwindcss';
+
+@font-face {
+  font-family: 'DearFromsol';
+  src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/2607161334@griun-fromsol-rg/griun-fromsol-rg/Griun_Fromsol-Rg.woff2')
+    format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@theme {
+  --color-*: initial;
+
+  --color-black: #1b1b1b;
+  --color-gray: #bababa;
+  --color-white: #ffffff;
+
+  --color-tomato-body-1: #9beb87;
+  --color-tomato-body-2: #f5ae8d;
+  --color-tomato-body-3: #f5908d;
+  --color-tomato-body-4: #f36673;
+  --color-tomato-leaf: #2ae578;
+  --color-lamp-on: #ffed92;
+  --color-lamp-off: #ffffff;
+  --color-error: #f36673;
+
+  --font-dearfromsol: 'DearFromsol';
+
+  --cursor-default: url('./assets/cursor_default.svg') 4 4, default;
+  --cursor-pointer: url('./assets/cursor_pointer.svg') 4 4, pointer;
+  --cursor-grab: url('./assets/cursor_grab.svg') 4 4, grab;
+  --cursor-grabbing: url('./assets/cursor_grabbing.svg') 4 4, grabbing;
+  --cursor-text: url('./assets/cursor_text.svg') 4 4, text;
+}
+
+body {
+  @apply cursor-default font-dearfromsol tracking-[10%] text-black;
+}
+
+button,
+a {
+  @apply cursor-pointer;
+}
+
+input[type='text'] {
+  @apply cursor-text;
+}
+
+@keyframes snot-slide {
+  to {
+    transform: translateX(-150px);
+  }
+}
+
+@keyframes pencil-slide {
+  to {
+    transform: translateX(-180px);
+  }
+}
+
+@keyframes tomato-surprised-slide {
+  to {
+    transform: translateX(-250px);
+  }
+}
+
+@keyframes note-slide {
+  to {
+    transform: translateX(-384px);
+  }
+}
+
+@keyframes steam-slide {
+  to {
+    transform: translateX(-280px);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-3px);
+  }
+  40%,
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@theme {
+  --animate-shake: shake 0.3s ease-in-out 2;
+  --animate-snot-slide: snot-slide 1.5s steps(5) infinite;
+  --animate-pencil-slide: pencil-slide 1.5s steps(3) infinite;
+  --animate-tomato-surprised-slide: tomato-surprised-slide 0.5s steps(2)
+    infinite;
+  --animate-note-slide: note-slide 1.5s steps(3) infinite;
+  --animate-steam-slide: steam-slide 2s steps(4) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shake {
+    animation: none;
+  }
+}

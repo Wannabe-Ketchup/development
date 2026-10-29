@@ -1,0 +1,32 @@
+services:
+  nest:
+    # 운영은 staging에서 검증된 커밋 SHA 이미지를 명시해서 배포한다.
+    image: ghcr.io/wannabe-ketchup/pomodoro-api:${TAG:?TAG에 배포할 이미지 태그(커밋 SHA)를 지정하세요}
+    container_name: nest
+    ports:
+      - '127.0.0.1:3000:3000'
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - '-e'
+        - "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ketchup
+    restart: always
+
+networks:
+  ketchup:
+    external: true
+    name: ketchup-network

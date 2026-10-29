@@ -1,0 +1,83 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/logs:/var/log/nginx
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      # nginx.conf의 root(React 빌드)를 같은 경로로 마운트한다.
+      - /home/ubuntu/wannabe-ketchup/dist:/home/ubuntu/wannabe-ketchup/dist:ro
+    networks:
+      - ketchup-network
+    restart: always
+
+  prometheus:
+    image: prom/prometheus:v3.13.4
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      # 90일과 3GB 중 먼저 닿는 쪽 기준으로 오래된 데이터부터 지운다.
+      - '--storage.tsdb.retention.time=90d'
+      - '--storage.tsdb.retention.size=3GB'
+    ports:
+      - '127.0.0.1:9090:9090'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    mem_limit: 256m
+    networks:
+      - ketchup-network
+    restart: always
+
+  loki:
+    image: grafana/loki:3.7.9
+    container_name: loki
+    command:
+      - '-config.file=/etc/loki/loki.yml'
+    environment:
+      # mem_limit에 닿기 전에 GC가 메모리를 회수하게 한다.
+      - GOMEMLIMIT=200MiB
+    volumes:
+      - ./loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki_data:/loki
+    mem_limit: 256m
+    networks:
+      - ketchup-network
+    restart: always
+
+  grafana:
+    image: grafana/grafana:13.2.4
+    container_name: grafana
+    ports:
+      - '127.0.0.1:3001:3000'
+    env_file:
+      - ./grafana/.env
+    environment:
+      - GF_USERS_ALLOW_SIGN_UP=false
+      # nginx를 거쳐 접속하므로 리다이렉트·링크가 외부 주소를 쓰게 한다.
+      - GF_SERVER_ROOT_URL=https://monitoring.zizon-tomato.cloud
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    mem_limit: 384m
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - ketchup-network
+    restart: unless-stopped
+
+networks:
+  ketchup-network:
+    name: ketchup-network
+
+volumes:
+  prometheus_data:
+  loki_data:
+  grafana_data:

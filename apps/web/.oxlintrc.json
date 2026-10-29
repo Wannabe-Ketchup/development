@@ -1,9 +1,16 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
+  "plugins": ["react", "typescript", "oxc", "jsx-a11y"],
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }],
-    "typescript/no-explicit-any": "error"
+    "typescript/no-explicit-any": "error",
+    "jsx-a11y/alt-text": "error",
+    "jsx-a11y/control-has-associated-label": "error",
+    "jsx-a11y/no-noninteractive-element-interactions": "error",
+    "jsx-a11y/no-noninteractive-element-to-interactive-role": "error",
+    "jsx-a11y/no-noninteractive-tabindex": "error",
+    "jsx-a11y/tabindex-no-positive": "error",
+    "jsx-a11y/no-autofocus": "off"
   }
 }

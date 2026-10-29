@@ -1,11 +1,11 @@
-import './App.css';
+import Home from './features/home/page';
+import Pomodoro from './features/pomodoro/page';
+import { useRoomId } from '@/lib/room-id';
 
 function App() {
-  return (
-    <>
-      <div>pomodoro</div>
-    </>
-  );
+  const roomId = useRoomId();
+
+  return roomId ? <Pomodoro /> : <Home />;
 }
 
 export default App;

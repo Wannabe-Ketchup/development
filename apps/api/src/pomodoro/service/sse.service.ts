@@ -1,0 +1,46 @@
+import { Injectable } from '@nestjs/common';
+import type { MessageEvent } from '@nestjs/common';
+import { Observable, Subject } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+import type { SseEventPayload } from '@pomodoro/shared';
+
+export const SSE_RETRY_MS = 5000;
+
+interface SseMessage {
+  roomId: string;
+  event: SseEventPayload;
+  id: string;
+  retry?: number;
+}
+
+@Injectable()
+export class SseService {
+  private readonly subject = new Subject<SseMessage>();
+  private eventIdCounter = 0;
+
+  subscribe(roomId: string): Observable<MessageEvent> {
+    return this.subject.asObservable().pipe(
+      filter((msg) => msg.roomId === roomId),
+      map((msg) => ({
+        type: msg.event.type,
+        data: msg.event.data,
+        id: msg.id,
+        retry: msg.retry ?? SSE_RETRY_MS,
+      })),
+    );
+  }
+
+  emit(
+    roomId: string,
+    event: SseEventPayload,
+    options?: { retry?: number },
+  ): void {
+    const id = String(++this.eventIdCounter);
+    this.subject.next({ roomId, event, id, retry: options?.retry });
+  }
+
+  createOwnSnapshotEvent(event: SseEventPayload): MessageEvent {
+    const id = String(++this.eventIdCounter);
+    return { type: event.type, data: event.data, id, retry: SSE_RETRY_MS };
+  }
+}

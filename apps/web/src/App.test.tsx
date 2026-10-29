@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { render } from '@testing-library/react';
+import Pomodoro from './features/pomodoro/page';
 
 test('renders without crashing', () => {
-  render(<App />);
-  expect(screen.getByText('pomodoro')).toBeTruthy();
+  const { container } = render(<Pomodoro />);
+  expect(container).toBeTruthy();
 });
