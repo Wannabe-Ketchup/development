@@ -344,3 +344,13 @@ function ItemEditModal({
 - `lib/`의 순수 함수처럼 판단이 있는 로직을 우선 테스트하고, 컴포넌트는 사용자가 보는 결과(렌더링, 상호작용 후 상태)로 검증한다.
 - `describe`·`it`은 한국어 문장으로, 행위와 결과를 함께 쓴다(`쿼리 문자열에 roomId가 없으면 null을 반환한다`). 본문은 가능하면 `// given`, `// when`, `// then`으로 나눈다.
 - API·SSE 등 경계는 `vi.mock('@/api/room')`처럼 모듈 단위로 mock한다.
+
+## 9. 접근성과 인터랙션 흐름
+
+- 아이콘만 있는 버튼은 `components/IconButton`을 쓴다. `label`이 `aria-label`이 되고 아이콘은 `aria-hidden`으로 숨겨진다. `<button>`에 직접 `aria-label`을 달지 않는다.
+- 클릭·드래그로만 되는 동작은 키보드(Tab, Enter, Space, Esc)로도 할 수 있어야 한다. 장식 요소는 `aria-hidden`으로 스크린 리더에서 숨긴다.
+- 목록은 `<ul>`/`<li>`로 만든다.
+- 의미 없는 이미지는 `alt=""`로 둔다.
+- `alt`와 `label`에는 "버튼", "아이콘", "이미지"처럼 role이 이미 알려 주는 말을 넣지 않는다(❌ `label="닫기 버튼"` → ✅ `label="닫기"`).
+- 포커스 이동이나 스크린 리더 발화가 바뀌는 변경은 해당 feature의 `flows.md`를 같은 작업에서 고친다. 형식은 `.claude/skills/develop/templates/interaction-flow.md`를 따른다.
+- `flows.md`의 시나리오 한 개는 `apps/web/e2e/`의 Playwright `describe` 한 개와 이름이 같다. e2e는 `pnpm --filter @pomodoro/web test:e2e`로 실행한다(최초 1회 `test:e2e:install`). 단위 테스트(8절)와 달리 `verify.sh`에 포함되지 않으므로 상호작용을 바꿨다면 직접 실행한다.
