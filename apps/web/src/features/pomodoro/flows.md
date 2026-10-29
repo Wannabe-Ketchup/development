@@ -1,6 +1,5 @@
 # 뽀모도로 인터랙션 흐름
 
-출처: `.harness/2026-10-19-icon-only-button.md`, `.harness/2026-10-21-a11y-user-scenarios.md`, `.harness/2026-10-23-pomodoro-how-to-use-tour.md`
 마지막 수정: 2026-10-23
 
 ---

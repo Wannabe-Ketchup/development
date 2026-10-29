@@ -86,6 +86,7 @@ disable-model-invocation: true
 - **핵심 코드**는 실제 파일에 쓰지 않고 설계 문서 안의 코드 블록으로 작성한다. 여기에는 `@pomodoro/shared` 요청·응답 타입, 도메인 엔티티와 메서드 시그니처, Controller 라우트 시그니처, 주요 컴포넌트·Hook 시그니처가 들어간다. 승인 전에는 프로덕션 코드를 건드리지 않는다.
 - 핵심 코드는 `.claude/rules/backend-conventions.md`, `.claude/rules/backend-testing.md`, `.claude/rules/frontend-conventions.md`를 따라야 한다. 예를 들어 현재 시각·난수는 주입받고, 공유 타입은 `@pomodoro/shared`에 둔다.
 - 테스트 계획은 backend-testing 1절(무엇을, 어느 계층에서)에 맞추고, `it` 문장마다 "깨지면 어떤 규칙이 깨지는가"를 함께 적는다. 모든 계층을 채우지 않는다. 같은 규칙은 가장 낮은 계층에서 한 번만 검증한다.
+- web의 사용자 상호작용(포커스 이동, 키보드 조작, 스크린 리더 발화)이 바뀌면 문서에 `인터랙션 흐름 변경` 절을 두고, 바뀔 `apps/web/src/features/<도메인>/flows.md`의 시나리오를 `.claude/skills/develop/templates/interaction-flow.md` 형식으로 적는다. 승인 전에는 `flows.md`와 e2e를 건드리지 않는다.
 - 필요한 의존성 추가(예: Jest, ORM)가 있으면 문서의 `의존성 변경` 절에 명시한다. 승인을 받아야만 설치할 수 있다.
 - 정리한 도메인 지식 후보를 문서의 `도메인 지식 변경` 절에 `신규`/`수정`으로 적는다. 어느 문서의 어느 절에 무엇을 추가·수정할지 문장 그대로 쓰고, 수정은 `전 → 후`로 쓴다. 이 기능이 따르는 기존 규칙도 `참고`로 한 줄씩 적는다. 승인 전에는 `docs/`를 건드리지 않는다.
 
@@ -104,6 +105,8 @@ disable-model-invocation: true
 
 - 기존 문서는 해당 절에 내용을 추가하거나 고친다. 바뀐 규칙은 지우고 새 규칙으로 바꾼다(이력은 설계 문서에 남는다).
 - 새 도메인이면 `.claude/skills/develop/templates/domain-doc.md` 템플릿으로 `docs/domain/<도메인>.md`를 만들고, `CLAUDE.md`의 `도메인 지식` 목록에 한 줄을 추가한다.
+
+설계 문서에 `인터랙션 흐름 변경`이 있으면 이 단계에서 `flows.md`도 함께 반영한다. 시나리오를 바꾸면 `flows.md`의 `마지막 수정` 날짜를 갱신하고, 시나리오 끝의 `e2e 파일` 줄이 가리키는 `apps/web/e2e/*.spec.ts`의 `describe`도 같은 이름으로 맞춘다.
 
 그다음 `implementer` 서브에이전트에 승인된 설계 문서 경로를 넘겨 구현을 맡긴다.
 
