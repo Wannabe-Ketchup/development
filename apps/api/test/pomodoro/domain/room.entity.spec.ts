@@ -56,12 +56,25 @@ function restoreRoom(props: {
   mode: RoomMode;
   currentCycle: number;
   timer: Timer;
+  participants?: Participant[];
 }): Room {
   return Room.restore({
     roomId: ROOM_ID,
-    participants: [Participant.create(PARTICIPANT_ID, '케첩', JOINED_AT)],
     capacity: ROOM_CAPACITY,
     ...props,
+    participants: props.participants ?? [
+      Participant.create(PARTICIPANT_ID, '케첩', JOINED_AT),
+    ],
+  });
+}
+
+function restoreParticipant(id: string, completedCycles: number): Participant {
+  return Participant.restore({
+    id,
+    nickname: '케첩',
+    statusMessage: '',
+    completedCycles,
+    joinedAt: JOINED_AT,
   });
 }
 
@@ -160,6 +173,26 @@ describe('Room', () => {
 
     // when & then
     expect(() => room.join(newParticipant)).toThrow(BadRequestException);
+  });
+
+  it('정원이 찬 방에서 참가자가 나가면 새 참가자가 들어올 수 있다 (CAP-02)', () => {
+    // given
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const room = Room.create('roomId');
+    room.join(Participant.create('1', 'name1', joinedAt));
+    room.join(Participant.create('2', 'name2', joinedAt));
+    room.join(Participant.create('3', 'name3', joinedAt));
+    room.join(Participant.create('4', 'name4', joinedAt));
+    const newParticipant = Participant.create('5', 'name5', joinedAt);
+
+    // when
+    room.leave('1');
+    room.join(newParticipant);
+
+    // then
+    const expectedSize = 4;
+    expect(room.participants.size).toBe(expectedSize);
+    expect(room.participants.get('5')).toBe(newParticipant);
   });
 
   it('같은 방의 다른 참가자가 쓰지 않는 닉네임이면 변경할 수 있다.', () => {
@@ -322,6 +355,22 @@ describe('Room', () => {
   });
 
   describe('startPomodoro', () => {
+    it('대기 상태에서 다음 세트를 시작해도 참여자의 마친 바퀴 수는 그대로다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [restoreParticipant(PARTICIPANT_ID, 4)],
+      });
+
+      // when
+      room.startPomodoro(PARTICIPANT_ID, new Date('2026-10-17T09:00:00.000Z'));
+
+      // then
+      expect(room.participants.get(PARTICIPANT_ID)?.completedCycles).toBe(4);
+    });
+
     it('대기 중인 방에서 시작하면 1회차 집중이 지금 시각부터 집중 시간만큼 진행된다', () => {
       // given
       const room = restoreRoom({
@@ -560,6 +609,22 @@ describe('Room', () => {
   });
 
   describe('finishFocus', () => {
+    it('집중이 끝나는 것만으로는 참여자의 마친 바퀴 수가 늘지 않는다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.FOCUS,
+        currentCycle: 1,
+        timer: runningTimer('2026-10-17T09:00:00.000Z', FOCUS_DURATION_SECONDS),
+        participants: [restoreParticipant(PARTICIPANT_ID, 0)],
+      });
+
+      // when
+      room.finishFocus();
+
+      // then
+      expect(room.participants.get(PARTICIPANT_ID)?.completedCycles).toBe(0);
+    });
+
     it('집중이 끝나면 같은 회차의 휴식이 집중 종료 예정 시각부터 시작된다', () => {
       // given
       const room = restoreRoom({
@@ -581,6 +646,32 @@ describe('Room', () => {
   });
 
   describe('finishBreak', () => {
+    it.each([{ cycle: 1 }, { cycle: CYCLE_COUNT }])(
+      '$cycle회차 휴식이 끝나면 방에 있는 참여자마다 마친 바퀴 수가 1씩 늘어난다',
+      ({ cycle }) => {
+        // given
+        const room = restoreRoom({
+          mode: ROOM_MODE.BREAK,
+          currentCycle: cycle,
+          timer: runningTimer(
+            '2026-10-17T09:25:00.000Z',
+            BREAK_DURATION_SECONDS,
+          ),
+          participants: [
+            restoreParticipant('participant-a', 0),
+            restoreParticipant('participant-b', 2),
+          ],
+        });
+
+        // when
+        room.finishBreak();
+
+        // then
+        expect(room.participants.get('participant-a')?.completedCycles).toBe(1);
+        expect(room.participants.get('participant-b')?.completedCycles).toBe(3);
+      },
+    );
+
     it('마지막 회차 전의 휴식이 끝나면 다음 회차 집중이 시작된다 (3회차 휴식 → 4회차 집중)', () => {
       // given
       const room = restoreRoom({

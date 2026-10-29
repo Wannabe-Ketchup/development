@@ -70,6 +70,12 @@ input[type='text'] {
   }
 }
 
+@keyframes steam-slide {
+  to {
+    transform: translateX(-280px);
+  }
+}
+
 @keyframes shake {
   0%,
   100% {
@@ -92,6 +98,7 @@ input[type='text'] {
   --animate-tomato-surprised-slide: tomato-surprised-slide 0.5s steps(2)
     infinite;
   --animate-note-slide: note-slide 1.5s steps(3) infinite;
+  --animate-steam-slide: steam-slide 2s steps(4) infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

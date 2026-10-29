@@ -1,14 +1,16 @@
 import { Test } from '@nestjs/testing';
 import { EnterRoomService } from '../../../src/pomodoro/service/enter-room.service';
 import { RoomQueryService } from '../../../src/pomodoro/service/room-query.service';
-import { RoomPresenceService } from '../../../src/pomodoro/service/room-presence.service';
+import { RoomPresenceTracker } from '../../../src/pomodoro/service/room-presence.tracker';
+import { LeaveRoomService } from '../../../src/pomodoro/service/leave-room.service';
+import { SseService } from '../../../src/pomodoro/service/sse.service';
 import { RoomRepository } from '../../../src/pomodoro/repository/room.repository';
 import { InMemoryRoomRepository } from '../../../src/pomodoro/repository/in-memory.room.repository';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
 
 describe('EnterRoomService', () => {
   beforeEach(() => {
-    // RoomPresenceService가 거는 퇴장 대기 타이머가 테스트 뒤에 남지 않게 한다
+    // RoomPresenceTracker가 거는 퇴장 대기 타이머가 테스트 뒤에 남지 않게 한다
     jest.useFakeTimers();
   });
 
@@ -23,7 +25,9 @@ describe('EnterRoomService', () => {
         providers: [
           EnterRoomService,
           RoomQueryService,
-          RoomPresenceService,
+          RoomPresenceTracker,
+          LeaveRoomService,
+          SseService,
           { provide: RoomRepository, useClass: InMemoryRoomRepository },
         ],
       }).compile();

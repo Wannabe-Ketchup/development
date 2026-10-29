@@ -104,7 +104,6 @@ disable-model-invocation: true
 
 - 기존 문서는 해당 절에 내용을 추가하거나 고친다. 바뀐 규칙은 지우고 새 규칙으로 바꾼다(이력은 설계 문서에 남는다).
 - 새 도메인이면 `.claude/skills/develop/templates/domain-doc.md` 템플릿으로 `docs/domain/<도메인>.md`를 만들고, `CLAUDE.md`의 `도메인 지식` 목록에 한 줄을 추가한다.
-- 문서 상단 `출처`에 이번 설계 문서 경로를 추가한다.
 
 그다음 `implementer` 서브에이전트에 승인된 설계 문서 경로를 넘겨 구현을 맡긴다.
 

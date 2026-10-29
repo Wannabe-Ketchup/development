@@ -6,5 +6,7 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "transformIgnorePatterns": ["node_modules/(?!(\\.pnpm/)?@nestjs[+/](config|event-emitter))"]
+  "transformIgnorePatterns": [
+    "node_modules/(?!(\\.pnpm/)?@nestjs[+/](config|event-emitter))"
+  ]
 }

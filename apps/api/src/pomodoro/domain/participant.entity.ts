@@ -12,9 +12,31 @@ export class Participant implements ParticipantShape {
     public readonly id: string,
     private _nickname: string,
     private _statusMessage: string,
-    private _currentCycle: number,
+    private _completedCycles: number,
     private _joinedAt: string,
   ) {}
+
+  // 검증하지 않는다. repository 매퍼와 테스트 given에서만 호출한다
+  static restore(props: {
+    id: string;
+    nickname: string;
+    statusMessage: string;
+    completedCycles: number;
+    joinedAt: string;
+  }): Participant {
+    return new Participant(
+      props.id,
+      props.nickname,
+      props.statusMessage,
+      props.completedCycles,
+      props.joinedAt,
+    );
+  }
+
+  // 방의 휴식이 끝날 때 Room이 호출한다
+  completeCycle(): void {
+    this._completedCycles += 1;
+  }
 
   private static validateNickname(nickname: string): void {
     if (
@@ -36,9 +58,15 @@ export class Participant implements ParticipantShape {
   static create(id: string, nickname: string, joinedAt: string): Participant {
     Participant.validateNickname(nickname);
 
-    const currentCycle = 0;
+    const completedCycles = 0;
     const statusMessage = '';
-    return new Participant(id, nickname, statusMessage, currentCycle, joinedAt);
+    return new Participant(
+      id,
+      nickname,
+      statusMessage,
+      completedCycles,
+      joinedAt,
+    );
   }
 
   public changeNickname(nickname: string): void {
@@ -67,8 +95,8 @@ export class Participant implements ParticipantShape {
     return this._statusMessage;
   }
 
-  get currentCycle(): number {
-    return this._currentCycle;
+  get completedCycles(): number {
+    return this._completedCycles;
   }
 
   get joinedAt(): string {

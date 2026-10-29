@@ -4,7 +4,8 @@ import { PomodoroSseController } from './controller/pomodoro-sse.controller';
 import { SseService } from './service/sse.service';
 import { EnterRoomService } from './service/enter-room.service';
 import { RoomQueryService } from './service/room-query.service';
-import { RoomPresenceService } from './service/room-presence.service';
+import { RoomPresenceTracker } from './service/room-presence.tracker';
+import { LeaveRoomService } from './service/leave-room.service';
 import { RoomEventStreamService } from './service/room-event-stream.service';
 import { ChangeNicknameService } from './service/change-nickname.service';
 import { ChangeStatusMessageService } from './service/change-status-message.service';
@@ -30,7 +31,8 @@ import { MetricsModule } from '../metrics/metrics.module';
     SseService,
     EnterRoomService,
     RoomQueryService,
-    RoomPresenceService,
+    RoomPresenceTracker,
+    LeaveRoomService,
     RoomEventStreamService,
     ChangeNicknameService,
     CreateRoomService,

@@ -135,11 +135,14 @@ export class Room {
     this._timer = this._timer.startBreak(focusEndsAt);
   }
 
+  // 휴식이 끝나면 방에 있는 참여자 모두 한 바퀴를 마친다.
   // 마지막 회차 휴식이 끝나면 대기 상태로, 그 전이면 다음 회차 집중으로 넘어간다
   finishBreak(): void {
     if (this._mode !== ROOM_MODE.BREAK) {
       throw new ConflictException('휴식 중인 방이 아닙니다.');
     }
+
+    this._participants.forEach((participant) => participant.completeCycle());
 
     if (this._currentCycle >= this._timer.totalCycle) {
       this._mode = ROOM_MODE.IDLE;

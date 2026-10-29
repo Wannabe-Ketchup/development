@@ -20,7 +20,7 @@ describe('Pomodoro 페이지', () => {
     id: 'p-1',
     nickname: '졸린토마토',
     statusMessage: '',
-    currentCycle: 0,
+    completedCycles: 0,
   };
   const selfParticipant = { id: 'p-2', nickname: '배고픈토마토' };
 
@@ -40,7 +40,7 @@ describe('Pomodoro 페이지', () => {
     // 본인도 이미 이 시점의 participants에 포함되어 있다.
     participants: [
       existingParticipant,
-      { ...selfParticipant, statusMessage: '', currentCycle: 0 },
+      { ...selfParticipant, statusMessage: '', completedCycles: 0 },
     ],
   };
 
@@ -101,7 +101,7 @@ describe('Pomodoro 페이지', () => {
       ...room,
       participants: [
         existingParticipant,
-        { ...selfParticipant, statusMessage: '', currentCycle: 0 },
+        { ...selfParticipant, statusMessage: '', completedCycles: 0 },
       ],
     };
     emitRoomState(confirmedRoom);

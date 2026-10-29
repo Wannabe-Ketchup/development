@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RoomRepository } from '../repository/room.repository';
 import { RoomQueryService } from './room-query.service';
-import { RoomPresenceService } from './room-presence.service';
+import { RoomPresenceTracker } from './room-presence.tracker';
 import { JoinRoomResponse } from '../dto/join-room-response.dto';
 import { RoomDto } from '../dto/room.dto';
 import { Participant } from '../domain/participant.entity';
@@ -13,7 +13,7 @@ export class EnterRoomService {
   constructor(
     private readonly roomQueryService: RoomQueryService,
     private readonly roomRepository: RoomRepository,
-    private readonly roomPresenceService: RoomPresenceService,
+    private readonly roomPresenceTracker: RoomPresenceTracker,
   ) {}
 
   // participantId는 로그인 세션의 값이다. 같은 세션이 다시 입장하면 기존 참가자를 돌려준다.
@@ -41,7 +41,7 @@ export class EnterRoomService {
     room.join(participant);
 
     this.roomRepository.save(room);
-    this.roomPresenceService.registerPendingParticipant(roomId, participant.id);
+    this.roomPresenceTracker.registerPendingParticipant(roomId, participant.id);
 
     return {
       participant: { id: participant.id, nickname: participant.nickname },

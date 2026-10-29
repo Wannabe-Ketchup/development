@@ -10,13 +10,13 @@ describe('RoomDto.fromEntity', () => {
       id: '1',
       nickname: 'a',
       statusMessage: '',
-      currentCycle: 0,
+      completedCycles: 0,
     } as unknown as Participant;
     const participant2 = {
       id: '2',
       nickname: 'b',
       statusMessage: '',
-      currentCycle: 0,
+      completedCycles: 0,
     } as unknown as Participant;
     const room = {
       roomId: 'room-1',
@@ -43,13 +43,13 @@ describe('RoomDto.fromEntity', () => {
           id: participant1.id,
           nickname: participant1.nickname,
           statusMessage: participant1.statusMessage,
-          currentCycle: participant1.currentCycle,
+          completedCycles: participant1.completedCycles,
         },
         {
           id: participant2.id,
           nickname: participant2.nickname,
           statusMessage: participant2.statusMessage,
-          currentCycle: participant2.currentCycle,
+          completedCycles: participant2.completedCycles,
         },
       ],
     });

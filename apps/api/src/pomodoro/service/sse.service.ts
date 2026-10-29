@@ -4,6 +4,8 @@ import { Observable, Subject } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import type { SseEventPayload } from '@pomodoro/shared';
 
+export const SSE_RETRY_MS = 5000;
+
 interface SseMessage {
   roomId: string;
   event: SseEventPayload;
@@ -23,7 +25,7 @@ export class SseService {
         type: msg.event.type,
         data: msg.event.data,
         id: msg.id,
-        retry: msg.retry ?? 5000,
+        retry: msg.retry ?? SSE_RETRY_MS,
       })),
     );
   }
@@ -39,6 +41,6 @@ export class SseService {
 
   createOwnSnapshotEvent(event: SseEventPayload): MessageEvent {
     const id = String(++this.eventIdCounter);
-    return { type: event.type, data: event.data, id, retry: 5000 };
+    return { type: event.type, data: event.data, id, retry: SSE_RETRY_MS };
   }
 }
