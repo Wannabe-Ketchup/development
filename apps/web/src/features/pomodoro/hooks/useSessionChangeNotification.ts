@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { RoomMode } from '@pomodoro/shared';
 import {
   isUserAwayFromPage,
@@ -12,11 +13,24 @@ export function useSessionChangeNotification(
   roomId: string | undefined,
   mode: RoomMode | undefined,
   currentCycle: number | undefined,
+  timerStartedAt: string | null | undefined,
 ): void {
+  // 대기로 돌아오면 timerStartedAt이 비므로, 알림 tag에 쓸 직전 세션의 시작 시각을 기억해 둔다
+  const lastStartedAtRef = useRef<string | null>(null);
+
   useSessionChange(mode, currentCycle, (session) => {
     if (roomId === undefined) return;
     if (!isUserAwayFromPage()) return;
-    const { title, options } = buildSessionNotification(roomId, session);
+    const sessionStartedAt = timerStartedAt ?? lastStartedAtRef.current;
+    const { title, options } = buildSessionNotification(
+      roomId,
+      session,
+      sessionStartedAt,
+    );
     showNotificationIfPermitted(title, options);
   });
+
+  useEffect(() => {
+    if (timerStartedAt) lastStartedAtRef.current = timerStartedAt;
+  }, [timerStartedAt]);
 }

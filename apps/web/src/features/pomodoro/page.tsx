@@ -93,6 +93,7 @@ function Pomodoro() {
     liveRoom?.roomId,
     liveRoom?.mode,
     liveRoom?.currentCycle,
+    liveRoom?.timer.timerStartedAt,
   );
   useTabTitle(liveRoom);
 
