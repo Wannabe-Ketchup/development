@@ -26,7 +26,7 @@ import { useCoachMarkTour } from './hooks/useCoachMarkTour';
 import { TOTAL_STEPS } from './lib/coach-mark-steps';
 import { PomodoroSession } from './components/PomodoroSession';
 
-const SEAT_SPACING_PX = 182;
+const SEAT_SPACING_PX = 205;
 // Participant의 의자 너비(w-36)와 같은 값. 참가자 목록의 실제 너비를 계산하는 데 쓴다.
 const SEAT_WIDTH_PX = 144;
 // 참가자 목록 박스의 높이. 앵커(의자 바닥)에서 의자(312px)와 닉네임·토마토 묶음 윗면까지(374px) 덮는다.
