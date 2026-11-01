@@ -45,7 +45,7 @@ export function Participant({
               />
             ) : (
               <div className="inline-flex h-9 items-center rounded-[10px] bg-white/60 px-3.5">
-                <span className="text-2xl leading-[normal] tracking-[2.4px]">
+                <span className="font-ongleipryudung text-2xl leading-[normal]">
                   {participant.nickname}
                 </span>
               </div>

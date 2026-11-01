@@ -47,13 +47,13 @@ export function ParticipantNickname({
     >
       <div
         className={cn(
-          'inline-flex h-9 items-center justify-center gap-2 rounded-[10px] border border-transparent bg-white/60 px-3.5',
+          'inline-flex h-9 items-center justify-center gap-2 rounded-[10px] border border-transparent bg-white/60 px-3.5 font-ongleipryudung',
           error && 'animate-shake border-error',
         )}
       >
         {draft === null ? (
           <>
-            <span className="text-2xl leading-[normal] tracking-[10%]">
+            <span className="text-2xl leading-[normal]">
               {displayedNickname}
             </span>
             <IconButton
@@ -73,7 +73,7 @@ export function ParticipantNickname({
               onChange={(event) => changeDraft(event.target.value)}
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}
-              className="field-sizing-content min-w-0 bg-transparent text-2xl leading-[normal] tracking-[2.4px] outline-none"
+              className="field-sizing-content min-w-0 bg-transparent text-2xl leading-[normal] outline-none"
             />
             <IconButton
               label="닉네임 확인"
