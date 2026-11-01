@@ -5,4 +5,4 @@
     - text: 지금 무엇을 하고있나요?
     - button "상태 메시지 수정"
   - listitem "토마토2": 토마토2 열심히!
-  - listitem "토마토3"
+  - listitem "이름 없음"

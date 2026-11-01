@@ -53,7 +53,7 @@ export function ParticipantNickname({
       >
         {draft === null ? (
           <>
-            <span className="text-2xl leading-[normal]">
+            <span className="text-2xl leading-[normal] whitespace-pre">
               {displayedNickname}
             </span>
             <IconButton
