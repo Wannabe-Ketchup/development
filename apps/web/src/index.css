@@ -34,7 +34,7 @@
 }
 
 body {
-  @apply cursor-default font-dearfromsol tracking-[10%] text-black;
+  @apply cursor-default font-dearfromsol tracking-[10%] text-black select-none;
 }
 
 button,
@@ -44,6 +44,11 @@ a {
 
 input[type='text'] {
   @apply cursor-text;
+}
+
+input,
+textarea {
+  @apply select-text;
 }
 
 @keyframes snot-slide {
