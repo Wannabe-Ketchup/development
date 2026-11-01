@@ -13,6 +13,8 @@ import { LPPlayer } from './components/LPPlayer';
 import { useTheme } from './hooks/useTheme';
 import { useRoomSSE } from './hooks/useRoomSSE';
 import { useSessionChangeAlarm } from './hooks/useSessionChangeAlarm';
+import { useNotificationPermission } from './hooks/useNotificationPermission';
+import { useSessionChangeNotification } from './hooks/useSessionChangeNotification';
 import { useRoomId } from '@/lib/room-id';
 import { enterRoom } from '@/api/room';
 import { getSeatsWidthPx, getSeatTranslateX } from './lib/seat-layout';
@@ -79,6 +81,18 @@ function Pomodoro() {
   );
 
   useSessionChangeAlarm(room?.mode, room?.currentCycle);
+
+  // 방 상태를 믿을 수 있을 때만 브라우저 알림에 쓴다
+  const isRoomLive =
+    !!roomId && !!room && !hasEnterRoomFailed && sseStatus !== 'error';
+  const liveRoom = isRoomLive ? room : null;
+
+  useNotificationPermission();
+  useSessionChangeNotification(
+    liveRoom?.roomId,
+    liveRoom?.mode,
+    liveRoom?.currentCycle,
+  );
 
   const canShowTour =
     !!roomId &&
