@@ -15,17 +15,19 @@ export function requestNotificationPermissionIfUndecided(): void {
   }
 }
 
-// 권한이 허용됐을 때만 알림을 띄운다. 생성이 막힌 환경(Android Chrome 등)에서는 아무것도 하지 않는다.
+// 권한이 허용됐을 때만 알림을 띄우고, 띄운 알림을 돌려준다(나중에 닫을 수 있게).
+// 생성이 막힌 환경(Android Chrome 등)이나 띄우지 못했으면 null을 돌려준다.
 export function showNotificationIfPermitted(
   title: string,
   options: NotificationOptions,
-): void {
-  if (!isNotificationSupported()) return;
-  if (Notification.permission !== 'granted') return;
+): Notification | null {
+  if (!isNotificationSupported()) return null;
+  if (Notification.permission !== 'granted') return null;
   try {
-    new Notification(title, options);
+    return new Notification(title, options);
   } catch {
     // 알림 실패는 알림음·탭 제목에 영향을 주지 않는다
+    return null;
   }
 }
 

@@ -35,15 +35,16 @@ describe('browser-notification', () => {
     expect(run).not.toThrow();
   });
 
-  it('권한이 granted가 아니면 알림을 만들지 않는다', () => {
+  it('권한이 granted가 아니면 알림을 만들지 않고 null을 돌려준다', () => {
     // given
     const NotificationMock = stubNotification('denied');
 
     // when
-    showNotificationIfPermitted('제목', { tag: 'a' });
+    const shown = showNotificationIfPermitted('제목', { tag: 'a' });
 
     // then
     expect(NotificationMock).not.toHaveBeenCalled();
+    expect(shown).toBeNull();
   });
 
   it('권한이 granted면 제목과 옵션으로 알림을 만든다', () => {
@@ -52,10 +53,11 @@ describe('browser-notification', () => {
     const options = { tag: 'a', silent: true };
 
     // when
-    showNotificationIfPermitted('제목', options);
+    const shown = showNotificationIfPermitted('제목', options);
 
     // then
     expect(NotificationMock).toHaveBeenCalledWith('제목', options);
+    expect(shown).toBeInstanceOf(NotificationMock);
   });
 
   it('알림 생성이 예외를 던져도 에러 없이 넘어간다', () => {
@@ -70,6 +72,7 @@ describe('browser-notification', () => {
 
     // then
     expect(show).not.toThrow();
+    expect(show()).toBeNull();
   });
 
   it.each([

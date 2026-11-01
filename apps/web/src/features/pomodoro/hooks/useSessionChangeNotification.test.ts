@@ -29,6 +29,9 @@ const renderNotification = (initialProps: SessionProps) =>
     { initialProps },
   );
 
+const createShownNotification = () =>
+  ({ close: vi.fn() }) as unknown as Notification;
+
 describe('useSessionChangeNotification', () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -93,5 +96,63 @@ describe('useSessionChangeNotification', () => {
         tag: `pomodoro:room-1:IDLE:0:${BREAK_STARTED_AT}`,
       }),
     );
+  });
+
+  it('새 알림을 띄울 때 이 탭이 띄운 직전 알림을 닫는다', () => {
+    // given
+    vi.mocked(isUserAwayFromPage).mockReturnValue(true);
+    const firstShown = createShownNotification();
+    vi.mocked(showNotificationIfPermitted)
+      .mockReturnValueOnce(firstShown)
+      .mockReturnValueOnce(createShownNotification());
+    const { rerender } = renderNotification({
+      mode: ROOM_MODE.FOCUS,
+      currentCycle: 1,
+      timerStartedAt: FOCUS_STARTED_AT,
+    });
+    rerender({
+      mode: ROOM_MODE.BREAK,
+      currentCycle: 1,
+      timerStartedAt: BREAK_STARTED_AT,
+    });
+
+    // when
+    rerender({
+      mode: ROOM_MODE.FOCUS,
+      currentCycle: 2,
+      timerStartedAt: '2026-11-01T10:30:00.000Z',
+    });
+
+    // then
+    expect(firstShown.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('사용자가 방 화면으로 돌아오면 띄운 알림을 닫는다', () => {
+    // given
+    vi.mocked(isUserAwayFromPage).mockReturnValue(true);
+    const shown = createShownNotification();
+    vi.mocked(showNotificationIfPermitted).mockReturnValue(shown);
+    changeSession();
+
+    // when
+    vi.mocked(isUserAwayFromPage).mockReturnValue(false);
+    window.dispatchEvent(new Event('focus'));
+
+    // then
+    expect(shown.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('아직 자리를 비운 상태면 포커스 이벤트가 와도 알림을 닫지 않는다', () => {
+    // given
+    vi.mocked(isUserAwayFromPage).mockReturnValue(true);
+    const shown = createShownNotification();
+    vi.mocked(showNotificationIfPermitted).mockReturnValue(shown);
+    changeSession();
+
+    // when
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    // then
+    expect(shown.close).not.toHaveBeenCalled();
   });
 });
