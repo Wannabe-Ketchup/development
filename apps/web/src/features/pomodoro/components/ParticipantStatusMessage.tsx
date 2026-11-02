@@ -81,7 +81,7 @@ export function ParticipantStatusMessage({
       <WobblySpeechBubble
         key={isEditing ? 'edit' : 'view'}
         className={cn(
-          'text-2xl whitespace-pre',
+          'font-ongleipryudung text-2xl whitespace-pre',
           textColor,
           error && 'animate-shake',
         )}

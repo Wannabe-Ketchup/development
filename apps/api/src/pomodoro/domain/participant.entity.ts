@@ -1,7 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 import {
+  getNicknameWeight,
   NICKNAME_ALLOWED_PATTERN,
-  NICKNAME_MAX_LENGTH,
+  NICKNAME_MAX_WEIGHT,
   NICKNAME_MIN_LENGTH,
   STATUS_MESSAGE_MAX_LENGTH,
   type Participant as ParticipantShape,
@@ -39,19 +40,18 @@ export class Participant implements ParticipantShape {
   }
 
   private static validateNickname(nickname: string): void {
-    if (
-      nickname.length < NICKNAME_MIN_LENGTH ||
-      nickname.length > NICKNAME_MAX_LENGTH
-    ) {
-      throw new BadRequestException(
-        `닉네임은 ${NICKNAME_MIN_LENGTH}자 이상 ${NICKNAME_MAX_LENGTH}자 이내입니다.`,
-      );
+    if (nickname.length < NICKNAME_MIN_LENGTH) {
+      throw new BadRequestException('닉네임을 입력해 주세요.');
     }
 
     if (!NICKNAME_ALLOWED_PATTERN.test(nickname)) {
       throw new BadRequestException(
-        '닉네임은 한글, 영문, 숫자만 사용할 수 있습니다.',
+        '닉네임은 한글, 영문, 숫자, 공백만 사용할 수 있습니다.',
       );
+    }
+
+    if (getNicknameWeight(nickname) > NICKNAME_MAX_WEIGHT) {
+      throw new BadRequestException('닉네임이 너무 깁니다. 줄여 주세요.');
     }
   }
 

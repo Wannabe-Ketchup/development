@@ -43,7 +43,7 @@ controller → service → repository
     └──→ dto
 ```
 
-- `domain`은 다른 계층을 import하지 않는다. ORM, HTTP, 다른 모듈의 내부 파일도 금지한다. **유일한 예외로 `@nestjs/common`의 내장 HTTP 예외 클래스만 import할 수 있다**(8절). 그 밖의 NestJS 기능(데코레이터, DI 등)은 쓰지 않는다. `@pomodoro/shared`의 타입과 상수(`ROOM_MODE`, `FOCUS_DURATION_SECONDS` 등)는 import할 수 있다.
+- `domain`은 다른 계층을 import하지 않는다. ORM, HTTP, 다른 모듈의 내부 파일도 금지한다. **유일한 예외로 `@nestjs/common`의 내장 HTTP 예외 클래스만 import할 수 있다**(8절). 그 밖의 NestJS 기능(데코레이터, DI 등)은 쓰지 않는다. `@pomodoro/shared`의 타입, 상수, 순수 함수(`ROOM_MODE`, `FOCUS_DURATION_SECONDS`, `getNicknameWeight` 등)는 import할 수 있다.
 - `service`는 Repository와 외부 시스템을 구현 클래스가 아니라 **포트(abstract class)**로 주입받는다(3절).
 - `repository`는 `repository`에 정의된 Repository 포트와 `service`에 정의된 외부 시스템 포트를 **구현**한다.
 - `controller`는 `repository`에 접근하지 않고 항상 `service`를 거친다.
@@ -184,7 +184,7 @@ constructor(private readonly paymentGateway: PaymentGateway) {}
 - Controller는 요청 검증, 커맨드 변환, 서비스 호출, 응답 변환만 한다. 비즈니스 분기를 두지 않는다.
 - 엔티티를 응답으로 그대로 반환하지 않는다. 항상 응답 DTO(`XxxResponse.from(entity)`)로 바꾼다.
 - **DTO의 형태(인터페이스)는 `@pomodoro/shared`에만 정의한다.** web은 이 인터페이스를 그대로 쓴다.
-  - 위치: 요청·응답 인터페이스는 `packages/shared/src/dto/request|response/<이름>.dto.ts`, 여러 곳에서 쓰는 모델 타입은 `src/types/<이름>.ts`, 공유 상수는 `src/constants/<이름>.ts`. 새 파일은 `src/index.ts`에서 `export *` 한다.
+  - 위치: 요청·응답 인터페이스는 `packages/shared/src/dto/request|response/<이름>.dto.ts`, 여러 곳에서 쓰는 모델 타입은 `src/types/<이름>.ts`, 공유 상수는 `src/constants/<이름>.ts`, api와 web이 같은 판정을 해야 하는 순수 함수(입출력 외 부수 효과 없음)는 `src/utils/<이름>.ts`. 새 파일은 `src/index.ts`에서 `export *` 한다.
   - shared 내부 상대 import는 `.js` 확장자를 붙인다(`import type { Timer } from './timer.js'`).
 - api는 모듈의 `dto/`에 **shared 인터페이스를 `implements`한 클래스**를 만들어 쓴다. api 안에서 요청·응답 형태를 따로 정의하지 않는다.
   - 요청 DTO: `class-validator` 데코레이터로 검증 규칙을 붙인다. 이름은 `XxxDto`(`CreateOrderDto implements CreateOrderRequest`). `class-validator`·`ValidationPipe`는 아직 설정되어 있지 않으므로, 처음 도입하는 작업에서 설계 문서 `의존성 변경`에 적고 승인받는다.

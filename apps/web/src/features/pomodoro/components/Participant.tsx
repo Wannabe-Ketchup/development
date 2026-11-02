@@ -6,6 +6,7 @@ import { Tomato } from './Tomato';
 import { getTomatoStage } from '../lib/tomato-stage';
 import { ParticipantNickname } from './ParticipantNickname';
 import { ParticipantStatusMessage } from './ParticipantStatusMessage';
+import { getNicknameLabel } from '../lib/nickname-label';
 
 interface ParticipantProps {
   roomId: string;
@@ -24,9 +25,11 @@ export function Participant({
   isSelf,
   isBreak,
 }: ParticipantProps) {
+  const nicknameLabel = getNicknameLabel(participant.nickname);
+
   return (
     <li
-      aria-label={isSelf ? `나, ${participant.nickname}` : participant.nickname}
+      aria-label={isSelf ? `나, ${nicknameLabel}` : nicknameLabel}
       data-tour-id={isSelf ? 'self-participant' : undefined}
       className={cn('relative', SEAT_MOVE_TRANSITION_CLASS)}
       style={{ transform: `translateX(${translateX}px)` }}
@@ -47,7 +50,7 @@ export function Participant({
               />
             ) : (
               <div className="inline-flex h-9 items-center rounded-[10px] bg-white/60 px-3.5">
-                <span className="text-2xl leading-[normal] tracking-[2.4px]">
+                <span className="font-ongleipryudung text-2xl leading-[normal] whitespace-pre">
                   {participant.nickname}
                 </span>
               </div>
