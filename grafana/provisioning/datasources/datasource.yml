@@ -15,3 +15,11 @@ datasources:
     access: proxy
     url: http://loki:3100
     editable: false
+    jsonData:
+      # 로그 상세의 trace_id를 누르면 Logs 대시보드를 그 요청의 로그로 거른다.
+      derivedFields:
+        - name: traceId
+          matcherType: label
+          matcherRegex: trace_id
+          url: '/d/logs?var-traceId=$${__value.raw}&from=now-24h&to=now'
+          urlDisplayLabel: 이 요청의 로그 보기
