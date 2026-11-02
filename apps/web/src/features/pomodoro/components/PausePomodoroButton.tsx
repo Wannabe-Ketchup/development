@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PauseSvg from '@/assets/pause.svg?react';
 import { pausePomodoro } from '@/api/timer';
 import { PILL_CONTENT_CLASS_NAME } from './SquigglePill';
 
@@ -27,11 +28,7 @@ export function PausePomodoroButton({ roomId }: PausePomodoroButtonProps) {
       className={PILL_CONTENT_CLASS_NAME}
     >
       pause
-      {/* ⏸ 아이콘: Figma 막대 2개(6.4×16px, 간격 3.2px) */}
-      <span aria-hidden="true" className="flex gap-[3.2px]">
-        <span className="h-4 w-[6.4px] bg-black" />
-        <span className="h-4 w-[6.4px] bg-black" />
-      </span>
+      <PauseSvg aria-hidden="true" />
     </button>
   );
 }

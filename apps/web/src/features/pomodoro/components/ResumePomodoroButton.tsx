@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import TriangleSvg from '@/assets/triangle.svg?react';
 import { resumePomodoro } from '@/api/timer';
 import { PILL_CONTENT_CLASS_NAME } from './SquigglePill';
 
@@ -27,11 +28,7 @@ export function ResumePomodoroButton({ roomId }: ResumePomodoroButtonProps) {
       className={PILL_CONTENT_CLASS_NAME}
     >
       resume
-      {/* ▶ 아이콘: start 버튼과 같은 높이(16px)의 삼각형 */}
-      <span
-        aria-hidden="true"
-        className="h-4 w-3.5 bg-black [clip-path:polygon(0_0,100%_50%,0_100%)]"
-      />
+      <TriangleSvg aria-hidden="true" />
     </button>
   );
 }
