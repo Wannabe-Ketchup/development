@@ -12,7 +12,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
         self: { nickname: '토마토1', statusMessage: '' },
         others: [
           { nickname: '토마토2', statusMessage: '열심히!' },
-          { nickname: '토마토3', statusMessage: '' },
+          { nickname: ' ', statusMessage: '' },
         ],
       });
       await page.goto('/pomodoro?roomId=r1');
@@ -41,6 +41,15 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       const otherEmptyItem = list.getByRole('listitem').nth(2);
       await expect(otherEmptyItem).toBeAttached();
       await expect(otherEmptyItem).not.toContainText('지금 무엇을');
+    });
+
+    test('공백만 있는 닉네임 참가자 listitem의 접근 가능한 이름은 "이름 없음"이다', async ({
+      page,
+    }) => {
+      const list = page.getByRole('list', { name: '참가자 목록' });
+      await expect(list.getByRole('listitem').nth(2)).toHaveAccessibleName(
+        '이름 없음',
+      );
     });
 
     test('타인의 리스트 항목에는 수정 버튼이 노출되지 않는다', async ({

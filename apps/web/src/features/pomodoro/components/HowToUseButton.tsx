@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { WobblyBox } from '@squiggle-line/react';
+import { PILL_CONTENT_CLASS_NAME, SquigglePill } from './SquigglePill';
 
 export interface HowToUseButtonProps {
   isOpen: boolean;
@@ -12,14 +12,7 @@ export const HowToUseButton = forwardRef<
 >(function HowToUseButton({ isOpen, onClick }, ref) {
   return (
     <div className="absolute bottom-8 left-8 z-20">
-      <WobblyBox
-        pathClassName="stroke-black"
-        strokeWidth={3}
-        frequency={500}
-        wiggle={5}
-        smoothen={12}
-        borderRadius={999}
-      >
+      <SquigglePill>
         <button
           ref={ref}
           type="button"
@@ -27,11 +20,11 @@ export const HowToUseButton = forwardRef<
           aria-expanded={isOpen}
           aria-controls="coach-mark-tour"
           onClick={onClick}
-          className="rounded-full bg-white px-5 py-3 font-dearfromsol text-2xl"
+          className={PILL_CONTENT_CLASS_NAME}
         >
           how to use
         </button>
-      </WobblyBox>
+      </SquigglePill>
     </div>
   );
 });

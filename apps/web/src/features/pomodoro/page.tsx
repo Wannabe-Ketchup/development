@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Room } from '@pomodoro/shared';
+import { ROOM_MODE, type Room } from '@pomodoro/shared';
 import wall1280 from '@/assets/wall-1280.webp?no-inline';
 import wall1920 from '@/assets/wall-1920.webp';
 import wall2560 from '@/assets/wall-2560.webp';
@@ -13,6 +13,9 @@ import { LPPlayer } from './components/LPPlayer';
 import { useTheme } from './hooks/useTheme';
 import { useRoomSSE } from './hooks/useRoomSSE';
 import { useSessionChangeAlarm } from './hooks/useSessionChangeAlarm';
+import { useNotificationPermission } from './hooks/useNotificationPermission';
+import { useSessionChangeNotification } from './hooks/useSessionChangeNotification';
+import { useTabTitle } from './hooks/useTabTitle';
 import { useRoomId } from '@/lib/room-id';
 import { enterRoom } from '@/api/room';
 import { getSeatsWidthPx, getSeatTranslateX } from './lib/seat-layout';
@@ -26,7 +29,7 @@ import { useCoachMarkTour } from './hooks/useCoachMarkTour';
 import { TOTAL_STEPS } from './lib/coach-mark-steps';
 import { PomodoroSession } from './components/PomodoroSession';
 
-const SEAT_SPACING_PX = 182;
+const SEAT_SPACING_PX = 205;
 // Participant의 의자 너비(w-36)와 같은 값. 참가자 목록의 실제 너비를 계산하는 데 쓴다.
 const SEAT_WIDTH_PX = 144;
 // 참가자 목록 박스의 높이. 앵커(의자 바닥)에서 의자(312px)와 닉네임·토마토 묶음 윗면까지(374px) 덮는다.
@@ -80,6 +83,20 @@ function Pomodoro() {
 
   useSessionChangeAlarm(room?.mode, room?.currentCycle);
 
+  // 방 상태를 믿을 수 있을 때만 탭 제목과 브라우저 알림에 쓴다
+  const isRoomLive =
+    !!roomId && !!room && !hasEnterRoomFailed && sseStatus !== 'error';
+  const liveRoom = isRoomLive ? room : null;
+
+  useNotificationPermission();
+  useSessionChangeNotification(
+    liveRoom?.roomId,
+    liveRoom?.mode,
+    liveRoom?.currentCycle,
+    liveRoom?.timer.timerStartedAt,
+  );
+  useTabTitle(liveRoom);
+
   const canShowTour =
     !!roomId &&
     !!room &&
@@ -96,7 +113,7 @@ function Pomodoro() {
   return (
     <div className="relative h-dvh w-dvw overflow-hidden">
       {/* 배경 레이어 */}
-      <div className="grid h-full w-full grid-cols-1 grid-rows-[6fr_4fr] select-none">
+      <div className="grid h-full w-full grid-cols-1 grid-rows-[6fr_4fr]">
         <img
           className="h-full min-h-0 w-full object-cover object-bottom"
           src={wall2560}
@@ -199,6 +216,7 @@ function Pomodoro() {
                 )}
                 isPending={participant.id === selfParticipantId && !isConfirmed}
                 isSelf={participant.id === selfParticipantId}
+                isBreak={room.mode === ROOM_MODE.BREAK}
               />
             ))}
           </ul>

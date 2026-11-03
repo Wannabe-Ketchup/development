@@ -335,6 +335,39 @@ describe('Room', () => {
     );
   });
 
+  it('앞뒤 공백만 다른 닉네임은 다른 닉네임으로 취급한다', () => {
+    // given
+    const roomId = 'roomId';
+    const joinedAt = '2026-09-02T00:00:00.000Z';
+    const participantId = 'A';
+    const room = Room.create(roomId);
+    room.join(
+      Participant.restore({
+        id: participantId,
+        nickname: 'ketchup',
+        statusMessage: '',
+        completedCycles: 0,
+        joinedAt,
+      }),
+    );
+    room.join(
+      Participant.restore({
+        id: 'B',
+        nickname: '토마토',
+        statusMessage: '',
+        completedCycles: 0,
+        joinedAt,
+      }),
+    );
+    const newNickname = '토마토 ';
+
+    // when
+    room.changeNickname(participantId, newNickname);
+
+    // then
+    expect(room.participants.get(participantId)?.nickname).toBe(newNickname);
+  });
+
   it('방의 참가자는 상태메시지를 변경할 수 있다.', () => {
     // given
     const roomId = 'roomId';

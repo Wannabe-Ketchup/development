@@ -16,7 +16,7 @@ export function EntryOptionButton({
       onClick={onClick}
       {...rest}
     >
-      <TriangleSvg aria-hidden="true" />
+      <TriangleSvg aria-hidden="true" className="h-4 w-4" />
       {children}
     </button>
   );
