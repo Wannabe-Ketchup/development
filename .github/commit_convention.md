@@ -27,6 +27,7 @@ body_rules:
   - Breaking Change 및 타 영역 영향 범위 (API, DB, FE 등)
   - 배포/마이그레이션 주의사항
 - 금지 사항: Simple 파일 목록 나열 (Diff 중복), 제목 내용 단순 반복
+- 공동 작성자·생성 도구 표기(`Co-Authored-By:`, "Generated with Claude Code" 등)를 넣지 않는다
 - Format:
   <타입>: <한국어 요약> (#이슈번호)
 
