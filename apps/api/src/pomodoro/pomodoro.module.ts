@@ -22,6 +22,7 @@ import { InMemoryRoomRepository } from './repository/in-memory.room.repository';
 import { TimerScheduler } from './scheduler/timer.scheduler';
 import { InMemoryTimerScheduler } from './scheduler/in-memory.timer.scheduler';
 import { CreateRoomService } from './service/create-room.service';
+import { FindInviteCodeService } from './service/find-invite-code.service';
 import { InviteCodeRepository } from './repository/invite-code.repository';
 import { InMemoryInviteCodeRepository } from './repository/in-memory.invite-code.repository';
 import { Random } from '../common/random/random';
@@ -40,6 +41,7 @@ import { MetricsModule } from '../metrics/metrics.module';
     RoomEventStreamService,
     ChangeNicknameService,
     CreateRoomService,
+    FindInviteCodeService,
     ChangeStatusMessageService,
     StartPomodoroService,
     PausePomodoroService,
