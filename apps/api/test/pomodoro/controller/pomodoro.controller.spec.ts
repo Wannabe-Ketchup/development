@@ -15,6 +15,7 @@ import { SessionConfig } from '../../../src/auth/config/session.config';
 import { Clock } from '../../../src/common/clock/clock';
 import { Random } from '../../../src/common/random/random';
 import { LoadS3MusicService } from '../../../src/music/service/load-s3-music.service';
+import { JoinRoomResponse } from '../../../src/pomodoro/dto/join-room-response.dto';
 import { InviteCode } from '../../../src/pomodoro/domain/invite-code';
 import { InviteCodeRepository } from '../../../src/pomodoro/repository/invite-code.repository';
 import { RoomRepository } from '../../../src/pomodoro/repository/room.repository';
@@ -112,6 +113,42 @@ describe('PomodoroController', () => {
     });
   });
 
+  describe('POST /pomodoro/room/:roomIdOrInviteCode/participant', () => {
+    it('초대코드로 입장하면 201과 그 방의 roomId가 담긴 방 정보를 응답한다', async () => {
+      // given
+      const roomId = 'room-uuid-1';
+      app.get(RoomRepository).save(
+        restoreRoom({
+          roomId,
+          participantIds: [],
+          mode: ROOM_MODE.IDLE,
+          currentCycle: 0,
+          timer: idleTimer(),
+        }),
+      );
+      app.get(InviteCodeRepository).save(roomId, InviteCode.restore('K7P2QX'));
+      const agent = request.agent(app.getHttpServer());
+      await agent.post('/auth/login/guest').expect(204);
+
+      // when
+      const response = await agent
+        .post('/pomodoro/room/K7P2QX/participant')
+        .expect(201);
+
+      // then
+      expect((response.body as JoinRoomResponse).room.roomId).toBe(roomId);
+    });
+
+    it('없는 초대코드로 입장하면 404를 응답한다', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      await agent.post('/auth/login/guest').expect(204);
+
+      // when & then
+      await agent.post('/pomodoro/room/K7P2QX/participant').expect(404);
+    });
+  });
+
   describe('GET /pomodoro/room/:roomId/invite-code', () => {
     function prepareRoom(roomId: string) {
       app.get(RoomRepository).save(
@@ -128,7 +165,7 @@ describe('PomodoroController', () => {
 
     it('방 참여자가 요청하면 200과 초대코드를 응답한다', async () => {
       // given
-      const roomId = 'room-1';
+      const roomId = 'room-uuid-1';
       prepareRoom(roomId);
       const agent = request.agent(app.getHttpServer());
       await agent.post('/auth/login/guest').expect(204);
@@ -145,7 +182,7 @@ describe('PomodoroController', () => {
 
     it('방 참여자가 아니면 404를 응답한다', async () => {
       // given
-      const roomId = 'room-1';
+      const roomId = 'room-uuid-1';
       prepareRoom(roomId);
       const agent = request.agent(app.getHttpServer());
       await agent.post('/auth/login/guest').expect(204);
@@ -158,7 +195,7 @@ describe('PomodoroController', () => {
   describe('POST /pomodoro/room/:roomId/participant/pomodoro-start', () => {
     it('대기 중인 방의 참가자가 시작하면 204를 응답한다', async () => {
       // given
-      const roomId = 'room-1';
+      const roomId = 'room-uuid-1';
       app.get(RoomRepository).save(
         restoreRoom({
           roomId,
@@ -192,7 +229,7 @@ describe('PomodoroController', () => {
 
     it('이미 진행 중인 방이면 409를 응답한다', async () => {
       // given
-      const roomId = 'room-1';
+      const roomId = 'room-uuid-1';
       app.get(RoomRepository).save(
         restoreRoom({
           roomId,
@@ -269,7 +306,7 @@ describe('PomodoroController', () => {
       async function enterRoomWith(
         status: 'RUNNING' | 'PAUSED',
       ): Promise<{ agent: ReturnType<typeof request.agent>; roomId: string }> {
-        const roomId = 'room-1';
+        const roomId = 'room-uuid-1';
         const agent = request.agent(app.getHttpServer());
         await agent.post('/auth/login/guest').expect(204);
         app.get(RoomRepository).save(

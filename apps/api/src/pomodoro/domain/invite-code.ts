@@ -31,6 +31,17 @@ export class InviteCode {
     return InviteCode.of(value);
   }
 
+  // 사용자 입력을 코드 비교용으로 바꾼다: 앞뒤 공백 제거 + 대문자
+  static normalize(input: string): string {
+    return input.trim().toUpperCase();
+  }
+
+  // 입장 값이 초대코드로 들어온 것인지 판별한다. 정규화한 길이가 6이면 초대코드다.
+  // 문자 집합은 보지 않는다(6자인데 틀린 문자는 roomId가 아니라 틀린 코드다)
+  static isInviteCodeInput(input: string): boolean {
+    return InviteCode.normalize(input).length === INVITE_CODE_LENGTH;
+  }
+
   // 검증하지 않는다. repository와 테스트 given에서만 호출한다
   static restore(value: string): InviteCode {
     return new InviteCode(value);

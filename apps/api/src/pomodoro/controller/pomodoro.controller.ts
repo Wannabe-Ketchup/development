@@ -53,12 +53,12 @@ export class PomodoroController {
     );
   }
 
-  @Post('room/:roomId/participant')
+  @Post('room/:roomIdOrInviteCode/participant')
   enterRoom(
-    @Param('roomId') roomId: string,
+    @Param('roomIdOrInviteCode') roomIdOrInviteCode: string,
     @ParticipantId() participantId: string,
   ): JoinRoomResponse {
-    return this.enterRoomService.joinRoom(roomId, participantId);
+    return this.enterRoomService.joinRoom(roomIdOrInviteCode, participantId);
   }
 
   @Patch('room/:roomId/participant/nickname')
