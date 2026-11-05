@@ -13,7 +13,10 @@ import {
 import { AppModule } from '../../../src/app.module';
 import { SessionConfig } from '../../../src/auth/config/session.config';
 import { Clock } from '../../../src/common/clock/clock';
+import { Random } from '../../../src/common/random/random';
 import { LoadS3MusicService } from '../../../src/music/service/load-s3-music.service';
+import { InviteCode } from '../../../src/pomodoro/domain/invite-code';
+import { InviteCodeRepository } from '../../../src/pomodoro/repository/invite-code.repository';
 import { RoomRepository } from '../../../src/pomodoro/repository/room.repository';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
 import { Participant } from '../../../src/pomodoro/domain/participant.entity';
@@ -24,6 +27,13 @@ const NOW = new Date('2026-10-17T09:10:00.000Z');
 class FixedClock extends Clock {
   now(): Date {
     return NOW;
+  }
+}
+
+// 항상 첫 문자(A)만 골라 초대코드가 AAAAAA로 고정된다
+class FixedRandom extends Random {
+  nextInt(): number {
+    return 0;
   }
 }
 
@@ -71,6 +81,8 @@ describe('PomodoroController', () => {
       .useValue({})
       .overrideProvider(Clock)
       .useClass(FixedClock)
+      .overrideProvider(Random)
+      .useClass(FixedRandom)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -84,6 +96,20 @@ describe('PomodoroController', () => {
   // 시작으로 등록된 세션 타이머는 app.close()에서 정리된다
   afterEach(async () => {
     await app.close();
+  });
+
+  describe('POST /pomodoro/room', () => {
+    it('초대코드를 발급하지 못하면 503을 응답한다', async () => {
+      // given
+      app
+        .get(InviteCodeRepository)
+        .save('other-room', InviteCode.restore('AAAAAA'));
+      const agent = request.agent(app.getHttpServer());
+      await agent.post('/auth/login/guest').expect(204);
+
+      // when & then
+      await agent.post('/pomodoro/room').expect(503);
+    });
   });
 
   describe('POST /pomodoro/room/:roomId/participant/pomodoro-start', () => {
