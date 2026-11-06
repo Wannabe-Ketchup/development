@@ -1,3 +1,5 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { InMemoryTimerScheduler } from '../../../src/pomodoro/scheduler/in-memory.timer.scheduler';
 import type { Room as RoomState } from '@pomodoro/shared';
 import { LeaveRoomService } from '../../../src/pomodoro/service/leave-room.service';
 import { RoomPresenceTracker } from '../../../src/pomodoro/service/room-presence.tracker';
@@ -21,7 +23,11 @@ describe('RoomPresenceTracker', () => {
       const roomRepository = new InMemoryRoomRepository();
       const sseService = new SseService();
       const tracker = new RoomPresenceTracker(
-        new LeaveRoomService(roomRepository, sseService),
+        new LeaveRoomService(
+          roomRepository,
+          sseService,
+          new InMemoryTimerScheduler(new EventEmitter2()),
+        ),
       );
       const room = Room.create(roomId);
       room.join(Participant.create(ghostId, '케첩', joinedAt));

@@ -137,6 +137,40 @@ describe('Room', () => {
     expect(room.participants.size).toBe(0);
   });
 
+  describe('isEmpty', () => {
+    it('참여자가 없는 방은 비어 있다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [],
+      });
+
+      // when
+      const empty = room.isEmpty();
+
+      // then
+      expect(empty).toBe(true);
+    });
+
+    it('참여자가 한 명이라도 있는 방은 비어 있지 않다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [restoreParticipant(PARTICIPANT_ID, 0)],
+      });
+
+      // when
+      const empty = room.isEmpty();
+
+      // then
+      expect(empty).toBe(false);
+    });
+  });
+
   it('참가자는 방의 정원이 비어있으면 방에 참가할 수 있다.', () => {
     // given
     const roomId = 'roomId';

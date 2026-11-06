@@ -157,6 +157,10 @@ export class Room {
     this._timer = this._timer.startFocus(breakEndsAt);
   }
 
+  isEmpty(): boolean {
+    return this._participants.size === 0;
+  }
+
   isRunning(): boolean {
     return this._mode !== ROOM_MODE.IDLE;
   }

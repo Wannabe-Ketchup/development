@@ -1,3 +1,5 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { InMemoryTimerScheduler } from '../../../src/pomodoro/scheduler/in-memory.timer.scheduler';
 import type { Room as RoomState } from '@pomodoro/shared';
 import { LeaveRoomService } from '../../../src/pomodoro/service/leave-room.service';
 import { RoomEventStreamService } from '../../../src/pomodoro/service/room-event-stream.service';
@@ -18,7 +20,13 @@ describe('RoomEventStreamService', () => {
     const sseService = new SseService();
     const service = new RoomEventStreamService(
       sseService,
-      new RoomPresenceTracker(new LeaveRoomService(roomRepository, sseService)),
+      new RoomPresenceTracker(
+        new LeaveRoomService(
+          roomRepository,
+          sseService,
+          new InMemoryTimerScheduler(new EventEmitter2()),
+        ),
+      ),
       new RoomQueryService(roomRepository),
     );
     const room = Room.create(roomId);

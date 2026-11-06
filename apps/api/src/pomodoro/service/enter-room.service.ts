@@ -3,6 +3,7 @@ import { RoomRepository } from '../repository/room.repository';
 import { InviteCodeRepository } from '../repository/invite-code.repository';
 import { RoomQueryService } from './room-query.service';
 import { RoomPresenceTracker } from './room-presence.tracker';
+import { TimerKey, TimerScheduler } from '../scheduler/timer.scheduler';
 import { JoinRoomResponse } from '../dto/join-room-response.dto';
 import { RoomDto } from '../dto/room.dto';
 import { Participant } from '../domain/participant.entity';
@@ -17,6 +18,7 @@ export class EnterRoomService {
     private readonly roomRepository: RoomRepository,
     private readonly roomPresenceTracker: RoomPresenceTracker,
     private readonly inviteCodeRepository: InviteCodeRepository,
+    private readonly timerScheduler: TimerScheduler,
   ) {}
 
   // roomIdOrInviteCode: 링크로 오면 roomId, 메인 화면에서 오면 초대코드
@@ -49,6 +51,7 @@ export class EnterRoomService {
     room.join(participant);
 
     this.roomRepository.save(room);
+    this.timerScheduler.cancel(TimerKey.roomDeletion(roomId));
     this.roomPresenceTracker.registerPendingParticipant(roomId, participant.id);
 
     return {

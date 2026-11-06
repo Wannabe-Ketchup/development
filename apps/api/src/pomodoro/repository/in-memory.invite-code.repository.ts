@@ -25,4 +25,14 @@ export class InMemoryInviteCodeRepository extends InviteCodeRepository {
   findRoomIdByInviteCode(value: string): string | undefined {
     return this.roomIdByCode.get(value);
   }
+
+  deleteByRoomId(roomId: string): void {
+    const inviteCode = this.codeByRoomId.get(roomId);
+    if (!inviteCode) {
+      return;
+    }
+
+    this.roomIdByCode.delete(inviteCode.value);
+    this.codeByRoomId.delete(roomId);
+  }
 }
