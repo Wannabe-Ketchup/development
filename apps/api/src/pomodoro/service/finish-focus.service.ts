@@ -17,7 +17,7 @@ export class FinishFocusService {
 
   finishFocus(roomId: string): void {
     const room = this.roomRepository.findById(roomId);
-    // 만료 시점에 방이 사라졌으면 알릴 대상이 없다. 방 삭제 기능이 생기면 그쪽에서 세션 타이머를 cancel한다
+    // 만료 시점에 방이 사라졌으면 알릴 대상이 없다. 방을 삭제할 때 세션 타이머를 취소하므로 보통은 여기 오지 않는다
     if (!room) {
       return;
     }

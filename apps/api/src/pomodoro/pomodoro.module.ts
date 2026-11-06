@@ -14,6 +14,7 @@ import { PausePomodoroService } from './service/pause-pomodoro.service';
 import { ResumePomodoroService } from './service/resume-pomodoro.service';
 import { FinishFocusService } from './service/finish-focus.service';
 import { FinishBreakService } from './service/finish-break.service';
+import { DeleteEmptyRoomService } from './service/delete-empty-room.service';
 import { PomodoroTimerListener } from './controller/pomodoro-timer.listener';
 import { Clock } from '../common/clock/clock';
 import { SystemClock } from '../common/clock/system.clock';
@@ -48,6 +49,7 @@ import { MetricsModule } from '../metrics/metrics.module';
     ResumePomodoroService,
     FinishFocusService,
     FinishBreakService,
+    DeleteEmptyRoomService,
     PomodoroTimerListener,
     { provide: Clock, useClass: SystemClock },
     { provide: RoomRepository, useClass: InMemoryRoomRepository },

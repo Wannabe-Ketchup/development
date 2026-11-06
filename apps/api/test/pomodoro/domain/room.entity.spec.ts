@@ -18,6 +18,9 @@ const ROOM_ID = 'room-1';
 const PARTICIPANT_ID = 'participant-1';
 const ROOM_CAPACITY = 4;
 const JOINED_AT = '2026-09-02T00:00:00.000Z';
+const LEFT_AT = new Date('2026-09-02T01:00:00.000Z');
+const FIVE_MINUTES_AFTER_LEFT = new Date('2026-09-02T01:05:00.000Z');
+const FIVE_MINUTES_SEC = 300;
 
 function idleTimer(): Timer {
   return Timer.restore({
@@ -57,6 +60,7 @@ function restoreRoom(props: {
   currentCycle: number;
   timer: Timer;
   participants?: Participant[];
+  emptiedAt?: Date;
 }): Room {
   return Room.restore({
     roomId: ROOM_ID,
@@ -131,10 +135,146 @@ describe('Room', () => {
     room.join(participant);
 
     // when
-    room.leave(participant.id);
+    room.leave(participant.id, LEFT_AT);
 
     // then
     expect(room.participants.size).toBe(0);
+  });
+
+  describe('isEmpty', () => {
+    it('참여자가 없는 방은 비어 있다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [],
+      });
+
+      // when
+      const empty = room.isEmpty();
+
+      // then
+      expect(empty).toBe(true);
+    });
+
+    it('참여자가 한 명이라도 있는 방은 비어 있지 않다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [restoreParticipant(PARTICIPANT_ID, 0)],
+      });
+
+      // when
+      const empty = room.isEmpty();
+
+      // then
+      expect(empty).toBe(false);
+    });
+  });
+
+  describe('secondsSinceEmptied', () => {
+    it('마지막 참여자가 퇴장하면 그 시각부터 빈 방이 된 시간을 잰다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [restoreParticipant(PARTICIPANT_ID, 0)],
+      });
+
+      // when
+      room.leave(PARTICIPANT_ID, LEFT_AT);
+
+      // then
+      expect(room.secondsSinceEmptied(FIVE_MINUTES_AFTER_LEFT)).toBe(
+        FIVE_MINUTES_SEC,
+      );
+    });
+
+    it('참여자가 남아 있으면 퇴장해도 빈 방이 된 시간을 재지 않는다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [
+          restoreParticipant(PARTICIPANT_ID, 0),
+          restoreParticipant('participant-2', 0),
+        ],
+      });
+
+      // when
+      room.leave(PARTICIPANT_ID, LEFT_AT);
+
+      // then
+      expect(room.secondsSinceEmptied(FIVE_MINUTES_AFTER_LEFT)).toBeUndefined();
+    });
+
+    it('이미 빈 방에 늦은 퇴장이 와도 빈 방이 된 시각은 바뀌지 않는다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [],
+        emptiedAt: LEFT_AT,
+      });
+
+      // when
+      room.leave(PARTICIPANT_ID, FIVE_MINUTES_AFTER_LEFT);
+
+      // then
+      expect(room.secondsSinceEmptied(FIVE_MINUTES_AFTER_LEFT)).toBe(
+        FIVE_MINUTES_SEC,
+      );
+    });
+
+    it('빈 방에 다시 입장하면 빈 방이 된 시각이 지워진다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [],
+        emptiedAt: LEFT_AT,
+      });
+
+      // when
+      room.join(restoreParticipant(PARTICIPANT_ID, 0));
+
+      // then
+      expect(room.secondsSinceEmptied(FIVE_MINUTES_AFTER_LEFT)).toBeUndefined();
+    });
+  });
+
+  describe('wasEmptiedByLeaving', () => {
+    it('퇴장으로 빈 방이 된 방은 입장한 적 있는 방이다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [],
+        emptiedAt: LEFT_AT,
+      });
+
+      // when
+      const emptiedByLeaving = room.wasEmptiedByLeaving();
+
+      // then
+      expect(emptiedByLeaving).toBe(true);
+    });
+
+    it('만든 뒤 아무도 입장하지 않은 방은 퇴장으로 빈 방이 된 방이 아니다', () => {
+      // when
+      const room = Room.create(ROOM_ID);
+
+      // then
+      expect(room.wasEmptiedByLeaving()).toBe(false);
+    });
   });
 
   it('참가자는 방의 정원이 비어있으면 방에 참가할 수 있다.', () => {
@@ -186,7 +326,7 @@ describe('Room', () => {
     const newParticipant = Participant.create('5', 'name5', joinedAt);
 
     // when
-    room.leave('1');
+    room.leave('1', LEFT_AT);
     room.join(newParticipant);
 
     // then
