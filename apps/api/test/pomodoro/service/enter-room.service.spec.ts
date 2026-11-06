@@ -3,12 +3,13 @@ import { ROOM_MODE } from '@pomodoro/shared';
 import { EnterRoomService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/enter-room.service';
 import { RoomQueryService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-query.service';
 import { RoomPresenceTracker } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-presence.tracker';
+import { InMemoryInviteCodeRepository } from '../../../src/pomodoro/repository/in-memory.invite-code.repository';
 import { RoomRepository } from '../../../src/pomodoro/service/../repository/room.repository';
 import { Room } from '../../../src/pomodoro/service/../domain/room.entity';
 import { Participant } from '../../../src/pomodoro/service/../domain/participant.entity';
 
 describe('EnterRoomService.joinRoom', () => {
-  const roomId = 'room-1';
+  const roomId = 'room-uuid-1';
   const sessionParticipantId = 'session-participant-id';
 
   const createMockRoom = (
@@ -77,6 +78,7 @@ describe('EnterRoomService.joinRoom', () => {
       roomQueryService,
       roomRepository,
       roomPresenceTracker,
+      new InMemoryInviteCodeRepository(),
     );
 
     generateRandomNickname = jest.spyOn(

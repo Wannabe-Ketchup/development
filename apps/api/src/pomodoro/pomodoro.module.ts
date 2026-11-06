@@ -22,6 +22,11 @@ import { InMemoryRoomRepository } from './repository/in-memory.room.repository';
 import { TimerScheduler } from './scheduler/timer.scheduler';
 import { InMemoryTimerScheduler } from './scheduler/in-memory.timer.scheduler';
 import { CreateRoomService } from './service/create-room.service';
+import { FindInviteCodeService } from './service/find-invite-code.service';
+import { InviteCodeRepository } from './repository/invite-code.repository';
+import { InMemoryInviteCodeRepository } from './repository/in-memory.invite-code.repository';
+import { Random } from '../common/random/random';
+import { CryptoRandom } from '../common/random/crypto.random';
 import { MetricsModule } from '../metrics/metrics.module';
 
 @Module({
@@ -36,6 +41,7 @@ import { MetricsModule } from '../metrics/metrics.module';
     RoomEventStreamService,
     ChangeNicknameService,
     CreateRoomService,
+    FindInviteCodeService,
     ChangeStatusMessageService,
     StartPomodoroService,
     PausePomodoroService,
@@ -45,6 +51,8 @@ import { MetricsModule } from '../metrics/metrics.module';
     PomodoroTimerListener,
     { provide: Clock, useClass: SystemClock },
     { provide: RoomRepository, useClass: InMemoryRoomRepository },
+    { provide: InviteCodeRepository, useClass: InMemoryInviteCodeRepository },
+    { provide: Random, useClass: CryptoRandom },
     { provide: TimerScheduler, useClass: InMemoryTimerScheduler },
   ],
   exports: [SseService],

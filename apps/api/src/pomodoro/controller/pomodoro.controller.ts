@@ -19,6 +19,8 @@ import type { JoinRoomResponse } from '../dto/join-room-response.dto';
 import type { ChangeNicknameRequest } from '../dto/change-nickname-request.dto';
 import { CreateRoomService } from '../service/create-room.service';
 import { RoomQueryService } from '../service/room-query.service';
+import { FindInviteCodeService } from '../service/find-invite-code.service';
+import { InviteCodeResponse } from '../dto/invite-code-response.dto';
 import type { CreateRoomResponse, ExistsRoomResponse } from '@pomodoro/shared';
 import type { ChangeStatusMessageRequest } from '../dto/change-status-message-request.dto';
 
@@ -33,6 +35,7 @@ export class PomodoroController {
     private readonly startPomodoroService: StartPomodoroService,
     private readonly pausePomodoroService: PausePomodoroService,
     private readonly resumePomodoroService: ResumePomodoroService,
+    private readonly findInviteCodeService: FindInviteCodeService,
   ) {}
 
   @Get('room/:roomId/exists')
@@ -40,12 +43,22 @@ export class PomodoroController {
     return { exists: this.roomQueryService.exists(roomId) };
   }
 
-  @Post('room/:roomId/participant')
-  enterRoom(
+  @Get('room/:roomId/invite-code')
+  findInviteCode(
     @Param('roomId') roomId: string,
     @ParticipantId() participantId: string,
+  ): InviteCodeResponse {
+    return InviteCodeResponse.from(
+      this.findInviteCodeService.findInviteCode(roomId, participantId),
+    );
+  }
+
+  @Post('room/:roomIdOrInviteCode/participant')
+  enterRoom(
+    @Param('roomIdOrInviteCode') roomIdOrInviteCode: string,
+    @ParticipantId() participantId: string,
   ): JoinRoomResponse {
-    return this.enterRoomService.joinRoom(roomId, participantId);
+    return this.enterRoomService.joinRoom(roomIdOrInviteCode, participantId);
   }
 
   @Patch('room/:roomId/participant/nickname')

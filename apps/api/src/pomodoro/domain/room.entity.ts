@@ -95,7 +95,7 @@ export class Room {
     this._participants.delete(participantId);
   }
 
-  private validateParticipant(participantId: string): void {
+  validateParticipant(participantId: string): void {
     if (!this._participants.has(participantId)) {
       throw new NotFoundException('방에 존재하지 않는 참가자입니다.');
     }
