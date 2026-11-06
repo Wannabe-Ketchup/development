@@ -11,6 +11,26 @@ const DEFAULT_EVENT_TYPE = 'message';
 
 const roomStateEvent: MessageEvent = { type: ROOM_STATE, data: {} };
 
+describe('MetricsService.recordEmptyRoomReturn', () => {
+  it('보존 시간 30분을 다 채우고 돌아온 복귀도 30분 버킷으로 구분된다', async () => {
+    // given
+    const metricName = 'empty_room_return_seconds';
+    const registry = new Registry();
+    const metricsService = new MetricsService(registry);
+    const thirtyMinutesSec = 1800;
+    const twentyFiveMinutesSec = 1500;
+
+    // when
+    metricsService.recordEmptyRoomReturn(thirtyMinutesSec);
+
+    // then
+    const readBucket = (le: number) =>
+      readMetricValue(registry, metricName, { le }, `${metricName}_bucket`);
+    expect(await readBucket(twentyFiveMinutesSec)).toBe(0);
+    expect(await readBucket(thirtyMinutesSec)).toBe(1);
+  });
+});
+
 describe('MetricsService.trackSseStream', () => {
   let registry: Registry;
   let metricsService: MetricsService;

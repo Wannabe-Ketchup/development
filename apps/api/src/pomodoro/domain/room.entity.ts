@@ -17,6 +17,8 @@ export class Room {
     private _timer: Timer,
     private _mode: RoomMode,
     private _currentCycle: number,
+    // 퇴장으로 빈 방이 된 시각. 방을 만들 때는 두지 않아 입장한 적 없는 방과 구분된다
+    private _emptiedAt?: Date,
   ) {}
 
   static create(roomId: string): Room {
@@ -37,6 +39,7 @@ export class Room {
     timer: Timer;
     mode: RoomMode;
     currentCycle: number;
+    emptiedAt?: Date;
   }): Room {
     return new Room(
       props.roomId,
@@ -47,6 +50,7 @@ export class Room {
       props.timer,
       props.mode,
       props.currentCycle,
+      props.emptiedAt,
     );
   }
 
@@ -89,10 +93,27 @@ export class Room {
   join(participant: Participant): void {
     this.validateCapacity();
     this._participants.set(participant.id, participant);
+    this._emptiedAt = undefined;
   }
 
-  leave(participantId: string): void {
-    this._participants.delete(participantId);
+  leave(participantId: string, now: Date): void {
+    const hasLeft = this._participants.delete(participantId);
+    // 이미 빈 방에 늦은 퇴장이 와도 빈 방이 된 시각은 그대로 둔다
+    if (hasLeft && this.isEmpty()) {
+      this._emptiedAt = now;
+    }
+  }
+
+  // 퇴장으로 빈 방이 된 뒤 지난 시간. 그런 상태가 아니면 undefined
+  secondsSinceEmptied(now: Date): number | undefined {
+    if (!this._emptiedAt) {
+      return undefined;
+    }
+    return (now.getTime() - this._emptiedAt.getTime()) / MS_PER_SECOND;
+  }
+
+  wasEmptiedByLeaving(): boolean {
+    return this._emptiedAt !== undefined;
   }
 
   validateParticipant(participantId: string): void {

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Clock } from '../../common/clock/clock';
 import { RoomRepository } from '../repository/room.repository';
 import { SseService } from './sse.service';
 import { RoomDto } from '../dto/room.dto';
@@ -12,6 +13,7 @@ export class LeaveRoomService {
     private readonly roomRepository: RoomRepository,
     private readonly sseService: SseService,
     private readonly timerScheduler: TimerScheduler,
+    private readonly clock: Clock,
   ) {}
 
   leaveRoom(roomId: string, participantId: string): void {
@@ -20,7 +22,7 @@ export class LeaveRoomService {
       return;
     }
 
-    room.leave(participantId);
+    room.leave(participantId, this.clock.now());
     this.roomRepository.save(room);
     this.sseService.emit(roomId, {
       type: 'room_state',

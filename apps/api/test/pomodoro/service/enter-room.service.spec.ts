@@ -5,6 +5,9 @@ import { RoomQueryService } from '../../../src/pomodoro/service/../../../src/pom
 import { RoomPresenceTracker } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-presence.tracker';
 import { InMemoryTimerScheduler } from '../../../src/pomodoro/scheduler/in-memory.timer.scheduler';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Registry } from 'prom-client';
+import { SystemClock } from '../../../src/common/clock/system.clock';
+import { MetricsService } from '../../../src/metrics/metrics.service';
 import { InMemoryInviteCodeRepository } from '../../../src/pomodoro/repository/in-memory.invite-code.repository';
 import { RoomRepository } from '../../../src/pomodoro/service/../repository/room.repository';
 import { Room } from '../../../src/pomodoro/service/../domain/room.entity';
@@ -33,6 +36,7 @@ describe('EnterRoomService.joinRoom', () => {
       timer: {},
       hasNickname,
       join,
+      secondsSinceEmptied: jest.fn(),
     } as unknown as Room;
 
     return { room, hasNickname, join };
@@ -82,6 +86,8 @@ describe('EnterRoomService.joinRoom', () => {
       roomPresenceTracker,
       new InMemoryInviteCodeRepository(),
       new InMemoryTimerScheduler(new EventEmitter2()),
+      new SystemClock(),
+      new MetricsService(new Registry()),
     );
 
     generateRandomNickname = jest.spyOn(

@@ -6,6 +6,7 @@ import {
   FOCUS_DURATION_SECONDS,
   ROOM_MODE,
 } from '@pomodoro/shared';
+import { Clock } from '../../../src/common/clock/clock';
 import { EMPTY_ROOM_DELETION_DELAY_SEC } from '../../../src/pomodoro/constant/room-deletion.constant';
 import { Participant } from '../../../src/pomodoro/domain/participant.entity';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
@@ -16,6 +17,15 @@ import { LeaveRoomService } from '../../../src/pomodoro/service/leave-room.servi
 
 const MS_PER_SECOND = 1000;
 const DELETION_DELAY_MS = EMPTY_ROOM_DELETION_DELAY_SEC * MS_PER_SECOND;
+const NOW = new Date('2026-11-07T09:00:00.000Z');
+const FIVE_MINUTES_LATER = new Date('2026-11-07T09:05:00.000Z');
+const FIVE_MINUTES_SEC = 300;
+
+class FixedClock extends Clock {
+  now(): Date {
+    return NOW;
+  }
+}
 
 function restoreParticipant(id: string): Participant {
   return Participant.restore({
@@ -51,7 +61,10 @@ describe('LeaveRoomService', () => {
   beforeEach(async () => {
     moduleRef = await Test.createTestingModule({
       imports: [EventEmitterModule.forRoot(), PomodoroModule],
-    }).compile();
+    })
+      .overrideProvider(Clock)
+      .useClass(FixedClock)
+      .compile();
     await moduleRef.init();
 
     // Nest 초기화가 끝난 뒤 가짜 타이머로 바꾼다.
@@ -97,6 +110,23 @@ describe('LeaveRoomService', () => {
 
       // then
       expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it('마지막 참여자가 퇴장하면 빈 방이 된 시각이 저장소의 방에 남는다', () => {
+      // given
+      const roomId = 'room-1';
+      const roomRepository = moduleRef.get(RoomRepository);
+      roomRepository.save(restoreRoom(roomId, ['participant-1']));
+
+      // when
+      moduleRef.get(LeaveRoomService).leaveRoom(roomId, 'participant-1');
+
+      // then
+      expect(
+        roomRepository
+          .findById(roomId)
+          ?.secondsSinceEmptied(FIVE_MINUTES_LATER),
+      ).toBe(FIVE_MINUTES_SEC);
     });
   });
 });

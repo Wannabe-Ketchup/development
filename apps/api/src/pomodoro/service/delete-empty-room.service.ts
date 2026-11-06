@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { MetricsService } from '../../metrics/metrics.service';
 import { InviteCodeRepository } from '../repository/invite-code.repository';
 import { RoomRepository } from '../repository/room.repository';
 import { TimerKey, TimerScheduler } from '../scheduler/timer.scheduler';
@@ -9,6 +10,7 @@ export class DeleteEmptyRoomService {
     private readonly roomRepository: RoomRepository,
     private readonly inviteCodeRepository: InviteCodeRepository,
     private readonly timerScheduler: TimerScheduler,
+    private readonly metricsService: MetricsService,
   ) {}
 
   deleteEmptyRoom(roomId: string): void {
@@ -20,5 +22,8 @@ export class DeleteEmptyRoomService {
     this.timerScheduler.cancel(TimerKey.session(roomId));
     this.inviteCodeRepository.deleteByRoomId(roomId);
     this.roomRepository.delete(roomId);
+    this.metricsService.recordEmptyRoomDeletion(
+      room.wasEmptiedByLeaving() ? 'used' : 'never_entered',
+    );
   }
 }

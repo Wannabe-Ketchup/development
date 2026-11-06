@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Clock } from '../../common/clock/clock';
+import { MetricsService } from '../../metrics/metrics.service';
 import { RoomRepository } from '../repository/room.repository';
 import { InviteCodeRepository } from '../repository/invite-code.repository';
 import { RoomQueryService } from './room-query.service';
@@ -19,6 +21,8 @@ export class EnterRoomService {
     private readonly roomPresenceTracker: RoomPresenceTracker,
     private readonly inviteCodeRepository: InviteCodeRepository,
     private readonly timerScheduler: TimerScheduler,
+    private readonly clock: Clock,
+    private readonly metricsService: MetricsService,
   ) {}
 
   // roomIdOrInviteCode: 링크로 오면 roomId, 메인 화면에서 오면 초대코드
@@ -48,11 +52,16 @@ export class EnterRoomService {
 
     const joinedAt = new Date().toISOString();
     const participant = Participant.create(participantId, nickname, joinedAt);
+    // 입장하면 빈 방이 된 시각이 지워지므로 먼저 읽는다
+    const secondsSinceEmptied = room.secondsSinceEmptied(this.clock.now());
     room.join(participant);
 
     this.roomRepository.save(room);
     this.timerScheduler.cancel(TimerKey.roomDeletion(roomId));
     this.roomPresenceTracker.registerPendingParticipant(roomId, participant.id);
+    if (secondsSinceEmptied !== undefined) {
+      this.metricsService.recordEmptyRoomReturn(secondsSinceEmptied);
+    }
 
     return {
       participant: { id: participant.id, nickname: participant.nickname },

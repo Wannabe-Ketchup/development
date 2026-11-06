@@ -7,6 +7,8 @@ import {
   FOCUS_DURATION_SECONDS,
   ROOM_MODE,
 } from '@pomodoro/shared';
+import { Registry } from 'prom-client';
+import { readMetricValue } from '../../metrics/read-metric-value';
 import { Random } from '../../../src/common/random/random';
 import { TIMER_EVENT } from '../../../src/pomodoro/constant/timer-event.constant';
 import { InviteCode } from '../../../src/pomodoro/domain/invite-code';
@@ -40,7 +42,13 @@ const IDLE_TIMER = Timer.restore({
   remainingTimeSec: FOCUS_DURATION_SECONDS,
 });
 
-function restoreRoom(roomId: string, participants: Participant[]): Room {
+const EMPTY_ROOMS_DELETED = 'empty_rooms_deleted_total';
+
+function restoreRoom(
+  roomId: string,
+  participants: Participant[],
+  emptiedAt?: Date,
+): Room {
   return Room.restore({
     roomId,
     participants,
@@ -48,6 +56,7 @@ function restoreRoom(roomId: string, participants: Participant[]): Room {
     timer: IDLE_TIMER,
     mode: ROOM_MODE.IDLE,
     currentCycle: 0,
+    emptiedAt,
   });
 }
 
@@ -137,6 +146,58 @@ describe('DeleteEmptyRoomService', () => {
 
       // then
       expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it('퇴장으로 빈 방이 된 방을 삭제하면 사용된 방의 삭제 수가 늘어난다', async () => {
+      // given
+      const roomId = 'room-1';
+      moduleRef
+        .get(RoomRepository)
+        .save(restoreRoom(roomId, [], new Date('2026-11-07T00:00:00.000Z')));
+
+      // when
+      moduleRef.get(DeleteEmptyRoomService).deleteEmptyRoom(roomId);
+
+      // then
+      expect(
+        await readMetricValue(moduleRef.get(Registry), EMPTY_ROOMS_DELETED, {
+          usage: 'used',
+        }),
+      ).toBe(1);
+    });
+
+    it('입장한 적 없는 방을 삭제하면 입장한 적 없는 방의 삭제 수가 늘어난다', async () => {
+      // given
+      const roomId = 'room-1';
+      moduleRef.get(RoomRepository).save(restoreRoom(roomId, []));
+
+      // when
+      moduleRef.get(DeleteEmptyRoomService).deleteEmptyRoom(roomId);
+
+      // then
+      expect(
+        await readMetricValue(moduleRef.get(Registry), EMPTY_ROOMS_DELETED, {
+          usage: 'never_entered',
+        }),
+      ).toBe(1);
+    });
+
+    it('삭제 시점에 참여자가 있어 삭제하지 않으면 삭제 수가 늘어나지 않는다', async () => {
+      // given
+      const roomId = 'room-1';
+      moduleRef
+        .get(RoomRepository)
+        .save(restoreRoom(roomId, [restoreParticipant('participant-1')]));
+
+      // when
+      moduleRef.get(DeleteEmptyRoomService).deleteEmptyRoom(roomId);
+
+      // then
+      expect(
+        await readMetricValue(moduleRef.get(Registry), EMPTY_ROOMS_DELETED, {
+          usage: 'never_entered',
+        }),
+      ).toBe(0);
     });
   });
 });
