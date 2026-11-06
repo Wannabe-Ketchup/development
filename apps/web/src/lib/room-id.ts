@@ -6,7 +6,8 @@ export function getRoomIdFromSearch(search: string): string | null {
 export function useRoomId(): string | null {
   return getRoomIdFromSearch(window.location.search);
 }
+export const POMODORO_PATH = '/pomodoro';
 // 방 페이지 주소를 만드는 규칙(파싱 규칙과 짝)
 export function goToRoom(roomId: string): void {
-  window.location.href = `/pomodoro?roomId=${encodeURIComponent(roomId)}`;
+  window.location.href = `${POMODORO_PATH}?roomId=${encodeURIComponent(roomId)}`;
 }

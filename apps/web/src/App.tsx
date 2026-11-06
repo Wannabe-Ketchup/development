@@ -1,11 +1,18 @@
 import Home from './features/home/page';
+import NotFound from './features/not-found/page';
 import Pomodoro from './features/pomodoro/page';
-import { useRoomId } from '@/lib/room-id';
+import { resolveRoute } from '@/lib/resolve-route';
 
 function App() {
-  const roomId = useRoomId();
-
-  return roomId ? <Pomodoro /> : <Home />;
+  const route = resolveRoute(window.location.pathname, window.location.search);
+  switch (route) {
+    case 'home':
+      return <Home />;
+    case 'pomodoro':
+      return <Pomodoro />;
+    case 'not-found':
+      return <NotFound />;
+  }
 }
 
 export default App;
