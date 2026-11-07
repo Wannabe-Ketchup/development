@@ -168,16 +168,6 @@ function Pomodoro() {
           <LPPlayer />
         </div>
 
-        {/* URL에 roomId가 없거나 잘못된 경우 */}
-        {!roomId && (
-          <div
-            data-testid="invalid-room-link"
-            className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 text-white"
-          >
-            잘못된 링크입니다. roomId를 확인해 주세요.
-          </div>
-        )}
-
         {/* roomId는 있지만 입장 API 호출이 실패한 경우 */}
         {roomId && hasEnterRoomFailed && (
           <div
