@@ -50,6 +50,23 @@ services:
       - ketchup-network
     restart: always
 
+  # staging Nest 로그 파일을 같은 서버의 Loki로 보낸다.
+  promtail:
+    image: grafana/promtail:3.6.11
+    container_name: promtail
+    command:
+      - '-config.file=/etc/promtail/promtail.yml'
+    environment:
+      - GOMEMLIMIT=100MiB
+    volumes:
+      - ./promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - ./logs:/var/log/nest:ro
+      - promtail_data:/var/lib/promtail
+    mem_limit: 128m
+    networks:
+      - ketchup-network
+    restart: always
+
   grafana:
     image: grafana/grafana:13.2.4
     container_name: grafana
@@ -80,4 +97,5 @@ networks:
 volumes:
   prometheus_data:
   loki_data:
+  promtail_data:
   grafana_data:
