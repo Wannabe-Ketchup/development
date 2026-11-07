@@ -4,10 +4,10 @@
 
 서버는 두 대다. staging 서버(zizon-tomato.cloud)는 staging 배포 환경이면서 모니터링 서버를 겸해 Prometheus, Loki, Grafana가 이곳에만 있다. 운영 서버(wannabe-ketchup.com)에는 앱과 nginx, 로그를 보내는 Promtail만 둔다.
 
-| 서버       | 저장소 위치                                                                                 | 컨테이너                               |
-| ---------- | ------------------------------------------------------------------------------------------- | -------------------------------------- |
-| staging    | 루트의 `app-compose.yml`, `infra-compose.yml`, `nginx/`, `prometheus/`, `loki/`, `grafana/` | nest, nginx, prometheus, loki, grafana |
-| production | `production/` 아래 전부                                                                     | nest, nginx, promtail                  |
+| 서버       | 저장소 위치                                                                                              | 컨테이너                                         |
+| ---------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| staging    | 루트의 `app-compose.yml`, `infra-compose.yml`, `nginx/`, `prometheus/`, `loki/`, `promtail/`, `grafana/` | nest, nginx, prometheus, loki, promtail, grafana |
+| production | `production/` 아래 전부                                                                                  | nest, nginx, promtail                            |
 
 compose 파일은 두 개로 나뉜다. `app-compose.yml`은 Nest 하나이고 GitHub Actions가 배포할 때마다 갱신한다. `infra-compose.yml`은 nginx와 모니터링 구성요소이며 자동 배포에 포함되지 않아 서버에서 직접 반영한다. infra가 `ketchup-network`를 만들고 app이 그 네트워크에 붙으므로 서버를 처음 띄울 때는 infra를 먼저 올린다. 두 파일이 같은 디렉터리에 있어 compose는 둘을 한 프로젝트로 보고, infra를 실행할 때 nest를 "orphan container"라고 경고한다. 이 경고는 무시하며, `--remove-orphans`를 붙이면 nest가 삭제되므로 쓰지 않는다.
 
@@ -39,7 +39,7 @@ GitHub Actions를 쓸 수 없는 급한 상황이면 운영 서버에 접속해 
 
 메트릭은 staging Prometheus가 15초마다 가져간다. staging Nest는 도커 네트워크 안에서 `nest:3000/metrics`로, 운영 Nest는 `https://wannabe-ketchup.com/api/metrics`로 수집한다. 운영 nginx는 이 경로를 staging 서버 IP에만 열고 다른 곳에서 오면 403을 돌려준다. 운영 데이터에는 `env="production"`, staging 데이터에는 `env="staging"` 라벨이 붙고, Grafana의 API와 Nest Runtime 대시보드 상단 `환경` 변수로 둘을 고른다.
 
-로그는 운영 서버 Promtail이 Nest 로그 파일(`logs/*.log`)을 읽어 staging Loki로 보낸다. staging nginx는 `/loki/api/v1/push` 한 경로만 운영 서버 IP에 열며, Loki의 조회 API는 밖으로 열지 않는다. Promtail은 어디까지 보냈는지 기록해 두므로 재시작해도 이어서 보내고, Loki가 잠시 멈추면 재시도한다. 원본 로그 파일은 운영 서버에 30일 동안 남는다. Grafana에서는 Explore에서 Loki를 고르고 `{env="production", job="nest"}`처럼 조회하며, `level`은 라벨로, `traceId`는 `trace_id` structured metadata로 들어 있어 `{env="production"} | trace_id="<값>"`으로 한 요청의 로그를 모아 볼 수 있다. 평소에는 Logs 대시보드에서 레벨별 로그 수와 에러 로그를 보고, 상단 `레벨`·`traceId`·`검색어` 변수로 전체 로그를 거른다. 로그를 펼쳐 `trace_id`의 "이 요청의 로그 보기"를 누르면 그 요청의 로그만 남는다. 이 링크는 `grafana/provisioning/datasources/datasource.yml`의 Loki `derivedFields`에 정의돼 있어, 대시보드와 함께 이 파일도 서버에 반영해야 한다. nginx 로그는 Loki로 보내지 않는다.
+로그는 각 서버의 Promtail이 Nest 로그 파일(`logs/*.log`)을 읽어 staging Loki로 보낸다. staging Promtail은 도커 네트워크 안에서 `loki:3100`으로 바로 보내고, 운영 Promtail은 staging nginx를 거친다. staging nginx는 `/loki/api/v1/push` 한 경로만 운영 서버 IP에 열며, Loki의 조회 API는 밖으로 열지 않는다. 메트릭과 같이 운영 로그에는 `env="production"`, staging 로그에는 `env="staging"` 라벨이 붙는다. Promtail은 어디까지 보냈는지 기록해 두므로 재시작해도 이어서 보내고, Loki가 잠시 멈추면 재시도한다. 원본 로그 파일은 각 서버에 30일 동안 남는다. Grafana에서는 Explore에서 Loki를 고르고 `{env="production", job="nest"}`처럼 조회하며, `level`은 라벨로, `traceId`는 `trace_id` structured metadata로 들어 있어 `{env="production"} | trace_id="<값>"`으로 한 요청의 로그를 모아 볼 수 있다. 평소에는 Logs 대시보드에서 레벨별 로그 수와 에러 로그를 보고, 상단 `env` 변수로 환경을 고른 뒤 `레벨`·`traceId`·`검색어` 변수로 전체 로그를 거른다. 로그를 펼쳐 `trace_id`의 "이 요청의 로그 보기"를 누르면 그 요청의 로그만 남는다. 이 링크는 `grafana/provisioning/datasources/datasource.yml`의 Loki `derivedFields`에 정의돼 있어, 대시보드와 함께 이 파일도 서버에 반영해야 한다. nginx 로그는 Loki로 보내지 않는다.
 
 메트릭과 로그는 모두 90일 동안 보관한다. Prometheus는 90일 전이라도 3GB를 넘으면 오래된 데이터부터 지운다. Loki는 용량 기준 삭제가 없으므로 staging 디스크 사용량(`df -h`)을 가끔 확인한다. Grafana는 `https://monitoring.zizon-tomato.cloud`로 접속하며, staging nginx가 같은 서버의 Grafana로 넘긴다. 회원가입은 막혀 있고 `grafana/.env`의 관리자 비밀번호로 로그인한다.
 
@@ -61,7 +61,7 @@ GitHub Actions를 쓸 수 없는 급한 상황이면 운영 서버에 접속해 
 
 ### staging 서버
 
-staging 서버의 `/home/ubuntu/wannabe-ketchup`은 git clone이 아니라 필요한 파일만 복사해 둔 디렉터리다. `app-compose.yml`은 워크플로가 복사하고, 나머지 infra 파일은 저장소에서 직접 복사한다. 복사할 것은 `infra-compose.yml`, `nginx/nginx.conf`, `prometheus/`, `loki/`, `grafana/provisioning/`, `grafana/dashboards/`이다. 저장소에 없는 `grafana/.env`는 서버에서 만들어 `GF_SECURITY_ADMIN_PASSWORD`에 긴 비밀번호를 넣는다. Grafana가 인터넷에 공개되므로 이 비밀번호가 유일한 보호 수단이다.
+staging 서버의 `/home/ubuntu/wannabe-ketchup`은 git clone이 아니라 필요한 파일만 복사해 둔 디렉터리다. `app-compose.yml`은 워크플로가 복사하고, 나머지 infra 파일은 저장소에서 직접 복사한다. 복사할 것은 `infra-compose.yml`, `nginx/nginx.conf`, `prometheus/`, `loki/`, `promtail/`, `grafana/provisioning/`, `grafana/dashboards/`이다. 저장소에 없는 `grafana/.env`는 서버에서 만들어 `GF_SECURITY_ADMIN_PASSWORD`에 긴 비밀번호를 넣는다. Grafana가 인터넷에 공개되므로 이 비밀번호가 유일한 보호 수단이다.
 
 파일을 올리기 전에 `monitoring.zizon-tomato.cloud`의 DNS A 레코드를 staging 서버 IP로 추가하고, 기존 인증서에 서브도메인을 더한다. 인증서가 서브도메인을 담고 있지 않으면 새 nginx 설정의 Grafana 블록은 인증서 경고를 낸다.
 
@@ -71,7 +71,7 @@ sudo certbot certonly --standalone --expand \
   --pre-hook "docker stop nginx" --post-hook "docker start nginx"
 ```
 
-그다음 `docker compose -f infra-compose.yml up -d`로 Prometheus, Loki, Grafana를 띄우고, 바뀐 nginx 설정을 읽도록 `docker compose -f infra-compose.yml up -d --force-recreate nginx`로 nginx를 다시 만든다. 이후 설정 파일만 바꿨을 때는 compose 정의가 그대로라 컨테이너가 다시 만들어지지 않으므로 `docker compose -f infra-compose.yml restart <서비스 이름>`으로 다시 읽힌다.
+그다음 `docker compose -f infra-compose.yml up -d`로 Prometheus, Loki, Promtail, Grafana를 띄우고, 바뀐 nginx 설정을 읽도록 `docker compose -f infra-compose.yml up -d --force-recreate nginx`로 nginx를 다시 만든다. 이후 설정 파일만 바꿨을 때는 compose 정의가 그대로라 컨테이너가 다시 만들어지지 않으므로 `docker compose -f infra-compose.yml restart <서비스 이름>`으로 다시 읽힌다.
 
 ### 운영 서버
 
@@ -83,4 +83,4 @@ sudo certbot certonly --standalone --expand \
 
 ### 적용 확인
 
-staging Grafana에서 `up{env="production"}`이 1인지, Explore의 Loki에서 `{env="production"}` 로그가 들어오는지 확인한다. 들어오지 않으면 운영 서버에서 `docker logs promtail`을, staging 서버에서 nginx 로그의 403 기록을 확인한다. 403이 보이면 nginx 설정의 `allow` IP가 실제 서버 IP와 다른 것이다.
+staging Grafana에서 `up{env="production"}`이 1인지, Explore의 Loki에서 `{env="production"}`과 `{env="staging"}` 로그가 들어오는지 확인한다. staging 로그가 들어오지 않으면 staging 서버에서 `docker logs promtail`을 확인한다. 운영 로그가 들어오지 않으면 운영 서버에서 `docker logs promtail`을, staging 서버에서 nginx 로그의 403 기록을 확인한다. 403이 보이면 nginx 설정의 `allow` IP가 실제 서버 IP와 다른 것이다.
