@@ -4,7 +4,7 @@ import Pomodoro from './features/pomodoro/page';
 import { resolveRoute } from '@/lib/resolve-route';
 
 function App() {
-  const route = resolveRoute(window.location.pathname, window.location.search);
+  const route = resolveRoute(window.location.pathname);
   switch (route) {
     case 'home':
       return <Home />;

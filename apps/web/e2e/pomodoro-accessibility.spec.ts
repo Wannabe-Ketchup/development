@@ -15,7 +15,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
           { nickname: ' ', statusMessage: '' },
         ],
       });
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
     });
 
     test('참가자 목록 리스트는 "참가자 목록" 레이블로 노출되고 항목 수가 맞다', async ({
@@ -90,7 +90,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
   test.describe('P-B. 음악 재생/중지', () => {
     test.beforeEach(async ({ page }) => {
       await mockEnterRoomOnly(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
     });
 
     test('LP 플레이어는 재생·중지 토글에 따라 버튼 레이블이 바뀐다', async ({
@@ -117,7 +117,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
   test.describe('P-C. 조명(테마) 전환', () => {
     test.beforeEach(async ({ page }) => {
       await mockEnterRoomOnly(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
     });
 
     test('조명 버튼 레이블은 현재 상태에서의 다음 전환 동작을 반영한다', async ({
@@ -139,7 +139,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: SSE 연결 완료 상태 (canShowTour=true)
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
 
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
@@ -160,7 +160,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 투어가 열린 상태
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -181,7 +181,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 투어가 열린 상태
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -201,7 +201,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 닉네임 스텝(4단계)이 열린 상태
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       await page.getByRole('button', { name: 'how to use' }).click();
       const dialog = page.getByRole('dialog', { name: '뽀모도로 사용법' });
       await expect(dialog).toBeVisible();
@@ -225,7 +225,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 닉네임 편집 중인 4단계
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       await page.getByRole('button', { name: 'how to use' }).click();
       const dialog = page.getByRole('dialog', { name: '뽀모도로 사용법' });
       await expect(dialog).toBeVisible();
@@ -249,7 +249,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 투어 열기
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -298,7 +298,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 투어 열기 (1단계)
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -342,7 +342,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 투어 열기
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -374,7 +374,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       // mockRoomWithSSEConnected는 FakeSSEEventSource를 주입한다.
       // window.__triggerSSEError()로 onerror를 직접 발화시켜 sseStatus='error'로 전환한다.
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -398,7 +398,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: SSE가 hanging 상태(연결만 됐고 room_state 이벤트 미수신 → isConfirmed=false)
       await mockEnterRoomOnly(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
 
       // then: How to use 버튼이 DOM에 없어야 한다
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
