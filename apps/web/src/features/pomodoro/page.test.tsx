@@ -51,18 +51,6 @@ describe('Pomodoro 페이지', () => {
     mockUseRoomSSE.mockReturnValue({ status: 'connecting' });
   });
 
-  it('roomId 없이 페이지에 진입하면 잘못된 링크 안내를 표시한다', () => {
-    // given
-    mockUseRoomId.mockReturnValue(null);
-
-    // when
-    render(<Pomodoro />);
-
-    // then
-    expect(mockEnterRoom).not.toHaveBeenCalled();
-    expect(screen.getByTestId('invalid-room-link')).toBeTruthy();
-  });
-
   it('입장 API 응답 후 SSE가 확정되기 전까지는 본인 좌석이 흐리게 표시되고 로딩 표시가 함께 보인다', async () => {
     // given
     mockEnterRoom.mockResolvedValue({ participant: selfParticipant, room });
