@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PomodoroModule } from './pomodoro/pomodoro.module';
@@ -33,6 +38,14 @@ import { SessionGuard } from './auth/guard/session.guard';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     // AlsMiddleware 다음 HttpLoggerMiddleware 를 실행함.
-    consumer.apply(AlsMiddleware, HttpLoggerMiddleware).forRoutes('*');
+    consumer.apply(AlsMiddleware).forRoutes('*');
+    // Prometheus 수집(15초)과 Docker 헬스체크(10초)는 주기적으로 들어와 로그를 흐리므로 남기지 않는다.
+    consumer
+      .apply(HttpLoggerMiddleware)
+      .exclude(
+        { path: 'metrics', method: RequestMethod.GET },
+        { path: 'health', method: RequestMethod.GET },
+      )
+      .forRoutes('*');
   }
 }
