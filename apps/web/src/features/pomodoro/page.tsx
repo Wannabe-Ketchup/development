@@ -16,6 +16,7 @@ import { useSessionChangeAlarm } from './hooks/useSessionChangeAlarm';
 import { useNotificationPermission } from './hooks/useNotificationPermission';
 import { useSessionChangeNotification } from './hooks/useSessionChangeNotification';
 import { useTabTitle } from './hooks/useTabTitle';
+import { cn } from '@/lib/cn';
 import { useRoomId } from '@/lib/room-id';
 import { enterRoom } from '@/api/room';
 import { getSeatsWidthPx, getSeatTranslateX } from './lib/seat-layout';
@@ -38,6 +39,7 @@ const SEATS_HEIGHT_PX = 326;
 
 function Pomodoro() {
   const { theme, toggleTheme } = useTheme();
+  const isDarkMode = theme === 'dark';
   const roomId = useRoomId();
 
   const [room, setRoom] = useState<Room | null>(null);
@@ -129,7 +131,7 @@ function Pomodoro() {
           alt=""
         />
 
-        {theme === 'dark' && <div className="absolute inset-0 bg-black/60" />}
+        {isDarkMode && <div className="absolute inset-0 dark-mode-overlay" />}
       </div>
 
       {/* 콘텐츠 레이어 */}
@@ -139,7 +141,12 @@ function Pomodoro() {
 
         {/* 방 입장이 끝난 뒤에만 시작 버튼/회차 라벨을 보여준다. 타이머와 같은 60% 기준에 붙여, 세로가 짧으면 타이머와 함께 화면 위로 잘린다 */}
         {roomId && room && selfParticipantId && (
-          <div className="absolute top-[calc(60%-480px)] left-1/2 -translate-x-1/2">
+          <div
+            className={cn(
+              'absolute top-[calc(60%-480px)] left-1/2 -translate-x-1/2',
+              isDarkMode && 'dark-mode-dim',
+            )}
+          >
             <PomodoroSession
               roomId={roomId}
               mode={room.mode}
@@ -151,19 +158,28 @@ function Pomodoro() {
 
         {/* 소품은 책상 래퍼(z-10) 안에서 책상 다음에 그려 책상 위에 보이게 한다. 참여자 목록(z-0) 안에 두면 책상에 가려진다 */}
         <div className="absolute top-[calc(60%+59px)] left-1/2 z-10 -translate-x-1/2">
-          <DeskSvg aria-hidden="true" />
-          {room && (
-            <DeskProps
-              mode={room.mode}
-              participantIds={room.participants.map(
-                (participant) => participant.id,
-              )}
-              seatSpacingPx={SEAT_SPACING_PX}
-            />
-          )}
+          {/* 램프는 어둡게 하지 않으므로 래퍼 밖에 둔다. 래퍼 크기가 책상 SVG와 같아서 소품 위치는 바뀌지 않는다 */}
+          <div className={cn('relative', isDarkMode && 'dark-mode-dim')}>
+            <DeskSvg aria-hidden="true" />
+            {room && (
+              <DeskProps
+                mode={room.mode}
+                participantIds={room.participants.map(
+                  (participant) => participant.id,
+                )}
+                seatSpacingPx={SEAT_SPACING_PX}
+              />
+            )}
+          </div>
           <Lamp theme={theme} onToggle={toggleTheme} />
         </div>
-        <div className="absolute bottom-[40%] left-[calc(50%+428px)]">
+        {/* 선반과 LP 플레이어를 함께 낮춘다 */}
+        <div
+          className={cn(
+            'absolute bottom-[40%] left-[calc(50%+428px)]',
+            isDarkMode && 'dark-mode-dim',
+          )}
+        >
           <ShelfSvg aria-hidden="true" />
           <LPPlayer />
         </div>
@@ -184,7 +200,10 @@ function Pomodoro() {
             aria-label="참가자 목록"
             data-tour-id="participants"
             // li는 너비 0으로 박스 아래 중앙(기존 앵커 지점)에 모이므로 자식 배치는 그대로다. 박스는 코치마크 타겟의 실제 크기를 위한 것이다.
-            className="absolute top-[calc(60%+232px)] left-1/2 z-0 flex -translate-x-1/2 -translate-y-full items-end justify-center"
+            className={cn(
+              'absolute top-[calc(60%+232px)] left-1/2 z-0 flex -translate-x-1/2 -translate-y-full items-end justify-center',
+              isDarkMode && 'dark-mode-dim',
+            )}
             style={{
               width: getSeatsWidthPx(
                 room.participants.length,
@@ -227,6 +246,7 @@ function Pomodoro() {
             ref={triggerRef}
             isOpen={tour.isOpen}
             onClick={tour.openTour}
+            className={cn(isDarkMode && 'dark-mode-dim')}
           />
         )}
       </div>
