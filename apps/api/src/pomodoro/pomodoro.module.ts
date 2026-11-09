@@ -3,6 +3,7 @@ import { PomodoroController } from './controller/pomodoro.controller';
 import { PomodoroSseController } from './controller/pomodoro-sse.controller';
 import { SseService } from './service/sse.service';
 import { EnterRoomService } from './service/enter-room.service';
+import { EnterRoomByInviteCodeService } from './service/enter-room-by-invite-code.service';
 import { RoomQueryService } from './service/room-query.service';
 import { RoomPresenceTracker } from './service/room-presence.tracker';
 import { LeaveRoomService } from './service/leave-room.service';
@@ -36,6 +37,7 @@ import { MetricsModule } from '../metrics/metrics.module';
   providers: [
     SseService,
     EnterRoomService,
+    EnterRoomByInviteCodeService,
     RoomQueryService,
     RoomPresenceTracker,
     LeaveRoomService,

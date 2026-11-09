@@ -36,36 +36,6 @@ describe('InviteCode', () => {
     );
   });
 
-  describe('isInviteCodeInput', () => {
-    it.each([
-      { input: 'K7P2QX' },
-      { input: 'k7p2qx' },
-      { input: ' K7P2QX ' },
-      { input: 'ABC0O1' },
-    ])('정리한 길이가 6자인 입력($input)은 초대코드로 본다', ({ input }) => {
-      // when
-      const isInviteCode = InviteCode.isInviteCodeInput(input);
-
-      // then
-      expect(isInviteCode).toBe(true);
-    });
-
-    it.each([
-      { input: 'K7P2Q' },
-      { input: 'K7P2QXZ' },
-      { input: '3f2b8c1e-5d4a-4e7b-9c6d-1a2b3c4d5e6f' },
-    ])(
-      '정리한 길이가 6자가 아닌 입력($input)은 초대코드로 보지 않는다',
-      ({ input }) => {
-        // when
-        const isInviteCode = InviteCode.isInviteCodeInput(input);
-
-        // then
-        expect(isInviteCode).toBe(false);
-      },
-    );
-  });
-
   describe('of', () => {
     it.each([{ length: 5 }, { length: 7 }])(
       '길이가 $length자인 값은 초대코드가 될 수 없다',

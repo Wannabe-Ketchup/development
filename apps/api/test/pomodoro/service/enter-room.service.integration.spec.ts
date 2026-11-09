@@ -19,9 +19,6 @@ import { LeaveRoomService } from '../../../src/pomodoro/service/leave-room.servi
 import { SseService } from '../../../src/pomodoro/service/sse.service';
 import { RoomRepository } from '../../../src/pomodoro/repository/room.repository';
 import { InMemoryRoomRepository } from '../../../src/pomodoro/repository/in-memory.room.repository';
-import { InviteCodeRepository } from '../../../src/pomodoro/repository/invite-code.repository';
-import { InMemoryInviteCodeRepository } from '../../../src/pomodoro/repository/in-memory.invite-code.repository';
-import { InviteCode } from '../../../src/pomodoro/domain/invite-code';
 import { TimerScheduler } from '../../../src/pomodoro/scheduler/timer.scheduler';
 import { InMemoryTimerScheduler } from '../../../src/pomodoro/scheduler/in-memory.timer.scheduler';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
@@ -87,10 +84,6 @@ describe('EnterRoomService', () => {
           { provide: Clock, useClass: SystemClock },
           { provide: TimerScheduler, useClass: InMemoryTimerScheduler },
           { provide: RoomRepository, useClass: InMemoryRoomRepository },
-          {
-            provide: InviteCodeRepository,
-            useClass: InMemoryInviteCodeRepository,
-          },
         ],
       }).compile();
       const roomRepository = moduleRef.get(RoomRepository);
@@ -101,43 +94,6 @@ describe('EnterRoomService', () => {
 
       // when
       service.joinRoom(roomId, sessionParticipantId);
-
-      // then
-      const savedRoom = roomRepository.findById(roomId);
-      expect(savedRoom?.participants.has(sessionParticipantId)).toBe(true);
-    });
-
-    it('초대코드로 입장하면 그 코드의 방에 참가자가 저장된다', async () => {
-      // given
-      const moduleRef = await Test.createTestingModule({
-        providers: [
-          EnterRoomService,
-          RoomQueryService,
-          RoomPresenceTracker,
-          LeaveRoomService,
-          SseService,
-          EventEmitter2,
-          MetricsService,
-          { provide: Registry, useValue: new Registry() },
-          { provide: Clock, useClass: SystemClock },
-          { provide: TimerScheduler, useClass: InMemoryTimerScheduler },
-          { provide: RoomRepository, useClass: InMemoryRoomRepository },
-          {
-            provide: InviteCodeRepository,
-            useClass: InMemoryInviteCodeRepository,
-          },
-        ],
-      }).compile();
-      const roomRepository = moduleRef.get(RoomRepository);
-      const inviteCodeRepository = moduleRef.get(InviteCodeRepository);
-      const service = moduleRef.get(EnterRoomService);
-      const roomId = 'room-uuid-1';
-      const sessionParticipantId = 'session-participant-id';
-      roomRepository.save(Room.create(roomId));
-      inviteCodeRepository.save(roomId, InviteCode.restore('K7P2QX'));
-
-      // when
-      service.joinRoom('K7P2QX', sessionParticipantId);
 
       // then
       const savedRoom = roomRepository.findById(roomId);
