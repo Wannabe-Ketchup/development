@@ -405,4 +405,153 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await expect(triggerBtn).not.toBeAttached();
     });
   });
+
+  test.describe('P-E. 초대코드 모달로 초대코드를 확인한다', () => {
+    test('Enter로 열면 코드가 보이고 포커스가 닫기 버튼으로 이동하며 Tab이 배경으로 나가지 않는다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '초대코드 보기' });
+      await expect(openBtn).toBeVisible();
+      await openBtn.focus();
+
+      // when
+      await page.keyboard.press('Enter');
+
+      // then: dialog와 코드가 보이고 포커스는 닫기 버튼
+      const dialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByText('ABC234')).toBeVisible();
+      await expect(page.getByRole('button', { name: '닫기' })).toBeFocused();
+
+      // when: Tab 반복
+      for (let i = 0; i < 6; i++) {
+        await page.keyboard.press('Tab');
+
+        // then: 배경 버튼으로 포커스가 나가지 않는다 (dialog 끝에서는 브라우저 UI로 빠질 수 있다)
+        await expect(
+          page.getByRole('button', { name: 'how to use' }),
+        ).not.toBeFocused();
+        await expect(
+          page.getByRole('button', { name: '초대코드 보기' }),
+        ).not.toBeFocused();
+      }
+    });
+
+    test('Escape로 닫히고 열기 버튼으로 포커스가 복원된다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '초대코드 보기' });
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(dialog).toBeVisible();
+
+      // when
+      await page.keyboard.press('Escape');
+
+      // then
+      await expect(dialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+
+    test('백드롭을 클릭하면 닫힌다', async ({ page }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: '초대코드 보기' }).focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(dialog).toBeVisible();
+
+      // when: 화면 모서리(백드롭) 클릭
+      await page.mouse.click(10, 10);
+
+      // then
+      await expect(dialog).not.toBeVisible();
+    });
+
+    test('닫기 버튼을 Enter로 누르면 닫히고 열기 버튼으로 포커스가 복원된다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '초대코드 보기' });
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(page.getByRole('button', { name: '닫기' })).toBeFocused();
+
+      // when
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+
+    test('투어가 열린 채 모달을 열면 투어는 사라지고 Escape 후 열기 버튼으로 포커스가 간다', async ({
+      page,
+    }) => {
+      // given: 투어가 열린 상태
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: 'how to use' }).click();
+      const tourDialog = page.getByRole('dialog', { name: '뽀모도로 사용법' });
+      await expect(tourDialog).toBeVisible();
+      const openBtn = page.getByRole('button', { name: '초대코드 보기' });
+
+      // when: 키보드로 열기 버튼에 가서 Enter
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+
+      // then: 투어는 사라지고 초대코드 dialog만 열린다
+      const inviteDialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(inviteDialog).toBeVisible();
+      await expect(tourDialog).not.toBeVisible();
+
+      // when
+      await page.keyboard.press('Escape');
+
+      // then
+      await expect(inviteDialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+
+    test('코드 복사하기를 Enter로 누르면 클립보드에 코드가 복사되고 복사했다고 발화한다', async ({
+      page,
+      context,
+    }) => {
+      // given
+      await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: '초대코드 보기' }).focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(dialog.getByText('ABC234')).toBeVisible();
+      const copyBtn = page.getByRole('button', { name: '코드 복사하기' });
+      await copyBtn.focus();
+
+      // when
+      await page.keyboard.press('Enter');
+
+      // then: 클립보드에는 코드만, 버튼은 결과로 바뀌고 포커스는 유지, status가 발화된다
+      await expect(
+        page.getByRole('button', { name: '복사했어요!' }),
+      ).toBeFocused();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+        'ABC234',
+      );
+      await expect(page.getByRole('status')).toHaveText(
+        '초대코드를 복사했어요',
+      );
+    });
+  });
 });
