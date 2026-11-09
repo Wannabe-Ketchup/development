@@ -1,4 +1,4 @@
-import type { ComponentType, SVGProps } from 'react';
+import type { ComponentType, Ref, SVGProps } from 'react';
 
 type IconButtonProps = Omit<
   React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -7,6 +7,7 @@ type IconButtonProps = Omit<
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   iconClassName?: string;
+  ref?: Ref<HTMLButtonElement>;
 };
 
 export function IconButton({

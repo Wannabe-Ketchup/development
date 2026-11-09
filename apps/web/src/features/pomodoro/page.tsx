@@ -24,6 +24,7 @@ import { Participant } from './components/Participant';
 import { RoomTimer } from './components/RoomTimer';
 import { Lamp } from './components/Lamp';
 import { DeskProps } from './components/DeskProps';
+import { InviteCodeButton } from './components/InviteCodeButton';
 import { HowToUseButton } from './components/HowToUseButton';
 import { CoachMarkTour } from './components/CoachMarkTour';
 import { useCoachMarkTour } from './hooks/useCoachMarkTour';
@@ -239,6 +240,10 @@ function Pomodoro() {
           >
             실시간 연결에 실패했습니다.
           </div>
+        )}
+
+        {canShowTour && (
+          <InviteCodeButton roomId={roomId} onOpen={tour.closeTour} />
         )}
 
         {canShowTour && (
