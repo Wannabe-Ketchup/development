@@ -2,6 +2,7 @@ import type {
   Room,
   CreateRoomResponse,
   ExistsRoomResponse,
+  InviteCodeResponse,
 } from '@pomodoro/shared';
 import { api } from './http';
 
@@ -93,4 +94,18 @@ export async function changeStatusMessage(
     const body = await response.json().catch(() => ({}));
     throw new Error(body.message || '상태메시지를 변경하지 못했습니다.');
   }
+}
+
+export async function findInviteCode(
+  roomId: string,
+): Promise<InviteCodeResponse> {
+  const response = await api(
+    `/api/pomodoro/room/${encodeURIComponent(roomId)}/invite-code`,
+  );
+
+  if (!response.ok) {
+    throw new Error('초대코드를 불러오지 못했습니다.');
+  }
+
+  return response.json() as Promise<InviteCodeResponse>;
 }

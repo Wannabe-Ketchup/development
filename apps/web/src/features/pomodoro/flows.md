@@ -1,6 +1,6 @@
 # 뽀모도로 인터랙션 흐름
 
-마지막 수정: 2026-11-07
+마지막 수정: 2026-11-09
 
 ---
 
@@ -71,3 +71,24 @@ e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-C. 조명(테�
 | 11   | (투어 내 포커스)          | SSE 에러 이벤트 발생              | dialog가 자동으로 닫히고 button "how to use"도 미노출로 바뀌며, 에러 오버레이 `[data-testid="sse-error"]`에 "실시간 연결에 실패했습니다." 안내가 노출된다     |
 
 e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-D. How to use 투어로 사용법을 익힌다`
+
+---
+
+## P-E. 초대코드 모달로 초대코드를 확인한다
+
+대상: 키보드 사용자 / 스크린 리더 사용자 (백드롭 클릭 단계는 마우스/터치 사용자)
+진입 조건: 뽀모도로 화면 진입, SSE 연결 완료. 초대코드 조회 응답은 `ABC234`, 클립보드 권한 허용
+
+| 단계 | 포커스 위치 (role "name")           | 동작                         | 예상 결과 / ARIA 발화                                                                                                           |
+| ---- | ----------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | button "초대코드 보기"              | Enter                        | dialog "초대코드"가 열리고 코드 "ABC234"가 보인다                                                                               |
+| 2    | (자동 포커스)                       | —                            | 포커스가 dialog 안 첫 요소 button "닫기"로 이동한다                                                                             |
+| 3    | dialog 안                           | Tab 반복                     | 배경 요소(button "how to use" 등)로 포커스가 가지 않는다                                                                        |
+| 4    | dialog 안                           | Escape                       | dialog가 닫히고 button "초대코드 보기"로 포커스가 복원된다                                                                      |
+| 5    | button "초대코드 보기"              | Enter 후 백드롭 click        | dialog가 닫힌다                                                                                                                 |
+| 6    | button "초대코드 보기"              | Enter 후 button "닫기" Enter | dialog가 닫히고 button "초대코드 보기"로 포커스가 복원된다                                                                      |
+| 7    | 투어 열림, button "초대코드 보기"   | 포커스 → Enter               | dialog "뽀모도로 사용법"이 사라지고 dialog "초대코드"만 열린다                                                                  |
+| 8    | dialog "초대코드" (7단계에서 연 것) | Escape                       | dialog가 닫히고 포커스가 button "how to use"가 아니라 button "초대코드 보기"로 간다                                             |
+| 9    | button "코드 복사하기"              | Enter                        | 클립보드에 "ABC234"가 복사되고, 버튼이 "복사했어요!"로 바뀌며 status "초대코드를 복사했어요"가 발화된다. 포커스는 버튼에 남는다 |
+
+e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-E. 초대코드 모달로 초대코드를 확인한다`

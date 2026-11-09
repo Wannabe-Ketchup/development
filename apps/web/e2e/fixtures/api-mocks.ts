@@ -41,6 +41,17 @@ export async function mockExistsRoom(
   });
 }
 
+export async function mockInviteCode(
+  page: Page,
+  options?: { inviteCode?: string },
+) {
+  await page.route('**/api/pomodoro/room/*/invite-code', async (route) => {
+    await route.fulfill({
+      json: { inviteCode: options?.inviteCode ?? 'ABC234' },
+    });
+  });
+}
+
 export async function mockRoomWith(page: Page, setup: RoomWithSelfSetup) {
   const SELF_ID = 'self-p1';
 
@@ -143,6 +154,8 @@ export async function mockRoomWithSSEConnected(page: Page) {
       json: { participant: { id: SELF_ID, nickname: '토마토1' }, room },
     });
   });
+
+  await mockInviteCode(page);
 
   // SSE URL(/api/sse/pomodoro/*)에 대해 fake EventSource를 주입한다.
   // fake EventSource는 연결을 닫지 않고(onerror 미발화), onopen + room_state 이벤트를 즉시 발화한다.
