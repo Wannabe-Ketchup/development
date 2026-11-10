@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wannabe-ketchup.com/sitemap.xml

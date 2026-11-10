@@ -4,10 +4,14 @@ import Pomodoro from './features/pomodoro/page';
 import { RoomBackground } from './features/pomodoro/components/RoomBackground';
 import { UnsupportedViewportNotice } from '@/components/UnsupportedViewportNotice';
 import { ViewportStage } from '@/components/ViewportStage';
+import { useExcludeFromSearch } from '@/hooks/useExcludeFromSearch';
 import { resolveRoute } from '@/lib/resolve-route';
 
 function App() {
   const route = resolveRoute(window.location.pathname);
+  // 검색 결과에는 메인만 나온다. 화면 크기 안내로 페이지를 마운트하지 않아도 적용되도록 여기서 건다.
+  useExcludeFromSearch(route !== 'home');
+
   return (
     <ViewportStage notice={renderNotice(route)}>
       {renderRoute(route)}

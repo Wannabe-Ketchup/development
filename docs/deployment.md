@@ -43,6 +43,29 @@ GitHub Actions를 쓸 수 없는 급한 상황이면 운영 서버에 접속해 
 
 메트릭과 로그는 모두 90일 동안 보관한다. Prometheus는 90일 전이라도 3GB를 넘으면 오래된 데이터부터 지운다. Loki는 용량 기준 삭제가 없으므로 staging 디스크 사용량(`df -h`)을 가끔 확인한다. Grafana는 `https://monitoring.zizon-tomato.cloud`로 접속하며, staging nginx가 같은 서버의 Grafana로 넘긴다. 회원가입은 막혀 있고 `grafana/.env`의 관리자 비밀번호로 로그인한다.
 
+## 검색 노출과 캐시
+
+검색에 나오는 페이지는 운영의 메인(`/`) 하나다. web 빌드의 `index.html`에 title, description, canonical, 공유 미리보기(OG, 이미지 `public/og-image.jpg`), JSON-LD가 있고 `robots.txt`와 `sitemap.xml`이 함께 배포된다. 메인이 아닌 주소(방 링크, 없는 페이지)는 앱이 처음 그릴 때 `<meta name="robots" content="noindex">`를 넣어 검색에서 뺀다. 화면 크기 안내가 나오는 경우도 같다. nginx는 모든 화면 주소에 `index.html`을 200으로 돌려주므로 없는 페이지도 HTTP 상태는 200이다.
+
+카카오톡 등은 한 번 가져간 공유 카드를 캐시한다. OG 이미지를 바꿀 때는 파일 이름을 바꾸고 `index.html`의 `og:image`와 JSON-LD `image`를 함께 고치거나, 카카오 공유 디버거에서 캐시를 지운다.
+
+staging은 운영과 같은 빌드를 쓰므로 nginx에서 검색을 막는다. 모든 응답에 `X-Robots-Tag: noindex, nofollow`를 붙이고, `robots.txt`는 전체 차단으로 바꿔 돌려주며, `sitemap.xml`은 404다. nginx는 location에 `add_header`가 하나라도 있으면 server의 `add_header`를 물려받지 않으므로, staging에서 헤더를 다는 location을 추가할 때는 `X-Robots-Tag`도 함께 적는다.
+
+두 서버 모두 `/assets/` 빌드 파일은 1년 동안 캐시하게 하고(`immutable`), 그 밖의 응답(`index.html`, `public` 파일, 화면 주소)은 매번 서버에 확인하게 한다(`no-cache`). 빌드 파일은 이름에 해시가 있어 배포하면 새 이름이 되고, `index.html`은 매번 확인하므로 배포 직후에도 새 버전을 받는다.
+
+nginx 설정은 자동 배포되지 않는다. 설정 파일을 서버에 복사한 뒤 `docker exec nginx nginx -t`로 문법을 확인하고 `docker exec nginx nginx -s reload`로 반영한다. `infra-compose.yml`은 `nginx.conf` 파일 하나를 컨테이너에 마운트하므로, 서버에서 파일을 `mv`로 바꾸거나 새 파일로 저장하는 편집기로 고치면 컨테이너는 옛 파일을 계속 본다. 이때는 `cp`로 덮어쓰거나 `docker compose -f infra-compose.yml restart nginx`로 다시 읽힌다. staging에 먼저 반영해 확인한 뒤 운영에 반영한다. 반영 후 아래를 확인한다.
+
+| 요청                                           | 운영                                                 | staging                                                           |
+| ---------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------- |
+| `curl -sI https://<도메인>/`                   | 200, `cache-control: no-cache`, `x-robots-tag` 없음  | 200, `cache-control: no-cache`, `x-robots-tag: noindex, nofollow` |
+| `curl -sI https://<도메인>/assets/<빌드 파일>` | `cache-control: public, max-age=31536000, immutable` | 같음 + `x-robots-tag`                                             |
+| `curl -sI https://<도메인>/og-image.jpg`       | 200, `content-type: image/jpeg`                      | 같음 + `x-robots-tag`                                             |
+| `curl -s https://<도메인>/robots.txt`          | `Allow: /`와 `Sitemap:`                              | `Disallow: /`                                                     |
+| `curl -sI https://<도메인>/sitemap.xml`        | 200                                                  | 404                                                               |
+| `curl -sI https://<도메인>/api/health`         | 기존과 같음                                          | 기존과 같음 + `x-robots-tag`                                      |
+
+방 링크가 검색에서 빠지는지는 브라우저 개발자 도구에서 `/pomodoro/<아무 값>`을 열고 `<head>`에 `<meta name="robots" content="noindex">`가 있는지로 확인한다. 공유 카드는 운영 배포 후 카카오 공유 디버거와 X·슬랙에 링크를 붙여 확인한다.
+
 ## 인증서
 
 두 서버 모두 certbot `--standalone`으로 Let's Encrypt 인증서를 받는다. staging 인증서 하나(`/etc/letsencrypt/live/zizon-tomato.cloud/`)에 `zizon-tomato.cloud`와 `monitoring.zizon-tomato.cloud`가 함께 들어 있다. standalone 방식은 발급·갱신 때 certbot이 80번 포트를 직접 열어야 하는데, 평소에는 nginx 컨테이너가 80번을 쓰고 있다. 그래서 발급할 때 `--pre-hook "docker stop nginx" --post-hook "docker start nginx"`를 함께 넘겨 renewal 설정에 저장해 두고, 자동 갱신 때도 nginx를 잠깐 내렸다가 올리게 한다. 갱신 중 몇 초 동안 사이트가 끊긴다. 훅이 저장됐는지는 `/etc/letsencrypt/renewal/<도메인>.conf`의 `pre_hook`, `post_hook` 줄로 확인하고, `sudo certbot renew --dry-run`으로 갱신을 미리 시험한다.
