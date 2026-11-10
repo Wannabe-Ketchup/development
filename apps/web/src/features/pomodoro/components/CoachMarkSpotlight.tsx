@@ -8,8 +8,8 @@ export interface CoachMarkSpotlightProps {
 }
 
 export const SPOTLIGHT_TRANSITION_MS = 300;
-const SPOTLIGHT_PADDING_PX = 12;
-const SPOTLIGHT_BORDER_RADIUS_PX = 12;
+export const SPOTLIGHT_PADDING_PX = 12;
+export const SPOTLIGHT_BORDER_RADIUS_PX = 12;
 const MIN_SPOTLIGHT_SIZE_PX = 40;
 
 export function CoachMarkSpotlight({

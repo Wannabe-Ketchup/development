@@ -53,9 +53,11 @@ export function CoachMarkBubble({
     const box = boxRef.current;
     if (!box) return;
 
-    const observer = new ResizeObserver(() => {
-      const { width, height } = box.getBoundingClientRect();
-      setSize({ width, height });
+    const observer = new ResizeObserver(([entry]) => {
+      // 축소된 래퍼 안에서는 getBoundingClientRect가 줄어든 크기를 돌려줘 테두리 path가 두 번 줄어든다.
+      // borderBoxSize는 transform 전 레이아웃 크기를 소수점까지 돌려준다(offsetWidth는 정수로 반올림된다).
+      const [borderBox] = entry.borderBoxSize;
+      setSize({ width: borderBox.inlineSize, height: borderBox.blockSize });
     });
     observer.observe(box);
     return () => observer.disconnect();

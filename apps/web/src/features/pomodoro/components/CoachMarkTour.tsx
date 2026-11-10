@@ -14,8 +14,11 @@ import {
 } from '../lib/bubble-placement';
 import { useTargetRect } from '../hooks/useTargetRect';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { useStageScale } from '@/hooks/useStageScale';
 import {
   CoachMarkSpotlight,
+  SPOTLIGHT_BORDER_RADIUS_PX,
+  SPOTLIGHT_PADDING_PX,
   SPOTLIGHT_TRANSITION_MS,
 } from './CoachMarkSpotlight';
 import { CoachMarkBubble } from './CoachMarkBubble';
@@ -60,6 +63,8 @@ export function CoachMarkTour({
   const step = COACH_MARK_STEPS[stepIndex];
   const targetRect = useTargetRect(isOpen ? step.selector : null);
   const reduceMotion = usePrefersReducedMotion();
+  // 투어는 body로 portal되어 스테이지 밖(화면 px)에 그려진다. 말풍선과 구멍만 화면과 같은 배율로 줄인다.
+  const scale = useStageScale();
 
   const prevBtnRef = useRef<HTMLButtonElement>(null);
   const nextBtnRef = useRef<HTMLButtonElement>(null);
@@ -238,6 +243,8 @@ export function CoachMarkTour({
         >
           <CoachMarkSpotlight
             targetRect={targetRect}
+            paddingPx={SPOTLIGHT_PADDING_PX * scale}
+            borderRadiusPx={SPOTLIGHT_BORDER_RADIUS_PX * scale}
             reduceMotion={reduceMotion}
             isAnimating={isSpotlightAnimating}
             onOverlayClick={onClose}
@@ -246,12 +253,12 @@ export function CoachMarkTour({
           {/* 말풍선: spotlight 위에 절대 배치 */}
           <div className="pointer-events-none fixed inset-0 z-50">
             <div
-              className="pointer-events-auto absolute"
-              style={
-                bubbleStyle
-                  ? { left: bubbleStyle.left, top: bubbleStyle.top }
-                  : { left: 0, top: 0 }
-              }
+              className="pointer-events-auto absolute origin-top-left"
+              style={{
+                left: bubbleStyle?.left ?? 0,
+                top: bubbleStyle?.top ?? 0,
+                transform: `scale(${scale})`,
+              }}
             >
               <CoachMarkBubble
                 stepIndex={stepIndex}
@@ -267,7 +274,15 @@ export function CoachMarkTour({
                 closeBtnRef={closeBtnRef}
                 bubbleRef={bubbleRef}
                 isReady={isReady}
-                tail={bubbleStyle?.tail ?? null}
+                // 꼬리는 말풍선 안쪽(축소 전) 좌표로 그린다
+                tail={
+                  bubbleStyle?.tail
+                    ? {
+                        ...bubbleStyle.tail,
+                        offset: bubbleStyle.tail.offset / scale,
+                      }
+                    : null
+                }
               />
             </div>
           </div>
