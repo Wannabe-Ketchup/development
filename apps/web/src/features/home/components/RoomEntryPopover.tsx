@@ -101,7 +101,7 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
       <div
         id="room-entry-error"
         role="alert"
-        className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full text-nowrap text-error"
+        className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap text-error"
       >
         {error ?? ''}
       </div>
@@ -124,7 +124,10 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
           {step === 'option' ? (
             // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- action buttons, not form controls
             <div role="group" aria-labelledby="room-entry-title">
-              <div id="room-entry-title" className="mb-3 text-2xl text-nowrap">
+              <div
+                id="room-entry-title"
+                className="mb-3 text-2xl whitespace-nowrap"
+              >
                 어디서 공부할까요?
               </div>
               <div className="flex flex-col gap-3">
@@ -171,7 +174,7 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="rounded-lg border-2 border-gray px-3 py-2 text-lg text-nowrap text-gray"
+                  className="rounded-lg border-2 border-gray px-3 py-2 text-lg whitespace-nowrap text-gray"
                 >
                   뒤로가기
                 </button>
