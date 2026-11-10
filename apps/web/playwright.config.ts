@@ -13,6 +13,8 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
+        // 기준 크기(1440×820) 이상이라 축소 모드가 되지 않고 기존 스냅샷이 유지된다.
+        viewport: { width: 1440, height: 900 },
         channel: 'chrome',
       },
     },

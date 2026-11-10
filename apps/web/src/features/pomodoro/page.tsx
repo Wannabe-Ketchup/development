@@ -108,7 +108,7 @@ function Pomodoro() {
   }, [tour, canShowTour]);
 
   return (
-    <div className="relative h-dvh w-dvw overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden">
       {/* 배경 레이어 */}
       <RoomBackground isDarkMode={isDarkMode} />
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { WobblyBox } from '@squiggle-line/react';
+import { useStageScale } from '@/hooks/useStageScale';
 import { cn } from '@/lib/cn';
 
 // 배경색은 안쪽 요소에 CSS로 칠하고 WobblyBox는 테두리만 그린다.
@@ -31,6 +32,7 @@ export function Modal({
 }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const isBackdropPressRef = useRef(false);
+  const scale = useStageScale();
   const isDismissible = onClose !== undefined;
 
   // 마운트되면 모달로 연다. StrictMode 이중 실행 대비로 open을 확인한다.
@@ -48,6 +50,9 @@ export function Modal({
       ref={dialogRef}
       aria-labelledby={labelledBy}
       className="m-auto overflow-visible bg-transparent p-0 backdrop:bg-black/32"
+      // showModal()은 top layer에 그려져 축소 스테이지의 transform을 받지 않으므로 화면과 같은 배율을 직접 건다.
+      // 기본 origin이 가운데라 m-auto 중앙 정렬이 유지되고, WobblyBox는 contentRect(transform 전 크기)로 재서 테두리가 어긋나지 않는다
+      style={{ transform: `scale(${scale})` }}
       onCancel={(e) => {
         if (!isDismissible) e.preventDefault();
       }}
