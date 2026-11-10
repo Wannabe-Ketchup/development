@@ -32,7 +32,7 @@ export function SofaSection({ tomatoStatus, handlers }: SofaSectionProps) {
         aria-hidden={tomatoStatus !== 'sleeping' || undefined}
         tabIndex={tomatoStatus === 'sleeping' ? 0 : -1}
         className={cn(
-          'absolute top-1/2 left-1/2 -translate-x-1/6 -translate-y-1/2 cursor-grab active:cursor-grabbing',
+          'absolute top-1/2 left-1/2 -translate-x-1/6 -translate-y-1/2 cursor-grab touch-none active:cursor-grabbing',
           tomatoStatus === 'sleeping'
             ? 'pointer-events-auto opacity-100'
             : 'pointer-events-none opacity-0',
