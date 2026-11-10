@@ -2,7 +2,7 @@ import { useEffect, useId, useRef } from 'react';
 import { WobblyBox } from '@squiggle-line/react';
 import CloseSvg from '@/assets/close.svg?react';
 import { IconButton } from '@/components/IconButton';
-import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useInviteCode, type InviteCodeState } from '../hooks/useInviteCode';
 
 // 배경색은 안쪽 요소에 CSS로 칠하고 WobblyBox는 테두리만 그린다.
