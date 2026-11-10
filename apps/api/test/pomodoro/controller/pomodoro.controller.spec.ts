@@ -113,7 +113,29 @@ describe('PomodoroController', () => {
     });
   });
 
-  describe('POST /pomodoro/room/:roomIdOrInviteCode/participant', () => {
+  describe('POST /pomodoro/room/:roomId/participant', () => {
+    it('방 ID 자리에 초대코드를 넣으면 404를 응답한다', async () => {
+      // given
+      const roomId = 'room-uuid-1';
+      app.get(RoomRepository).save(
+        restoreRoom({
+          roomId,
+          participantIds: [],
+          mode: ROOM_MODE.IDLE,
+          currentCycle: 0,
+          timer: idleTimer(),
+        }),
+      );
+      app.get(InviteCodeRepository).save(roomId, InviteCode.restore('K7P2QX'));
+      const agent = request.agent(app.getHttpServer());
+      await agent.post('/auth/login/guest').expect(204);
+
+      // when & then
+      await agent.post('/pomodoro/room/K7P2QX/participant').expect(404);
+    });
+  });
+
+  describe('POST /pomodoro/room/participant/invite-code', () => {
     it('초대코드로 입장하면 201과 그 방의 roomId가 담긴 방 정보를 응답한다', async () => {
       // given
       const roomId = 'room-uuid-1';
@@ -132,7 +154,8 @@ describe('PomodoroController', () => {
 
       // when
       const response = await agent
-        .post('/pomodoro/room/K7P2QX/participant')
+        .post('/pomodoro/room/participant/invite-code')
+        .send({ inviteCode: 'K7P2QX' })
         .expect(201);
 
       // then
@@ -145,7 +168,10 @@ describe('PomodoroController', () => {
       await agent.post('/auth/login/guest').expect(204);
 
       // when & then
-      await agent.post('/pomodoro/room/K7P2QX/participant').expect(404);
+      await agent
+        .post('/pomodoro/room/participant/invite-code')
+        .send({ inviteCode: 'K7P2QX' })
+        .expect(404);
     });
   });
 

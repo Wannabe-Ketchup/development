@@ -1,9 +1,1 @@
-import type { Room } from '@pomodoro/shared';
-
-export interface JoinRoomResponse {
-  participant: {
-    id: string;
-    nickname: string;
-  };
-  room: Room;
-}
+export type { JoinRoomResponse } from '@pomodoro/shared';

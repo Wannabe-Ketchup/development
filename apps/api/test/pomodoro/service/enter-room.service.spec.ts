@@ -8,7 +8,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Registry } from 'prom-client';
 import { SystemClock } from '../../../src/common/clock/system.clock';
 import { MetricsService } from '../../../src/metrics/metrics.service';
-import { InMemoryInviteCodeRepository } from '../../../src/pomodoro/repository/in-memory.invite-code.repository';
 import { RoomRepository } from '../../../src/pomodoro/service/../repository/room.repository';
 import { Room } from '../../../src/pomodoro/service/../domain/room.entity';
 import { Participant } from '../../../src/pomodoro/service/../domain/participant.entity';
@@ -84,7 +83,6 @@ describe('EnterRoomService.joinRoom', () => {
       roomQueryService,
       roomRepository,
       roomPresenceTracker,
-      new InMemoryInviteCodeRepository(),
       new InMemoryTimerScheduler(new EventEmitter2()),
       new SystemClock(),
       new MetricsService(new Registry()),
