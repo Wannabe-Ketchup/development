@@ -14,7 +14,7 @@ interface TableSectionProps {
 export const TableSection = forwardRef<HTMLDivElement, TableSectionProps>(
   ({ tomatoStatus, onCancel }, ref) => {
     return (
-      <div className="relative pt-17" ref={ref}>
+      <div className="relative pt-17" ref={ref} data-testid="table">
         {tomatoStatus === 'dragging' && (
           <WobblyBox
             aria-hidden="true"

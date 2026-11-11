@@ -1,10 +1,12 @@
 import { useReducer, useRef } from 'react';
+import { useStageScale } from '@/hooks/useStageScale';
 import { tomatoReducer, initialTomatoState } from './tomatoReducer';
 
 const DRAG_THRESHOLD = 5;
-const DROP_MARGIN = 60;
+const DROP_MARGIN_PX = 60;
 
 export function useTomatoDrag() {
+  const scale = useStageScale();
   const [state, dispatch] = useReducer(tomatoReducer, initialTomatoState);
 
   const tableRef = useRef<HTMLDivElement>(null);
@@ -41,12 +43,13 @@ export function useTomatoDrag() {
       return;
     }
     const rect = tableRef.current?.getBoundingClientRect();
+    const dropMargin = DROP_MARGIN_PX * scale;
     const isOverTable =
       !!rect &&
-      e.clientX >= rect.left - DROP_MARGIN &&
-      e.clientX <= rect.right + DROP_MARGIN &&
-      e.clientY >= rect.top - DROP_MARGIN &&
-      e.clientY <= rect.bottom + DROP_MARGIN;
+      rect.left - dropMargin <= e.clientX &&
+      e.clientX <= rect.right + dropMargin &&
+      rect.top - dropMargin <= e.clientY &&
+      e.clientY <= rect.bottom + dropMargin;
 
     dispatch({ type: 'DROP', isOverTable });
     pointerStartPos.current = null;

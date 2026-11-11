@@ -10,3 +10,6 @@ export * from './types/sse-event';
 export * from './dto/response/music-response.dto';
 export * from './dto/response/create-room-response.dto';
 export * from './dto/response/exists-room-response.dto';
+export * from './dto/response/invite-code-response.dto';
+export * from './dto/response/join-room-response.dto';
+export * from './dto/request/enter-room-by-invite-code-request.dto';

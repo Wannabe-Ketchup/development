@@ -43,7 +43,7 @@ describe('SessionGuard', () => {
 
     it('게스트 로그인으로 받은 세션으로 보호된 API를 호출하면 통과한다', async () => {
       // given
-      const roomId = 'roomId';
+      const roomId = 'room-uuid-1';
       app.get(RoomRepository).save(Room.create(roomId));
       const agent = request.agent(app.getHttpServer());
       await agent.post('/auth/login/guest').expect(204);

@@ -19,6 +19,10 @@ import type { JoinRoomResponse } from '../dto/join-room-response.dto';
 import type { ChangeNicknameRequest } from '../dto/change-nickname-request.dto';
 import { CreateRoomService } from '../service/create-room.service';
 import { RoomQueryService } from '../service/room-query.service';
+import { FindInviteCodeService } from '../service/find-invite-code.service';
+import { EnterRoomByInviteCodeService } from '../service/enter-room-by-invite-code.service';
+import type { EnterRoomByInviteCodeRequest } from '../dto/enter-room-by-invite-code-request.dto';
+import { InviteCodeResponse } from '../dto/invite-code-response.dto';
 import type { CreateRoomResponse, ExistsRoomResponse } from '@pomodoro/shared';
 import type { ChangeStatusMessageRequest } from '../dto/change-status-message-request.dto';
 
@@ -33,11 +37,23 @@ export class PomodoroController {
     private readonly startPomodoroService: StartPomodoroService,
     private readonly pausePomodoroService: PausePomodoroService,
     private readonly resumePomodoroService: ResumePomodoroService,
+    private readonly findInviteCodeService: FindInviteCodeService,
+    private readonly enterRoomByInviteCodeService: EnterRoomByInviteCodeService,
   ) {}
 
   @Get('room/:roomId/exists')
   existsRoom(@Param('roomId') roomId: string): ExistsRoomResponse {
     return { exists: this.roomQueryService.exists(roomId) };
+  }
+
+  @Get('room/:roomId/invite-code')
+  findInviteCode(
+    @Param('roomId') roomId: string,
+    @ParticipantId() participantId: string,
+  ): InviteCodeResponse {
+    return InviteCodeResponse.from(
+      this.findInviteCodeService.findInviteCode(roomId, participantId),
+    );
   }
 
   @Post('room/:roomId/participant')
@@ -46,6 +62,17 @@ export class PomodoroController {
     @ParticipantId() participantId: string,
   ): JoinRoomResponse {
     return this.enterRoomService.joinRoom(roomId, participantId);
+  }
+
+  @Post('room/participant/invite-code')
+  enterRoomByInviteCode(
+    @Body() body: EnterRoomByInviteCodeRequest,
+    @ParticipantId() participantId: string,
+  ): JoinRoomResponse {
+    return this.enterRoomByInviteCodeService.enterRoomByInviteCode(
+      body.inviteCode,
+      participantId,
+    );
   }
 
   @Patch('room/:roomId/participant/nickname')

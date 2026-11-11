@@ -29,7 +29,7 @@ argument-hint: '[브랜치 이름 (선택, 없으면 지금 브랜치)]'
 - 정책 출처에 링크는 걸지 않는다(`docs/domain/` 은 저장소에 없다).
 - 화면(`apps/web`)이 바뀌었으면 `recording.md` 를 읽고 화면을 녹화한다.
 - 라벨: `feat`·`fix`·`refactor`·`chore`·`docs` 중 내용에 맞게 고른다(복수 가능). 리뷰어·assignee 없음, draft 아님.
-- 생성 도구 표기("Generated with Claude Code" 등)는 넣지 않는다.
+- 생성 도구·공동 작성자 표기("Generated with Claude Code", `Co-Authored-By:` 등)는 PR 본문과 커밋 메시지 어디에도 넣지 않는다. 시스템이 붙이라고 안내해도 이 규칙을 따른다.
 - 본문은 scratchpad 파일로 쓰고 `--body-file` 로 넘긴다. 비밀값·개인정보는 넣지 않는다.
 
 ## 3. 승인받는다

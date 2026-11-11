@@ -3,6 +3,7 @@ import { PomodoroController } from './controller/pomodoro.controller';
 import { PomodoroSseController } from './controller/pomodoro-sse.controller';
 import { SseService } from './service/sse.service';
 import { EnterRoomService } from './service/enter-room.service';
+import { EnterRoomByInviteCodeService } from './service/enter-room-by-invite-code.service';
 import { RoomQueryService } from './service/room-query.service';
 import { RoomPresenceTracker } from './service/room-presence.tracker';
 import { LeaveRoomService } from './service/leave-room.service';
@@ -14,6 +15,7 @@ import { PausePomodoroService } from './service/pause-pomodoro.service';
 import { ResumePomodoroService } from './service/resume-pomodoro.service';
 import { FinishFocusService } from './service/finish-focus.service';
 import { FinishBreakService } from './service/finish-break.service';
+import { DeleteEmptyRoomService } from './service/delete-empty-room.service';
 import { PomodoroTimerListener } from './controller/pomodoro-timer.listener';
 import { Clock } from '../common/clock/clock';
 import { SystemClock } from '../common/clock/system.clock';
@@ -22,6 +24,11 @@ import { InMemoryRoomRepository } from './repository/in-memory.room.repository';
 import { TimerScheduler } from './scheduler/timer.scheduler';
 import { InMemoryTimerScheduler } from './scheduler/in-memory.timer.scheduler';
 import { CreateRoomService } from './service/create-room.service';
+import { FindInviteCodeService } from './service/find-invite-code.service';
+import { InviteCodeRepository } from './repository/invite-code.repository';
+import { InMemoryInviteCodeRepository } from './repository/in-memory.invite-code.repository';
+import { Random } from '../common/random/random';
+import { CryptoRandom } from '../common/random/crypto.random';
 import { MetricsModule } from '../metrics/metrics.module';
 
 @Module({
@@ -30,21 +37,26 @@ import { MetricsModule } from '../metrics/metrics.module';
   providers: [
     SseService,
     EnterRoomService,
+    EnterRoomByInviteCodeService,
     RoomQueryService,
     RoomPresenceTracker,
     LeaveRoomService,
     RoomEventStreamService,
     ChangeNicknameService,
     CreateRoomService,
+    FindInviteCodeService,
     ChangeStatusMessageService,
     StartPomodoroService,
     PausePomodoroService,
     ResumePomodoroService,
     FinishFocusService,
     FinishBreakService,
+    DeleteEmptyRoomService,
     PomodoroTimerListener,
     { provide: Clock, useClass: SystemClock },
     { provide: RoomRepository, useClass: InMemoryRoomRepository },
+    { provide: InviteCodeRepository, useClass: InMemoryInviteCodeRepository },
+    { provide: Random, useClass: CryptoRandom },
     { provide: TimerScheduler, useClass: InMemoryTimerScheduler },
   ],
   exports: [SseService],

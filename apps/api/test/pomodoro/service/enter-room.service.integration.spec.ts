@@ -1,4 +1,17 @@
-import { Test } from '@nestjs/testing';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { Test, TestingModule } from '@nestjs/testing';
+import {
+  BREAK_DURATION_SECONDS,
+  CYCLE_COUNT,
+  FOCUS_DURATION_SECONDS,
+  ROOM_MODE,
+} from '@pomodoro/shared';
+import { Registry } from 'prom-client';
+import { Clock } from '../../../src/common/clock/clock';
+import { SystemClock } from '../../../src/common/clock/system.clock';
+import { MetricsService } from '../../../src/metrics/metrics.service';
+import { readMetricValue } from '../../metrics/read-metric-value';
+import { Timer } from '../../../src/pomodoro/domain/timer.entity';
 import { EnterRoomService } from '../../../src/pomodoro/service/enter-room.service';
 import { RoomQueryService } from '../../../src/pomodoro/service/room-query.service';
 import { RoomPresenceTracker } from '../../../src/pomodoro/service/room-presence.tracker';
@@ -6,7 +19,44 @@ import { LeaveRoomService } from '../../../src/pomodoro/service/leave-room.servi
 import { SseService } from '../../../src/pomodoro/service/sse.service';
 import { RoomRepository } from '../../../src/pomodoro/repository/room.repository';
 import { InMemoryRoomRepository } from '../../../src/pomodoro/repository/in-memory.room.repository';
+import { TimerScheduler } from '../../../src/pomodoro/scheduler/timer.scheduler';
+import { InMemoryTimerScheduler } from '../../../src/pomodoro/scheduler/in-memory.timer.scheduler';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
+import { PomodoroModule } from '../../../src/pomodoro/pomodoro.module';
+import { TIMER_EVENT } from '../../../src/pomodoro/constant/timer-event.constant';
+import { EMPTY_ROOM_DELETION_DELAY_SEC } from '../../../src/pomodoro/constant/room-deletion.constant';
+import { TimerKey } from '../../../src/pomodoro/scheduler/timer.scheduler';
+
+const MS_PER_SECOND = 1000;
+const EMPTY_ROOM_RETURN = 'empty_room_return_seconds';
+const NOW = new Date('2026-11-07T09:05:00.000Z');
+const FIVE_MINUTES_AGO = new Date('2026-11-07T09:00:00.000Z');
+const FIVE_MINUTES_SEC = 300;
+
+class FixedClock extends Clock {
+  now(): Date {
+    return NOW;
+  }
+}
+
+function restoreEmptyRoom(roomId: string, emptiedAt?: Date): Room {
+  return Room.restore({
+    roomId,
+    participants: [],
+    capacity: 4,
+    timer: Timer.restore({
+      status: 'IDLE',
+      focusTimeSec: FOCUS_DURATION_SECONDS,
+      breakTimeSec: BREAK_DURATION_SECONDS,
+      totalCycle: CYCLE_COUNT,
+      timerStartedAt: null,
+      remainingTimeSec: FOCUS_DURATION_SECONDS,
+    }),
+    mode: ROOM_MODE.IDLE,
+    currentCycle: 0,
+    emptiedAt,
+  });
+}
 
 describe('EnterRoomService', () => {
   beforeEach(() => {
@@ -28,12 +78,17 @@ describe('EnterRoomService', () => {
           RoomPresenceTracker,
           LeaveRoomService,
           SseService,
+          EventEmitter2,
+          MetricsService,
+          { provide: Registry, useValue: new Registry() },
+          { provide: Clock, useClass: SystemClock },
+          { provide: TimerScheduler, useClass: InMemoryTimerScheduler },
           { provide: RoomRepository, useClass: InMemoryRoomRepository },
         ],
       }).compile();
       const roomRepository = moduleRef.get(RoomRepository);
       const service = moduleRef.get(EnterRoomService);
-      const roomId = 'roomId';
+      const roomId = 'room-uuid-1';
       const sessionParticipantId = 'session-participant-id';
       roomRepository.save(Room.create(roomId));
 
@@ -43,6 +98,97 @@ describe('EnterRoomService', () => {
       // then
       const savedRoom = roomRepository.findById(roomId);
       expect(savedRoom?.participants.has(sessionParticipantId)).toBe(true);
+    });
+
+    it('비어 있던 방에 입장하면 삭제 예약이 취소되어 30분이 지나도 삭제되지 않는다', async () => {
+      // given: 비어서 삭제 예약이 걸린 방
+      const moduleRef = await Test.createTestingModule({
+        imports: [EventEmitterModule.forRoot(), PomodoroModule],
+      }).compile();
+      await moduleRef.init();
+      const roomRepository = moduleRef.get(RoomRepository);
+      const roomId = 'room-uuid-1';
+      const participantId = 'session-participant-id';
+      roomRepository.save(restoreEmptyRoom(roomId));
+      moduleRef
+        .get(TimerScheduler)
+        .register(
+          TimerKey.roomDeletion(roomId),
+          TIMER_EVENT.ROOM_DELETION_TIMEOUT,
+          { roomId },
+          EMPTY_ROOM_DELETION_DELAY_SEC,
+        );
+
+      // when: 입장하고 연결을 유지한다
+      moduleRef.get(EnterRoomService).joinRoom(roomId, participantId);
+      moduleRef.get(RoomPresenceTracker).connectParticipant(participantId);
+
+      // then: 예약된 타이머가 하나도 남지 않고, 30분이 지나도 방이 남는다
+      expect(jest.getTimerCount()).toBe(0);
+      jest.advanceTimersByTime(EMPTY_ROOM_DELETION_DELAY_SEC * MS_PER_SECOND);
+      expect(roomRepository.findById(roomId)).toBeDefined();
+
+      await moduleRef.close();
+    });
+
+    describe('빈 방 복귀 시간', () => {
+      let moduleRef: TestingModule;
+
+      beforeEach(async () => {
+        moduleRef = await Test.createTestingModule({
+          imports: [EventEmitterModule.forRoot(), PomodoroModule],
+        })
+          .overrideProvider(Clock)
+          .useClass(FixedClock)
+          .compile();
+        await moduleRef.init();
+      });
+
+      afterEach(async () => {
+        await moduleRef.close();
+      });
+
+      it('퇴장으로 빈 방이 된 방에 입장하면 빈 방이 된 뒤 지난 시간이 복귀 시간으로 기록된다', async () => {
+        // given
+        const roomId = 'room-uuid-1';
+        moduleRef
+          .get(RoomRepository)
+          .save(restoreEmptyRoom(roomId, FIVE_MINUTES_AGO));
+
+        // when
+        moduleRef.get(EnterRoomService).joinRoom(roomId, 'participant-1');
+
+        // then
+        const registry = moduleRef.get(Registry);
+        expect(
+          await readMetricValue(
+            registry,
+            EMPTY_ROOM_RETURN,
+            {},
+            `${EMPTY_ROOM_RETURN}_sum`,
+          ),
+        ).toBe(FIVE_MINUTES_SEC);
+      });
+
+      it('입장한 적 없는 방에 처음 입장하면 복귀 시간이 기록되지 않는다', async () => {
+        // given
+        const roomId = 'room-uuid-1';
+        moduleRef.get(RoomRepository).save(restoreEmptyRoom(roomId));
+
+        // when
+        moduleRef.get(EnterRoomService).joinRoom(roomId, 'participant-1');
+
+        // then
+        const registry = moduleRef.get(Registry);
+        expect(
+          await readMetricValue(
+            registry,
+            EMPTY_ROOM_RETURN,
+            {},
+            `${EMPTY_ROOM_RETURN}_count`,
+          ),
+        ).toBe(0);
+      });
     });
   });
 });

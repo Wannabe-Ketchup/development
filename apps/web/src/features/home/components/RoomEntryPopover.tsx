@@ -1,12 +1,27 @@
 import { useRef, useState } from 'react';
 import { WobblySpeechBubble } from '@squiggle-line/react';
 import { EntryOptionButton } from './EntryOptionButton';
-import { createRoom, existsRoom } from '@/api/room';
+import { createRoom, EnterRoomError, enterRoomByInviteCode } from '@/api/room';
 import { useShake } from '@/hooks/useShake';
 import { cn } from '@/lib/cn';
 import { goToRoom } from '@/lib/room-id';
 
 type Step = 'option' | 'input';
+
+const RETRY_MESSAGE = '잠시 후 다시 시도해 주세요.';
+
+// 초대코드 입장 실패를 사용자 안내 문구로 바꾼다
+function toEntryErrorMessage(error: unknown): string {
+  if (!(error instanceof EnterRoomError)) return RETRY_MESSAGE;
+  switch (error.reason) {
+    case 'not-found':
+      return '찾을 수 없는 방입니다.';
+    case 'rejected':
+      return error.message;
+    case 'unknown':
+      return RETRY_MESSAGE;
+  }
+}
 
 interface RoomEntryPopoverProps {
   onClose?: () => void;
@@ -45,9 +60,9 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
   const handleEnterRoom = async () => {
     if (isPending) return;
 
-    const roomId = inviteCode.trim();
+    const trimmedInviteCode = inviteCode.trim();
 
-    if (!roomId) {
+    if (!trimmedInviteCode) {
       rejectEntry('초대 코드를 입력해 주세요.');
       return;
     }
@@ -55,16 +70,11 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
     setIsPending(true);
 
     try {
-      const { exists } = await existsRoom(roomId);
-
-      if (!exists) {
-        rejectEntry('찾을 수 없는 방입니다.');
-        return;
-      }
-
-      goToRoom(roomId);
-    } catch {
-      rejectEntry('잠시 후 다시 시도해 주세요.');
+      // 초대코드는 서버만 roomId로 풀 수 있으므로 입장 응답의 roomId로 이동한다
+      const { room } = await enterRoomByInviteCode(trimmedInviteCode);
+      goToRoom(room.roomId);
+    } catch (error) {
+      rejectEntry(toEntryErrorMessage(error));
     } finally {
       setIsPending(false);
     }
@@ -91,7 +101,7 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
       <div
         id="room-entry-error"
         role="alert"
-        className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full text-nowrap text-error"
+        className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap text-error"
       >
         {error ?? ''}
       </div>
@@ -114,7 +124,10 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
           {step === 'option' ? (
             // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- action buttons, not form controls
             <div role="group" aria-labelledby="room-entry-title">
-              <div id="room-entry-title" className="mb-3 text-2xl text-nowrap">
+              <div
+                id="room-entry-title"
+                className="mb-3 text-2xl whitespace-nowrap"
+              >
                 어디서 공부할까요?
               </div>
               <div className="flex flex-col gap-3">
@@ -161,7 +174,7 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="rounded-lg border-2 border-gray px-3 py-2 text-lg text-nowrap text-gray"
+                  className="rounded-lg border-2 border-gray px-3 py-2 text-lg whitespace-nowrap text-gray"
                 >
                   뒤로가기
                 </button>

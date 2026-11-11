@@ -29,7 +29,7 @@ describe('닉네임 수정 (e2e)', () => {
 
   it('유효한 닉네임으로 요청하면 204를 반환한다.', async () => {
     // given
-    const roomId = 'roomId';
+    const roomId = 'room-uuid-1';
     app.get(RoomRepository).save(Room.create(roomId));
     const newNickname = '마요';
 
@@ -47,7 +47,7 @@ describe('닉네임 수정 (e2e)', () => {
 
   it('형식에 맞지 않는 닉네임으로 요청하면 400을 반환한다.', async () => {
     // given
-    const roomId = 'roomId';
+    const roomId = 'room-uuid-1';
     app.get(RoomRepository).save(Room.create(roomId));
     const invalidNickname = '토마토🍅';
 
@@ -81,7 +81,7 @@ describe('닉네임 수정 (e2e)', () => {
 
   it('방에 없는 참가자로 요청하면 404를 반환한다.', async () => {
     // given
-    const roomId = 'roomId';
+    const roomId = 'room-uuid-1';
     app.get(RoomRepository).save(Room.create(roomId));
     const newNickname = '마요';
 

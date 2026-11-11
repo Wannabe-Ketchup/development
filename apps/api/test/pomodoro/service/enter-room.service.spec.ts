@@ -3,12 +3,17 @@ import { ROOM_MODE } from '@pomodoro/shared';
 import { EnterRoomService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/enter-room.service';
 import { RoomQueryService } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-query.service';
 import { RoomPresenceTracker } from '../../../src/pomodoro/service/../../../src/pomodoro/service/room-presence.tracker';
+import { InMemoryTimerScheduler } from '../../../src/pomodoro/scheduler/in-memory.timer.scheduler';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Registry } from 'prom-client';
+import { SystemClock } from '../../../src/common/clock/system.clock';
+import { MetricsService } from '../../../src/metrics/metrics.service';
 import { RoomRepository } from '../../../src/pomodoro/service/../repository/room.repository';
 import { Room } from '../../../src/pomodoro/service/../domain/room.entity';
 import { Participant } from '../../../src/pomodoro/service/../domain/participant.entity';
 
 describe('EnterRoomService.joinRoom', () => {
-  const roomId = 'room-1';
+  const roomId = 'room-uuid-1';
   const sessionParticipantId = 'session-participant-id';
 
   const createMockRoom = (
@@ -30,6 +35,7 @@ describe('EnterRoomService.joinRoom', () => {
       timer: {},
       hasNickname,
       join,
+      secondsSinceEmptied: jest.fn(),
     } as unknown as Room;
 
     return { room, hasNickname, join };
@@ -77,6 +83,9 @@ describe('EnterRoomService.joinRoom', () => {
       roomQueryService,
       roomRepository,
       roomPresenceTracker,
+      new InMemoryTimerScheduler(new EventEmitter2()),
+      new SystemClock(),
+      new MetricsService(new Registry()),
     );
 
     generateRandomNickname = jest.spyOn(

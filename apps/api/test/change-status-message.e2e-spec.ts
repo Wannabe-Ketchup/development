@@ -29,7 +29,7 @@ describe('상태메시지 수정 (e2e)', () => {
 
   it('방의 참가자가 요청하면 204를 반환한다.', async () => {
     // given
-    const roomId = 'roomId';
+    const roomId = 'room-uuid-1';
     app.get(RoomRepository).save(Room.create(roomId));
     const newStatusMessage = '집중 중';
 
@@ -63,7 +63,7 @@ describe('상태메시지 수정 (e2e)', () => {
 
   it('방에 없는 참가자로 요청하면 404를 반환한다.', async () => {
     // given
-    const roomId = 'roomId';
+    const roomId = 'room-uuid-1';
     app.get(RoomRepository).save(Room.create(roomId));
     const newStatusMessage = '집중 중';
 

@@ -22,6 +22,7 @@
   --color-black: #1b1b1b;
   --color-gray: #bababa;
   --color-white: #ffffff;
+  --color-cream: #fffdf9;
 
   --color-tomato-body-1: #9beb87;
   --color-tomato-body-2: #f5ae8d;
@@ -46,6 +47,17 @@
   font-family: var(--font-ongleipryudung);
   -webkit-text-stroke: 1px currentColor;
   letter-spacing: 0.2em;
+}
+
+/* 다크모드 수치는 여기서만 관리한다 */
+/* 배경(벽·바닥)을 덮는 막 */
+@utility dark-mode-overlay {
+  @apply bg-black/60;
+}
+
+/* 가구·참여자·알약 UI는 일부러 밝게 두되, 다크모드에서 튀지 않을 만큼만 낮춘다 (램프·타이머 제외) */
+@utility dark-mode-dim {
+  @apply brightness-85;
 }
 
 body {

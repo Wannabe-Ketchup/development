@@ -15,7 +15,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
           { nickname: ' ', statusMessage: '' },
         ],
       });
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
     });
 
     test('참가자 목록 리스트는 "참가자 목록" 레이블로 노출되고 항목 수가 맞다', async ({
@@ -90,7 +90,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
   test.describe('P-B. 음악 재생/중지', () => {
     test.beforeEach(async ({ page }) => {
       await mockEnterRoomOnly(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
     });
 
     test('LP 플레이어는 재생·중지 토글에 따라 버튼 레이블이 바뀐다', async ({
@@ -117,7 +117,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
   test.describe('P-C. 조명(테마) 전환', () => {
     test.beforeEach(async ({ page }) => {
       await mockEnterRoomOnly(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
     });
 
     test('조명 버튼 레이블은 현재 상태에서의 다음 전환 동작을 반영한다', async ({
@@ -139,7 +139,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: SSE 연결 완료 상태 (canShowTour=true)
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
 
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
@@ -160,7 +160,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 투어가 열린 상태
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -181,7 +181,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 투어가 열린 상태
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -201,7 +201,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 닉네임 스텝(4단계)이 열린 상태
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       await page.getByRole('button', { name: 'how to use' }).click();
       const dialog = page.getByRole('dialog', { name: '뽀모도로 사용법' });
       await expect(dialog).toBeVisible();
@@ -225,7 +225,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 닉네임 편집 중인 4단계
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       await page.getByRole('button', { name: 'how to use' }).click();
       const dialog = page.getByRole('dialog', { name: '뽀모도로 사용법' });
       await expect(dialog).toBeVisible();
@@ -249,7 +249,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 투어 열기
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -298,7 +298,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 투어 열기 (1단계)
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -342,7 +342,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: 투어 열기
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -374,7 +374,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       // mockRoomWithSSEConnected는 FakeSSEEventSource를 주입한다.
       // window.__triggerSSEError()로 onerror를 직접 발화시켜 sseStatus='error'로 전환한다.
       await mockRoomWithSSEConnected(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).toBeVisible();
       await triggerBtn.click();
@@ -398,11 +398,160 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     }) => {
       // given: SSE가 hanging 상태(연결만 됐고 room_state 이벤트 미수신 → isConfirmed=false)
       await mockEnterRoomOnly(page);
-      await page.goto('/pomodoro?roomId=r1');
+      await page.goto('/pomodoro/r1');
 
       // then: How to use 버튼이 DOM에 없어야 한다
       const triggerBtn = page.getByRole('button', { name: 'how to use' });
       await expect(triggerBtn).not.toBeAttached();
+    });
+  });
+
+  test.describe('P-E. 초대코드 모달로 초대코드를 확인한다', () => {
+    test('Enter로 열면 코드가 보이고 포커스가 닫기 버튼으로 이동하며 Tab이 배경으로 나가지 않는다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '초대코드 보기' });
+      await expect(openBtn).toBeVisible();
+      await openBtn.focus();
+
+      // when
+      await page.keyboard.press('Enter');
+
+      // then: dialog와 코드가 보이고 포커스는 닫기 버튼
+      const dialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByText('ABC234')).toBeVisible();
+      await expect(page.getByRole('button', { name: '닫기' })).toBeFocused();
+
+      // when: Tab 반복
+      for (let i = 0; i < 6; i++) {
+        await page.keyboard.press('Tab');
+
+        // then: 배경 버튼으로 포커스가 나가지 않는다 (dialog 끝에서는 브라우저 UI로 빠질 수 있다)
+        await expect(
+          page.getByRole('button', { name: 'how to use' }),
+        ).not.toBeFocused();
+        await expect(
+          page.getByRole('button', { name: '초대코드 보기' }),
+        ).not.toBeFocused();
+      }
+    });
+
+    test('Escape로 닫히고 열기 버튼으로 포커스가 복원된다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '초대코드 보기' });
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(dialog).toBeVisible();
+
+      // when
+      await page.keyboard.press('Escape');
+
+      // then
+      await expect(dialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+
+    test('백드롭을 클릭하면 닫힌다', async ({ page }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: '초대코드 보기' }).focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(dialog).toBeVisible();
+
+      // when: 화면 모서리(백드롭) 클릭
+      await page.mouse.click(10, 10);
+
+      // then
+      await expect(dialog).not.toBeVisible();
+    });
+
+    test('닫기 버튼을 Enter로 누르면 닫히고 열기 버튼으로 포커스가 복원된다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '초대코드 보기' });
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(page.getByRole('button', { name: '닫기' })).toBeFocused();
+
+      // when
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+
+    test('투어가 열린 채 모달을 열면 투어는 사라지고 Escape 후 열기 버튼으로 포커스가 간다', async ({
+      page,
+    }) => {
+      // given: 투어가 열린 상태
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: 'how to use' }).click();
+      const tourDialog = page.getByRole('dialog', { name: '뽀모도로 사용법' });
+      await expect(tourDialog).toBeVisible();
+      const openBtn = page.getByRole('button', { name: '초대코드 보기' });
+
+      // when: 키보드로 열기 버튼에 가서 Enter
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+
+      // then: 투어는 사라지고 초대코드 dialog만 열린다
+      const inviteDialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(inviteDialog).toBeVisible();
+      await expect(tourDialog).not.toBeVisible();
+
+      // when
+      await page.keyboard.press('Escape');
+
+      // then
+      await expect(inviteDialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+
+    test('코드 복사하기를 Enter로 누르면 클립보드에 코드가 복사되고 복사했다고 발화한다', async ({
+      page,
+      context,
+    }) => {
+      // given
+      await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: '초대코드 보기' }).focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '초대코드' });
+      await expect(dialog.getByText('ABC234')).toBeVisible();
+      const copyBtn = page.getByRole('button', { name: '코드 복사하기' });
+      await copyBtn.focus();
+
+      // when
+      await page.keyboard.press('Enter');
+
+      // then: 클립보드에는 코드만, 버튼은 결과로 바뀌고 포커스는 유지, status가 발화된다
+      await expect(
+        page.getByRole('button', { name: '복사했어요!' }),
+      ).toBeFocused();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+        'ABC234',
+      );
+      await expect(page.getByRole('status')).toHaveText(
+        '초대코드를 복사했어요',
+      );
     });
   });
 });
