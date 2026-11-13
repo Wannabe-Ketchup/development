@@ -1,0 +1,11 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: discord
+    receivers:
+      - uid: discord
+        type: discord
+        settings:
+          # webhook 주소를 알면 누구나 채널에 글을 쓸 수 있으므로 grafana/.env에만 둔다.
+          url: $DISCORD_WEBHOOK_URL

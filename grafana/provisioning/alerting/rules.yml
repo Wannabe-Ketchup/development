@@ -1,0 +1,149 @@
+apiVersion: 1
+
+# 운영 서버 알림. 기준과 근거는 docs/deployment.md의 알림 절을 본다.
+groups:
+  # 바로 봐야 하는 알림. 서버 응답 없음의 30초 지속을 지키려고 10초마다 확인한다.
+  - orgId: 1
+    name: production-urgent
+    folder: 운영 알림
+    interval: 10s
+    rules:
+      - uid: prod-server-down
+        title: 서버 응답 없음
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: up{env="production"}
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+        # 수집 대상이 사라지거나 Prometheus를 못 읽으면 운영 서버를 볼 수 없으므로 알린다.
+        noDataState: Alerting
+        execErrState: Alerting
+        # nest 재시작은 수집 한 번(15초) 안에 끝났다. 30초 넘게 0이면 스스로 살아나지 못한 것으로 본다.
+        for: 30s
+        labels:
+          urgency: urgent
+        annotations:
+          summary: 운영 서버가 30초 넘게 응답하지 않습니다.
+          description: '할 일: 서버에 접속해 nest 컨테이너 상태와 로그를 확인하고 살립니다.'
+
+      - uid: prod-sse-near-limit
+        title: 동시 접속 상한 임박
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sse_connections_active{env="production"}
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    # nginx 상한(production/nginx/nginx.conf의 limit_conn 2000) 바로 아래. 값이 정수라 1899 초과 = 1900 이상
+                    type: gt
+                    params: [1899]
+        # 서버가 죽어 값이 없으면 서버 응답 없음이 알린다. 이 알림은 직전 상태를 유지해 해제 메시지를 보내지 않는다.
+        noDataState: KeepLast
+        execErrState: KeepLast
+        for: 0s
+        labels:
+          urgency: urgent
+        annotations:
+          summary: '동시 접속 {{ printf "%.0f" $values.A.Value }}명. 2000명부터 nginx가 새 접속을 거절합니다.'
+          description: '할 일: 갑자기 몰린 것인지 꾸준히 는 것인지 확인하고, nginx 메모리 줄이기·사양 올리기를 시작합니다.'
+
+      - uid: prod-eventloop-lag
+        title: 서버 느려짐
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: nodejs_eventloop_lag_p99_seconds{env="production"}
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0.1]
+        noDataState: KeepLast
+        execErrState: KeepLast
+        # 평소 p99는 10~30ms다. 순간 튐은 넘기고 1분 계속 100ms를 넘을 때만 알린다.
+        for: 1m
+        labels:
+          urgency: urgent
+        annotations:
+          summary: '이벤트 루프 지연 p99 {{ humanizeDuration $values.A.Value }}가 1분 넘게 이어집니다.'
+          description: '할 일: 서버에서 CPU와 메모리·스왑을 확인합니다. CPU가 원인이면 SSE 방 단위 전송, 메모리·스왑이면 nginx 메모리 줄이기·사양 올리기.'
+
+  # 며칠 안에만 보면 되는 알림. 하루 최댓값을 보므로 1시간마다 확인해도 충분하다.
+  - orgId: 1
+    name: production-capacity
+    folder: 운영 알림
+    interval: 1h
+    rules:
+      - uid: prod-capacity-plan
+        title: 증설 준비
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 86400
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: max_over_time(sse_connections_active{env="production"}[1d])
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    # 상한 2000까지 대책(약 1주)을 마칠 여유: 1주에 43%까지 늘어도 된다. 값이 정수라 1399 초과 = 1400 이상
+                    type: gt
+                    params: [1399]
+        noDataState: KeepLast
+        execErrState: KeepLast
+        for: 0s
+        labels:
+          urgency: plan
+        annotations:
+          summary: '하루 최대 동시 접속 {{ printf "%.0f" $values.A.Value }}명. 상한 2000명까지 대책에 1주쯤 걸립니다.'
+          description: '할 일: nginx 메모리를 줄이고 부하 테스트로 상한을 다시 잽니다.'
