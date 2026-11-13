@@ -1,0 +1,13 @@
+apiVersion: 1
+
+# 사용자가 적은 동안은 모든 알림을 한 채널로 받는다.
+policies:
+  - orgId: 1
+    receiver: discord
+    group_by: ['alertname']
+    routes:
+      # 증설 준비는 하루 최댓값이라 한 번 넘으면 하루 동안 울린 상태로 남는다. 하루에 한 번만 다시 보낸다.
+      - receiver: discord
+        object_matchers:
+          - ['urgency', '=', 'plan']
+        repeat_interval: 24h
