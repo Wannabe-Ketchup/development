@@ -19,6 +19,8 @@ staging을 main에 머지하면 `Deploy Production` 워크플로가 같은 검�
 
 이미지에는 환경별 설정이 들어가지 않는다. `SESSION_SECRET`, `AWS_*`, `CDN_DOMAIN` 같은 값은 컨테이너가 시작할 때 각 서버의 `.env`에서 읽기 때문에 같은 이미지가 staging과 운영에서 각자의 설정으로 동작한다. 따라서 `.env`가 잘못돼 배포가 실패하면 다시 빌드해도 소용없고, 서버의 `.env`를 고친 뒤 워크플로를 다시 실행해야 한다.
 
+디스코드 방 생성 알림은 `NODE_ENV`가 `production`이고 `.env`에 `DISCORD_WEBHOOK_URL`이 있을 때만 보낸다. 운영 서버 `.env`에 이 값을 넣는다. 세션 쿠키의 `secure`는 `NODE_ENV`가 `dev`가 아니면 켜진다.
+
 배포 단계에서는 `production/app-compose.yml`을 운영 서버 `APP_DIR`에 복사하고 `TAG=<커밋 SHA>`로 이미지를 받아 Nest를 다시 띄운다. 헬스체크가 통과할 때까지 기다린 뒤 서버 안에서 `/health`가 200인지 한 번 더 확인하며, 실패하면 Nest 로그 50줄을 남기고 워크플로를 실패로 끝낸다. 이 경우 web 빌드는 복사하지 않는다. 마지막으로 web 빌드 결과를 `WEB_DIR`에 덮어쓴다.
 
 세션과 방 상태는 Nest 메모리에 있으므로 배포나 롤백으로 Nest가 다시 뜨면 진행 중인 방과 로그인 세션이 초기화된다.
