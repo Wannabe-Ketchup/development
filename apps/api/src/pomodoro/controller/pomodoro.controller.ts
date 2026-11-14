@@ -25,6 +25,7 @@ import type { EnterRoomByInviteCodeRequest } from '../dto/enter-room-by-invite-c
 import { InviteCodeResponse } from '../dto/invite-code-response.dto';
 import type { CreateRoomResponse, ExistsRoomResponse } from '@pomodoro/shared';
 import type { ChangeStatusMessageRequest } from '../dto/change-status-message-request.dto';
+import { NotifyDiscord } from '../../common/notification/notify-discord.decorator';
 
 @Controller('pomodoro')
 export class PomodoroController {
@@ -90,6 +91,10 @@ export class PomodoroController {
   }
 
   @Post('room')
+  @NotifyDiscord<CreateRoomResponse>({
+    title: '새 뽀모도로 방을 만들었어요!',
+    fields: (response) => [{ name: '방 ID', value: response.roomId }],
+  })
   createRoom(): CreateRoomResponse {
     return { roomId: this.createRoomService.create() };
   }

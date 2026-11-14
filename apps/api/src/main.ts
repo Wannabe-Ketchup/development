@@ -15,7 +15,8 @@ async function bootstrap() {
 
   SessionConfig.of({
     secret: configService.getOrThrow<string>('SESSION_SECRET'),
-    isProduction: configService.get('NODE_ENV') === 'production',
+    // staging(NODE_ENV=staging)도 HTTPS라 secure 쿠키를 쓴다. 로컬(dev)만 끈다.
+    isProduction: configService.get('NODE_ENV') !== 'dev',
   }).apply(app);
 
   // 전역 예외 필터 등록
