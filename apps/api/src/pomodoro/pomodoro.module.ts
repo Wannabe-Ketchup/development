@@ -30,9 +30,10 @@ import { InMemoryInviteCodeRepository } from './repository/in-memory.invite-code
 import { Random } from '../common/random/random';
 import { CryptoRandom } from '../common/random/crypto.random';
 import { MetricsModule } from '../metrics/metrics.module';
+import { NotificationModule } from '../common/notification/notification.module';
 
 @Module({
-  imports: [MetricsModule],
+  imports: [MetricsModule, NotificationModule],
   controllers: [PomodoroController, PomodoroSseController],
   providers: [
     SseService,
