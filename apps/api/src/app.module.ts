@@ -17,6 +17,7 @@ import { AuthModule } from './auth/auth.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { APP_GUARD } from '@nestjs/core';
 import { SessionGuard } from './auth/guard/session.guard';
+import { NotificationModule } from './common/notification/notification.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { SessionGuard } from './auth/guard/session.guard';
     LoggerModule,
     AuthModule,
     MetricsModule,
+    NotificationModule,
   ],
   providers: [
     // @Public()이 없는 모든 핸들러는 유효한 로그인 세션이 있어야 한다.
