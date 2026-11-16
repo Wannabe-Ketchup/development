@@ -19,6 +19,8 @@ staging을 main에 머지하면 `Deploy Production` 워크플로가 같은 검�
 
 이미지에는 환경별 설정이 들어가지 않는다. `SESSION_SECRET`, `AWS_*`, `CDN_DOMAIN` 같은 값은 컨테이너가 시작할 때 각 서버의 `.env`에서 읽기 때문에 같은 이미지가 staging과 운영에서 각자의 설정으로 동작한다. 따라서 `.env`가 잘못돼 배포가 실패하면 다시 빌드해도 소용없고, 서버의 `.env`를 고친 뒤 워크플로를 다시 실행해야 한다.
 
+디스코드 방 생성 알림은 `NODE_ENV`가 `production`이고 `.env`에 `DISCORD_WEBHOOK_URL`이 있을 때만 보낸다. 운영 서버 `.env`에 이 값을 넣는다. 세션 쿠키의 `secure`는 `NODE_ENV`가 `dev`가 아니면 켜진다.
+
 배포 단계에서는 `production/app-compose.yml`을 운영 서버 `APP_DIR`에 복사하고 `TAG=<커밋 SHA>`로 이미지를 받아 Nest를 다시 띄운다. 헬스체크가 통과할 때까지 기다린 뒤 서버 안에서 `/health`가 200인지 한 번 더 확인하며, 실패하면 Nest 로그 50줄을 남기고 워크플로를 실패로 끝낸다. 이 경우 web 빌드는 복사하지 않는다. 마지막으로 web 빌드 결과를 `WEB_DIR`에 덮어쓴다.
 
 세션과 방 상태는 Nest 메모리에 있으므로 배포나 롤백으로 Nest가 다시 뜨면 진행 중인 방과 로그인 세션이 초기화된다.
@@ -42,6 +44,19 @@ GitHub Actions를 쓸 수 없는 급한 상황이면 운영 서버에 접속해 
 로그는 각 서버의 Promtail이 Nest 로그 파일(`logs/*.log`)을 읽어 staging Loki로 보낸다. staging Promtail은 도커 네트워크 안에서 `loki:3100`으로 바로 보내고, 운영 Promtail은 staging nginx를 거친다. staging nginx는 `/loki/api/v1/push` 한 경로만 운영 서버 IP에 열며, Loki의 조회 API는 밖으로 열지 않는다. 메트릭과 같이 운영 로그에는 `env="production"`, staging 로그에는 `env="staging"` 라벨이 붙는다. Promtail은 어디까지 보냈는지 기록해 두므로 재시작해도 이어서 보내고, Loki가 잠시 멈추면 재시도한다. 원본 로그 파일은 각 서버에 30일 동안 남는다. Grafana에서는 Explore에서 Loki를 고르고 `{env="production", job="nest"}`처럼 조회하며, `level`은 라벨로, `traceId`는 `trace_id` structured metadata로 들어 있어 `{env="production"} | trace_id="<값>"`으로 한 요청의 로그를 모아 볼 수 있다. 평소에는 Logs 대시보드에서 레벨별 로그 수와 에러 로그를 보고, 상단 `env` 변수로 환경을 고른 뒤 `레벨`·`traceId`·`검색어` 변수로 전체 로그를 거른다. 로그를 펼쳐 `trace_id`의 "이 요청의 로그 보기"를 누르면 그 요청의 로그만 남는다. 이 링크는 `grafana/provisioning/datasources/datasource.yml`의 Loki `derivedFields`에 정의돼 있어, 대시보드와 함께 이 파일도 서버에 반영해야 한다. nginx 로그는 Loki로 보내지 않는다.
 
 메트릭과 로그는 모두 90일 동안 보관한다. Prometheus는 90일 전이라도 3GB를 넘으면 오래된 데이터부터 지운다. Loki는 용량 기준 삭제가 없으므로 staging 디스크 사용량(`df -h`)을 가끔 확인한다. Grafana는 `https://monitoring.zizon-tomato.cloud`로 접속하며, staging nginx가 같은 서버의 Grafana로 넘긴다. 회원가입은 막혀 있고 `grafana/.env`의 관리자 비밀번호로 로그인한다.
+
+운영 서버 알림은 Grafana가 디스코드 채널 하나로 보낸다. 규칙은 `grafana/provisioning/alerting/`에 파일로 있고, Grafana 화면에서는 고칠 수 없다. 디스코드 webhook 주소는 알면 누구나 채널에 글을 쓸 수 있으므로 저장소에 두지 않고 staging 서버의 `grafana/.env`에 `DISCORD_WEBHOOK_URL`로 넣는다. 이 값이 비어 있으면 Grafana가 알림 설정을 읽지 못해 시작하지 않는다. 로컬에서는 가짜 주소를 넣는다. 로컬 Prometheus는 운영 서버를 수집하지 못해(운영 nginx가 staging IP에만 연다) 서버 응답 없음이 울리므로, 진짜 주소를 넣으면 팀 채널로 간다. 알림 메시지에는 지금 값과 할 일이 함께 온다.
+
+| 알림                | 조건                                       | 확인 간격 |
+| ------------------- | ------------------------------------------ | --------- |
+| 서버 응답 없음      | `up{env="production"}`이 30초 넘게 0       | 10초      |
+| 동시 접속 상한 임박 | SSE 연결 1900 이상 (nginx가 2000부터 거절) | 10초      |
+| 서버 느려짐         | 이벤트 루프 지연 p99가 1분 넘게 100ms 초과 | 10초      |
+| 증설 준비           | 하루 최대 SSE 연결 1400 이상               | 1시간     |
+
+서버가 죽으면 나머지 알림은 값이 없어지는데, 이때는 직전 상태를 유지하고 서버 응답 없음 하나만 울린다. 알림은 조건이 풀리면 해제 메시지와 함께 저절로 꺼지고, 계속 울리는 동안에는 4시간마다 다시 보낸다. 증설 준비는 한 번 넘으면 하루 동안 울린 상태로 남으므로 하루에 한 번만 다시 보낸다. 동시 접속 상한 임박과 증설 준비 기준은 운영 nginx의 SSE 상한 2000에서 정했으므로, 상한을 바꾸면 두 기준도 함께 바꾼다. 운영 서버에서 부하 테스트를 할 때는 미리 Grafana의 Alerting > Silences에서 `env=production`으로 테스트 시간 동안 알림을 끈다.
+
+처음 반영할 때는 `.env`에 값을 먼저 넣고 파일을 복사한다. 알림 파일을 바꾸면 서버에 복사한 뒤 `docker compose -f infra-compose.yml restart grafana`로 다시 읽힌다. `grafana/.env`를 바꿨을 때는 `restart`로는 반영되지 않으므로 `docker compose -f infra-compose.yml up -d --force-recreate grafana`로 컨테이너를 다시 만든다.
 
 ## 검색 노출과 캐시
 
@@ -84,7 +99,7 @@ nginx 설정은 자동 배포되지 않는다. 설정 파일을 서버에 복사
 
 ### staging 서버
 
-staging 서버의 `/home/ubuntu/wannabe-ketchup`은 git clone이 아니라 필요한 파일만 복사해 둔 디렉터리다. `app-compose.yml`은 워크플로가 복사하고, 나머지 infra 파일은 저장소에서 직접 복사한다. 복사할 것은 `infra-compose.yml`, `nginx/nginx.conf`, `prometheus/`, `loki/`, `promtail/`, `grafana/provisioning/`, `grafana/dashboards/`이다. 저장소에 없는 `grafana/.env`는 서버에서 만들어 `GF_SECURITY_ADMIN_PASSWORD`에 긴 비밀번호를 넣는다. Grafana가 인터넷에 공개되므로 이 비밀번호가 유일한 보호 수단이다.
+staging 서버의 `/home/ubuntu/wannabe-ketchup`은 git clone이 아니라 필요한 파일만 복사해 둔 디렉터리다. `app-compose.yml`은 워크플로가 복사하고, 나머지 infra 파일은 저장소에서 직접 복사한다. 복사할 것은 `infra-compose.yml`, `nginx/nginx.conf`, `prometheus/`, `loki/`, `promtail/`, `grafana/provisioning/`, `grafana/dashboards/`이다. 저장소에 없는 `grafana/.env`는 서버에서 만들어 `GF_SECURITY_ADMIN_PASSWORD`에 긴 비밀번호를, `DISCORD_WEBHOOK_URL`에 알림 채널의 webhook 주소를 넣는다. Grafana가 인터넷에 공개되므로 이 비밀번호가 유일한 보호 수단이다.
 
 파일을 올리기 전에 `monitoring.zizon-tomato.cloud`의 DNS A 레코드를 staging 서버 IP로 추가하고, 기존 인증서에 서브도메인을 더한다. 인증서가 서브도메인을 담고 있지 않으면 새 nginx 설정의 Grafana 블록은 인증서 경고를 낸다.
 

@@ -6,6 +6,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import {
   BREAK_DURATION_SECONDS,
   CYCLE_COUNT,
+  type CreateRoomResponse,
   FOCUS_DURATION_SECONDS,
   ROOM_MODE,
   type RoomMode,
@@ -13,6 +14,8 @@ import {
 import { AppModule } from '../../../src/app.module';
 import { SessionConfig } from '../../../src/auth/config/session.config';
 import { Clock } from '../../../src/common/clock/clock';
+import type { Notification } from '../../../src/common/notification/notification';
+import { NotificationSender } from '../../../src/common/notification/notification-sender';
 import { Random } from '../../../src/common/random/random';
 import { LoadS3MusicService } from '../../../src/music/service/load-s3-music.service';
 import { JoinRoomResponse } from '../../../src/pomodoro/dto/join-room-response.dto';
@@ -35,6 +38,16 @@ class FixedClock extends Clock {
 class FixedRandom extends Random {
   nextInt(): number {
     return 0;
+  }
+}
+
+// 보낸 알림을 기록만 한다
+class RecordingNotificationSender extends NotificationSender {
+  readonly sent: Notification[] = [];
+
+  send(notification: Notification): Promise<void> {
+    this.sent.push(notification);
+    return Promise.resolve();
   }
 }
 
@@ -84,6 +97,8 @@ describe('PomodoroController', () => {
       .useClass(FixedClock)
       .overrideProvider(Random)
       .useClass(FixedRandom)
+      .overrideProvider(NotificationSender)
+      .useClass(RecordingNotificationSender)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -100,6 +115,25 @@ describe('PomodoroController', () => {
   });
 
   describe('POST /pomodoro/room', () => {
+    it('방을 만들면 방 ID가 담긴 방 생성 알림이 전송된다', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      await agent.post('/auth/login/guest').expect(204);
+
+      // when
+      const response = await agent.post('/pomodoro/room').expect(201);
+
+      // then
+      const { roomId } = response.body as CreateRoomResponse;
+      const sender = app.get<RecordingNotificationSender>(NotificationSender);
+      expect(sender.sent).toEqual([
+        {
+          title: '새 뽀모도로 방을 만들었어요!',
+          fields: [{ name: '방 ID', value: roomId }],
+        },
+      ]);
+    });
+
     it('초대코드를 발급하지 못하면 503을 응답한다', async () => {
       // given
       app
