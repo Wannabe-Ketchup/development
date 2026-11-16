@@ -1,0 +1,117 @@
+apiVersion: 1
+
+# 운영 서버 전체(node exporter)의 메모리·스왑 알림. 기준과 근거는 docs/deployment.md의 알림 절을 본다.
+groups:
+  # 수집 간격은 15초지만 Grafana는 확인 간격이 10초의 배수여야 시작한다. production-urgent와 같은 10초로 둔다.
+  - orgId: 1
+    name: production-server
+    folder: 운영 알림
+    interval: 10s
+    rules:
+      - uid: prod-swap-in
+        title: 스왑 읽기 지속
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 180
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              # 스왑 쓰기는 보지 않는다. 쓰기는 안 쓰는 메모리를 치우는 것이라 사람이 몰릴 때 정상에서도 튄다.
+              # 느려지는 건 필요한 메모리를 디스크에서 다시 읽어 올 때다.
+              expr: rate(node_vmstat_pswpin{job="node",env="production"}[2m])
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    # 초당 25페이지 = 100KB(운영 서버 페이지 4KB). 부하 테스트 2분 평균: 2000명 + 1000명 몰림 최대 58KB,
+                    # 3000명 + 이벤트 초당 10(p99 1~2초) 124~164KB, 멈춤 1000KB 이상.
+                    type: gt
+                    params: [25]
+        # 서버가 죽으면 서버 응답 없음이, node exporter만 멈추면 아래 알림이 알린다.
+        noDataState: KeepLast
+        execErrState: KeepLast
+        # 순간 튐은 넘긴다. 테스트에서는 서버가 멈추기 약 1분 전에 울렸다.
+        for: 1m
+        labels:
+          urgency: urgent
+        annotations:
+          summary: '스왑 읽기가 초당 {{ printf "%.0f" $values.A.Value }}페이지(1페이지 4KB)로 1분 넘게 이어집니다. 메모리가 모자라 서버가 느려지는 중입니다.'
+          description: '할 일: Server 대시보드에서 메모리 사용량을 보고, 서버에서 docker stats로 커진 컨테이너를 찾습니다. 접속이 많아서라면 nginx 메모리 줄이기·사양 올리기, 아니면 커진 컨테이너를 다시 시작합니다.'
+
+      - uid: prod-oom-kill
+        title: OOM 종료
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              # 컨테이너 메모리 상한(mem_limit)에 걸려 꺼진 것도 센다.
+              expr: increase(node_vmstat_oom_kill{job="node",env="production"}[5m])
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        noDataState: KeepLast
+        execErrState: KeepLast
+        # nest는 몇 초 만에 다시 떠서 서버 응답 없음이 울리지 않을 수 있으므로 바로 알린다. 5분 뒤 저절로 해제된다.
+        for: 0s
+        labels:
+          urgency: urgent
+        annotations:
+          summary: '메모리 부족으로 프로그램이 강제 종료됐습니다(최근 5분 {{ printf "%.0f" $values.A.Value }}번). nest였다면 진행 중이던 방과 로그인 세션이 초기화됐습니다.'
+          description: '할 일: 서버에서 sudo dmesg -T | grep -i "killed process"로 어떤 프로그램이었는지, docker ps로 방금 다시 시작한 컨테이너를 확인합니다.'
+
+      - uid: prod-node-exporter-down
+        title: node exporter 멈춤
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              # node exporter가 0이고 nest가 1일 때만 1이다. 서버 전체가 죽으면 둘 다 0이라 서버 응답 없음만 울린다.
+              # 수집 설정을 바꾼 직후에는 같은 job의 옛 대상이 몇 분 남아 줄이 둘이 되고, 그대로 곱하면 계산이 실패한다.
+              # 그래서 env마다 하나로 모은다. node는 하나라도 살아 있으면 수집 중, nest는 하나라도 0이면 서버 응답 없음이 맡는다.
+              expr: (1 - max by (env) (up{job="node",env="production"})) * on(env) min by (env) (up{job="nest",env="production"})
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        noDataState: KeepLast
+        execErrState: KeepLast
+        # 컨테이너 재시작(몇 초)과 수집 한두 번 실패는 넘긴다. 길면 그동안 스왑 알림이 값을 못 본다.
+        for: 2m
+        labels:
+          urgency: urgent
+        annotations:
+          summary: 운영 서버 메모리·스왑 수집이 2분 넘게 끊겼습니다. 그동안 스왑 읽기·OOM 알림이 울리지 않습니다.
+          description: '할 일: 서버에서 docker ps와 docker logs node-exporter로 컨테이너 상태를, 운영 nginx의 /api/node-metrics 설정을 확인합니다.'
