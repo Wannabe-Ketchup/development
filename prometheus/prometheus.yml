@@ -18,3 +18,14 @@ scrape_configs:
         labels:
           job: nest
           env: production
+
+  # 운영 서버 전체 메모리·스왑·CPU·디스크(node exporter).
+  # 운영 nginx가 /api/node-metrics를 이 서버 IP에만 열어 node-exporter 컨테이너로 넘긴다.
+  - job_name: node-production
+    scheme: https
+    metrics_path: /api/node-metrics
+    static_configs:
+      - targets: ['wannabe-ketchup.com']
+        labels:
+          job: node
+          env: production

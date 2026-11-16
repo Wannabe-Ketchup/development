@@ -19,7 +19,8 @@ groups:
             datasourceUid: prometheus
             model:
               refId: A
-              expr: up{env="production"}
+              # job으로 nest만 본다. node exporter가 멈춘 것은 서버가 응답하지 않는 것이 아니다.
+              expr: up{job="nest",env="production"}
               instant: true
           - refId: C
             datasourceUid: __expr__
