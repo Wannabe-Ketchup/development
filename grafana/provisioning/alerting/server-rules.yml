@@ -44,7 +44,8 @@ groups:
           urgency: urgent
         annotations:
           summary: '스왑 읽기가 초당 {{ printf "%.0f" $values.A.Value }}페이지(1페이지 4KB)로 1분 넘게 이어집니다. 메모리가 모자라 서버가 느려지는 중입니다.'
-          description: '할 일: Server 대시보드에서 메모리 사용량을 보고, 서버에서 docker stats로 커진 컨테이너를 찾습니다. 접속이 많아서라면 nginx 메모리 줄이기·사양 올리기, 아니면 커진 컨테이너를 다시 시작합니다.'
+          # 우분투 자동 업데이트(apt)는 메모리를 300MB 넘게 써서 이 알림을 울릴 수 있어 새벽 4:00~5:00에만 돌게 해 두었다(docs/deployment.md).
+          description: '할 일: 해결됨 메시지의 시각이 한국 시간 새벽 4:00~5:15 안이면 우분투 자동 업데이트 때문이니 넘어갑니다. 그 밖에는 Server 대시보드에서 메모리 사용량을 보고, 서버에서 docker stats로 커진 컨테이너를 찾습니다. 접속이 많아서라면 nginx 메모리 줄이기·사양 올리기, 아니면 커진 컨테이너를 다시 시작합니다.'
 
       - uid: prod-oom-kill
         title: OOM 종료
