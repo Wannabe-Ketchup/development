@@ -47,7 +47,7 @@ GitHub Actions를 쓸 수 없는 급한 상황이면 운영 서버에 접속해 
 
 메트릭과 로그는 모두 90일 동안 보관한다. Prometheus는 90일 전이라도 3GB를 넘으면 오래된 데이터부터 지운다. Loki는 용량 기준 삭제가 없으므로 staging 디스크 사용량(`df -h`)을 가끔 확인한다. Grafana는 `https://monitoring.zizon-tomato.cloud`로 접속하며, staging nginx가 같은 서버의 Grafana로 넘긴다. 회원가입은 막혀 있고 `grafana/.env`의 관리자 비밀번호로 로그인한다.
 
-운영 서버 알림은 Grafana가 디스코드 채널 하나로 보낸다. 규칙은 `grafana/provisioning/alerting/`에 파일로 있고, Grafana 화면에서는 고칠 수 없다. 디스코드 webhook 주소는 알면 누구나 채널에 글을 쓸 수 있으므로 저장소에 두지 않고 staging 서버의 `grafana/.env`에 `DISCORD_WEBHOOK_URL`로 넣는다. 이 값이 비어 있으면 Grafana가 알림 설정을 읽지 못해 시작하지 않는다. 로컬에서는 가짜 주소를 넣는다. 로컬 Prometheus는 운영 서버를 수집하지 못해(운영 nginx가 staging IP에만 연다) 서버 응답 없음이 울리므로, 진짜 주소를 넣으면 팀 채널로 간다. 알림 메시지에는 지금 값과 할 일이 함께 온다.
+운영 서버 알림은 Grafana가 디스코드 채널 하나로 보낸다. 규칙은 `grafana/provisioning/alerting/`에 파일로 있고, Grafana 화면에서는 고칠 수 없다. 디스코드 webhook 주소는 알면 누구나 채널에 글을 쓸 수 있으므로 저장소에 두지 않고 staging 서버의 `grafana/.env`에 `DISCORD_WEBHOOK_URL`로 넣는다. 이 값이 비어 있으면 Grafana가 알림 설정을 읽지 못해 시작하지 않는다. 로컬에서는 가짜 주소를 넣는다. 로컬 Prometheus는 운영 서버를 수집하지 못해(운영 nginx가 staging IP에만 연다) 서버 응답 없음이 울리므로, 진짜 주소를 넣으면 팀 채널로 간다. 알림 메시지에는 지금 값과 할 일이 함께 온다. 메시지 형식은 `templates.yml`에 있다. 울릴 때는 summary, 할 일, 알림 링크를 보내고, 해결됐을 때는 알림 이름과 울린 시각부터 해결된 시각까지만 보낸다. Grafana 기본 형식은 해결 메시지에도 울릴 때의 summary("느려지는 중입니다" 등)를 그대로 붙여서 바꿨다. 해결 메시지는 Grafana가 최대 5분씩 모아 보내므로 실제로 해결된 때보다 늦게 올 수 있다. 해결 시각은 메시지에 적힌 시각으로 본다.
 
 | 알림                | 조건                                                    | 확인 간격 |
 | ------------------- | ------------------------------------------------------- | --------- |
@@ -61,7 +61,7 @@ GitHub Actions를 쓸 수 없는 급한 상황이면 운영 서버에 접속해 
 
 서버가 죽으면 나머지 알림은 값이 없어지는데, 이때는 직전 상태를 유지하고 서버 응답 없음 하나만 울린다. 알림은 조건이 풀리면 해제 메시지와 함께 저절로 꺼지고, 계속 울리는 동안에는 4시간마다 다시 보낸다. 증설 준비는 한 번 넘으면 하루 동안 울린 상태로 남으므로 하루에 한 번만 다시 보낸다. 동시 접속 상한 임박과 증설 준비 기준은 운영 nginx의 SSE 상한 2000에서 정했으므로, 상한을 바꾸면 두 기준도 함께 바꾼다. 운영 서버에서 부하 테스트를 할 때는 미리 Grafana의 Alerting > Silences에서 `env=production`으로 테스트 시간 동안 알림을 끈다.
 
-메모리·스왑 알림 세 개는 `server-rules.yml`에 따로 있다. 스왑 읽기 기준은 2026-11-11 운영 부하 테스트의 2분 평균에서 정했다. 2000명에 1000명이 더 몰려도 최대 58KB/초였고, 3000명에 이벤트 초당 10개일 때는 124에서 164KB/초가 이어지며 p99가 1초에서 2초로 튀었고, 서버가 멈췄을 때는 1000KB/초를 넘었다. node exporter는 페이지 수로 세므로 운영 서버 페이지 크기(4KB)로 나눠 초당 25페이지로 적었다. 스왑 쓰기는 보지 않는다. 쓰기는 안 쓰는 메모리를 디스크로 치우는 것이라 사람이 몰릴 때 정상에서도 튀고, 느려지는 건 필요한 메모리를 다시 읽어 올 때다. OOM 종료는 nest가 몇 초 만에 다시 떠서 서버 응답 없음이 울리지 않을 수 있으므로 따로 알린다. nest가 강제 종료됐다면 진행 중이던 방과 로그인 세션이 초기화된 것이다. 이 값은 컨테이너가 `mem_limit`에 걸려 꺼진 것도 센다. node exporter 멈춤은 그동안 스왑·OOM 알림이 값을 보지 못하므로 알리며, 서버 전체가 죽어 nest도 수집되지 않을 때는 울리지 않는다. 알림 그룹의 확인 간격은 10초의 배수여야 한다. 그렇지 않으면 Grafana가 알림 파일을 읽지 못해 시작하지 않는다.
+메모리·스왑 알림 세 개는 `server-rules.yml`에 따로 있다. 스왑 읽기 기준은 2026-11-11 운영 부하 테스트의 2분 평균에서 정했다. 2000명에 1000명이 더 몰려도 최대 58KB/초였고, 3000명에 이벤트 초당 10개일 때는 124에서 164KB/초가 이어지며 p99가 1초에서 2초로 튀었고, 서버가 멈췄을 때는 1000KB/초를 넘었다. node exporter는 페이지 수로 세므로 운영 서버 페이지 크기(4KB)로 나눠 초당 25페이지로 적었다. 스왑 쓰기는 보지 않는다. 쓰기는 안 쓰는 메모리를 디스크로 치우는 것이라 사람이 몰릴 때 정상에서도 튀고, 느려지는 건 필요한 메모리를 다시 읽어 올 때다. 운영 서버의 우분투 자동 업데이트(목록 받기 `apt-daily`, 보안 업데이트 설치 `apt-daily-upgrade`)는 한 번에 메모리를 최대 약 340MB 써서 이 알림을 울릴 수 있다. 2026-11-17 21:15에 처음 울렸는데, 16초짜리 작업이 2분 평균에 약 2분 동안 남아 "1분 넘게"를 넘었다. 우분투 기본값은 하루 중 아무 때나(설치는 한국 시간 오후 3시에서 4시 사이) 돌아서 사용자가 많은 시간에 서버를 느리게 할 수 있다. 그래서 운영 서버에서 두 작업이 한국 시간 새벽 4시에서 5시 사이에만 돌게 했고(아래 운영 서버 처음 설정), 알림의 할 일에 "해결 시각이 새벽 4시에서 5시 15분 사이면 넘어간다"를 적었다. 5시 15분은 설치가 5시 전에 시작하고 2분 평균에 2분쯤 남는 것을 감안한 값이다. 지속 시간을 늘리거나 그 시간에 알림을 끄는 방법은 쓰지 않았다. 테스트에서 경고 구간이 1분 반 이어진 뒤 서버가 멈췄으므로 2분 이상으로 늘리면 멈추기 전에 울리지 못하고, 알림을 끄면 그 시간에 생긴 진짜 문제를 놓친다. OOM 종료는 nest가 몇 초 만에 다시 떠서 서버 응답 없음이 울리지 않을 수 있으므로 따로 알린다. nest가 강제 종료됐다면 진행 중이던 방과 로그인 세션이 초기화된 것이다. 이 값은 컨테이너가 `mem_limit`에 걸려 꺼진 것도 센다. node exporter 멈춤은 그동안 스왑·OOM 알림이 값을 보지 못하므로 알리며, 서버 전체가 죽어 nest도 수집되지 않을 때는 울리지 않는다. 알림 그룹의 확인 간격은 10초의 배수여야 한다. 그렇지 않으면 Grafana가 알림 파일을 읽지 못해 시작하지 않는다.
 
 처음 반영할 때는 `.env`에 값을 먼저 넣고 파일을 복사한다. 알림 파일을 바꾸면 서버에 복사한 뒤 `docker compose -f infra-compose.yml restart grafana`로 다시 읽힌다. `grafana/.env`를 바꿨을 때는 `restart`로는 반영되지 않으므로 `docker compose -f infra-compose.yml up -d --force-recreate grafana`로 컨테이너를 다시 만든다.
 
@@ -127,6 +127,21 @@ sudo certbot certonly --standalone --expand \
 비밀값은 커밋하지 않는 `.env`에 두고, 루트 `.env.example`의 항목을 운영 값으로 채운다.
 
 `docker compose -f infra-compose.yml up -d`로 nginx, Promtail, node exporter를 먼저 띄운다. Nest는 main에 머지하면 워크플로가 띄우고, 그 전에 직접 띄우려면 staging에서 검증한 커밋 SHA로 `TAG=<SHA> docker compose -f app-compose.yml up -d --wait`를 실행한다. 운영 `app-compose.yml`은 `TAG`가 없으면 실행을 거부한다.
+
+우분투 자동 업데이트가 한국 시간 새벽에만 돌게 타이머를 덮어쓴다. 이유는 위 모니터링 절의 스왑 읽기 알림 설명에 있다. 서버 시간대는 UTC다. 원래 타이머 파일은 그대로 두고 덮어쓰기 파일만 추가하므로, 지우면 기본값으로 돌아간다.
+
+```bash
+sudo mkdir -p /etc/systemd/system/apt-daily.timer.d /etc/systemd/system/apt-daily-upgrade.timer.d
+# 목록 받기: 한국 시간 4시에서 4시 30분 사이 (OnCalendar= 빈 줄은 기본 시각을 지운다)
+printf '[Timer]\nOnCalendar=\nOnCalendar=*-*-* 19:00 UTC\nRandomizedDelaySec=30m\n' | sudo tee /etc/systemd/system/apt-daily.timer.d/override.conf
+# 보안 업데이트 설치: 한국 시간 4시 30분에서 5시 사이, 목록 받기 뒤
+printf '[Timer]\nOnCalendar=\nOnCalendar=*-*-* 19:30 UTC\nRandomizedDelaySec=30m\n' | sudo tee /etc/systemd/system/apt-daily-upgrade.timer.d/override.conf
+sudo systemctl daemon-reload
+sudo systemctl restart apt-daily.timer apt-daily-upgrade.timer
+systemctl list-timers apt-daily.timer apt-daily-upgrade.timer --no-pager
+```
+
+마지막 명령의 NEXT가 각각 19:00에서 19:30 사이, 19:30에서 20:00 사이(UTC)면 적용된 것이다. 목록 받기를 하루 한 번으로 줄여도 설치가 원래 하루 한 번이라 업데이트가 늦어지지 않는다.
 
 ### 적용 확인
 
