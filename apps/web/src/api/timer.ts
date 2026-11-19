@@ -1,3 +1,4 @@
+import type { ChangeTimerDurationRequest } from '@pomodoro/shared';
 import { api } from './http';
 
 const HTTP_STATUS_CONFLICT = 409;
@@ -40,4 +41,31 @@ export function resumePomodoro(roomId: string): Promise<void> {
     'resume',
     '뽀모도로를 재개하지 못했습니다.',
   );
+}
+
+export type ChangeTimerDurationResult =
+  { ok: true } | { ok: false; reason: 'running' | 'failed' };
+
+// requestTimerAction과 달리 409를 성공으로 삼키지 않는다. 시작과 겹쳐 저장이 거절되면 사용자가 알아야 한다
+export async function changeTimerDuration(
+  roomId: string,
+  body: ChangeTimerDurationRequest,
+): Promise<ChangeTimerDurationResult> {
+  try {
+    const response = await api(
+      `/api/pomodoro/room/${roomId}/participant/timer-duration`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+    );
+    if (response.ok) return { ok: true };
+    if (response.status === HTTP_STATUS_CONFLICT) {
+      return { ok: false, reason: 'running' };
+    }
+    return { ok: false, reason: 'failed' };
+  } catch {
+    return { ok: false, reason: 'failed' };
+  }
 }

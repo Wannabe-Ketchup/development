@@ -19,6 +19,7 @@ import { RoomTimer } from './components/RoomTimer';
 import { Lamp } from './components/Lamp';
 import { DeskProps } from './components/DeskProps';
 import { InviteCodeButton } from './components/InviteCodeButton';
+import { TimerSettingsButton } from './components/TimerSettingsButton';
 import { HowToUseButton } from './components/HowToUseButton';
 import { CoachMarkTour } from './components/CoachMarkTour';
 import { useCoachMarkTour } from './hooks/useCoachMarkTour';
@@ -220,7 +221,21 @@ function Pomodoro() {
         )}
 
         {canShowTour && (
-          <InviteCodeButton roomId={roomId} onOpen={tour.closeTour} />
+          <div className="absolute top-9 right-9 z-20 flex items-center gap-7">
+            {/* dim은 버튼 요소에 건다. 모달은 버튼의 형제로 렌더링되어 영향을 받지 않는다 */}
+            <TimerSettingsButton
+              roomId={roomId}
+              timer={room.timer}
+              isEditable={room.mode === ROOM_MODE.IDLE}
+              onOpen={tour.closeTour}
+              className={cn(isDarkMode && 'dark-mode-dim')}
+            />
+            <InviteCodeButton
+              roomId={roomId}
+              onOpen={tour.closeTour}
+              className={cn(isDarkMode && 'dark-mode-dim')}
+            />
+          </div>
         )}
 
         {canShowTour && (

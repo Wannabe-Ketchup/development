@@ -35,6 +35,7 @@
 
   --font-dearfromsol: 'DearFromsol', 'OngleipRyudung';
   --font-ongleipryudung: 'OngleipRyudung';
+  --font-gaegu: 'Gaegu';
 
   --cursor-default: url('./assets/cursor_default.svg') 4 4, default;
   --cursor-pointer: url('./assets/cursor_pointer.svg') 4 4, pointer;
