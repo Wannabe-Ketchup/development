@@ -11,6 +11,7 @@ import { RoomEventStreamService } from './service/room-event-stream.service';
 import { ChangeNicknameService } from './service/change-nickname.service';
 import { ChangeStatusMessageService } from './service/change-status-message.service';
 import { StartPomodoroService } from './service/start-pomodoro.service';
+import { ChangeTimerDurationService } from './service/change-timer-duration.service';
 import { PausePomodoroService } from './service/pause-pomodoro.service';
 import { ResumePomodoroService } from './service/resume-pomodoro.service';
 import { FinishFocusService } from './service/finish-focus.service';
@@ -47,6 +48,7 @@ import { MetricsModule } from '../metrics/metrics.module';
     FindInviteCodeService,
     ChangeStatusMessageService,
     StartPomodoroService,
+    ChangeTimerDurationService,
     PausePomodoroService,
     ResumePomodoroService,
     FinishFocusService,

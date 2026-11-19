@@ -298,6 +298,84 @@ describe('PomodoroController', () => {
     });
   });
 
+  describe('PUT /pomodoro/room/:roomId/participant/timer-duration', () => {
+    async function enterIdleRoom(): Promise<{
+      agent: ReturnType<typeof request.agent>;
+      roomId: string;
+      participantId: string;
+    }> {
+      const roomId = 'room-uuid-1';
+      const agent = request.agent(app.getHttpServer());
+      await agent.post('/auth/login/guest').expect(204);
+      app.get(RoomRepository).save(
+        restoreRoom({
+          roomId,
+          participantIds: [],
+          mode: ROOM_MODE.IDLE,
+          currentCycle: 0,
+          timer: idleTimer(),
+        }),
+      );
+      const enterResponse = await agent
+        .post(`/pomodoro/room/${roomId}/participant`)
+        .expect(201);
+      // 세션의 참가자 id는 서버가 발급하므로 입장 응답에서 받는다
+      const { participant } = enterResponse.body as {
+        participant: { id: string };
+      };
+      return { agent, roomId, participantId: participant.id };
+    }
+
+    it('대기 중인 방의 시간을 바꾸면 204를 응답한다', async () => {
+      // given
+      const { agent, roomId } = await enterIdleRoom();
+
+      // when & then
+      await agent
+        .put(`/pomodoro/room/${roomId}/participant/timer-duration`)
+        .send({ focusMinutes: 30, breakMinutes: 10 })
+        .expect(204);
+    });
+
+    it('진행 중인 방의 시간을 바꾸려 하면 409를 응답한다', async () => {
+      // given
+      const { agent, roomId, participantId } = await enterIdleRoom();
+      app.get(RoomRepository).save(
+        restoreRoom({
+          roomId,
+          participantIds: [participantId],
+          mode: ROOM_MODE.FOCUS,
+          currentCycle: 1,
+          timer: Timer.restore({
+            status: 'RUNNING',
+            focusTimeSec: FOCUS_DURATION_SECONDS,
+            breakTimeSec: BREAK_DURATION_SECONDS,
+            totalCycle: CYCLE_COUNT,
+            timerStartedAt: '2026-10-17T09:00:00.000Z',
+            remainingTimeSec: FOCUS_DURATION_SECONDS,
+          }),
+        }),
+      );
+
+      // when & then
+      await agent
+        .put(`/pomodoro/room/${roomId}/participant/timer-duration`)
+        .send({ focusMinutes: 30, breakMinutes: 10 })
+        .expect(409);
+    });
+
+    it('범위 밖 시간을 보내면 400을 응답한다', async () => {
+      // given
+      const { agent, roomId } = await enterIdleRoom();
+
+      // when & then
+      await agent
+        .put(`/pomodoro/room/${roomId}/participant/timer-duration`)
+        .send({ focusMinutes: 65, breakMinutes: 10 })
+        .expect(400);
+    });
+  });
+
   describe.each([
     {
       action: 'pomodoro-pause',

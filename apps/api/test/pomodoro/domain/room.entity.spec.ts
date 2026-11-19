@@ -933,6 +933,65 @@ describe('Room', () => {
     );
   });
 
+  describe('changeTimerDuration', () => {
+    it.each([
+      {
+        state: '집중 중',
+        mode: ROOM_MODE.FOCUS,
+        timer: () =>
+          runningTimer('2026-10-17T09:00:00.000Z', FOCUS_DURATION_SECONDS),
+      },
+      {
+        state: '휴식 중',
+        mode: ROOM_MODE.BREAK,
+        timer: () =>
+          runningTimer('2026-10-17T09:25:00.000Z', BREAK_DURATION_SECONDS),
+      },
+      {
+        state: '일시정지 중',
+        mode: ROOM_MODE.FOCUS,
+        timer: () => pausedTimer(600),
+      },
+    ])('$state에는 시간을 바꿀 수 없다', ({ mode, timer }) => {
+      // given
+      const room = restoreRoom({
+        mode,
+        currentCycle: 1,
+        timer: timer(),
+      });
+
+      // when & then
+      expect(() => room.changeTimerDuration(PARTICIPANT_ID, 30, 10)).toThrow(
+        ConflictException,
+      );
+      expect(room.timer).toEqual(timer());
+    });
+
+    it('시간을 바꾼 뒤 마지막 회차 휴식이 끝나 대기로 돌아가도 바꾼 시간이 유지된다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.BREAK,
+        currentCycle: CYCLE_COUNT,
+        timer: Timer.restore({
+          status: 'RUNNING',
+          focusTimeSec: 1800,
+          breakTimeSec: 600,
+          totalCycle: CYCLE_COUNT,
+          timerStartedAt: '2026-10-17T09:25:00.000Z',
+          remainingTimeSec: 600,
+        }),
+      });
+
+      // when
+      room.finishBreak();
+
+      // then
+      expect(room.mode).toBe(ROOM_MODE.IDLE);
+      expect(room.timer.focusTimeSec).toBe(1800);
+      expect(room.timer.breakTimeSec).toBe(600);
+    });
+  });
+
   describe('remainingSecondsInPhase', () => {
     it.each([
       { now: '2026-10-17T09:20:00.000Z', expected: 300 },
