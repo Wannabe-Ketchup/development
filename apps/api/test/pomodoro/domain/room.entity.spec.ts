@@ -933,6 +933,105 @@ describe('Room', () => {
     );
   });
 
+  describe('resetPomodoro', () => {
+    // 시간 설정이 유지되는지 보려고 기본값과 다른 집중 30분·휴식 10분으로 둔다
+    const customTimer = (
+      status: 'RUNNING' | 'PAUSED',
+      timerStartedAt: string | null,
+      remainingTimeSec: number,
+    ) =>
+      Timer.restore({
+        status,
+        focusTimeSec: 1800,
+        breakTimeSec: 600,
+        totalCycle: CYCLE_COUNT,
+        timerStartedAt,
+        remainingTimeSec,
+      });
+
+    it.each([
+      {
+        state: '집중 진행 중',
+        mode: ROOM_MODE.FOCUS,
+        currentCycle: 2,
+        timer: () => customTimer('RUNNING', '2026-10-17T09:00:00.000Z', 1800),
+      },
+      {
+        state: '휴식 진행 중',
+        mode: ROOM_MODE.BREAK,
+        currentCycle: 2,
+        timer: () => customTimer('RUNNING', '2026-10-17T09:30:00.000Z', 600),
+      },
+      {
+        state: '일시정지 중',
+        mode: ROOM_MODE.FOCUS,
+        currentCycle: 3,
+        timer: () => customTimer('PAUSED', null, 900),
+      },
+    ])(
+      '$state에 리셋하면 대기 상태가 되고 회차가 0, 남은 시간은 설정된 집중 시간이며 집중·휴식 시간은 그대로다',
+      ({ mode, currentCycle, timer }) => {
+        // given
+        const room = restoreRoom({ mode, currentCycle, timer: timer() });
+
+        // when
+        room.resetPomodoro(PARTICIPANT_ID);
+
+        // then
+        expect(room.mode).toBe(ROOM_MODE.IDLE);
+        expect(room.currentCycle).toBe(0);
+        expect(room.timer.status).toBe('IDLE');
+        expect(room.timer.timerStartedAt).toBeNull();
+        expect(room.timer.remainingTimeSec).toBe(1800);
+        expect(room.timer.focusTimeSec).toBe(1800);
+        expect(room.timer.breakTimeSec).toBe(600);
+      },
+    );
+
+    it('대기 중에는 리셋할 수 없다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+      });
+
+      // when & then
+      expect(() => room.resetPomodoro(PARTICIPANT_ID)).toThrow(
+        ConflictException,
+      );
+    });
+
+    it('방 참여자가 아니면 리셋할 수 없다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.FOCUS,
+        currentCycle: 1,
+        timer: runningTimer('2026-10-17T09:00:00.000Z', FOCUS_DURATION_SECONDS),
+      });
+
+      // when & then
+      expect(() => room.resetPomodoro('stranger')).toThrow(NotFoundException);
+      expect(room.mode).toBe(ROOM_MODE.FOCUS);
+    });
+
+    it('리셋해도 참여자의 토마토 단계(마친 바퀴)는 그대로다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.BREAK,
+        currentCycle: CYCLE_COUNT,
+        timer: runningTimer('2026-10-17T10:55:00.000Z', BREAK_DURATION_SECONDS),
+        participants: [restoreParticipant(PARTICIPANT_ID, 2)],
+      });
+
+      // when
+      room.resetPomodoro(PARTICIPANT_ID);
+
+      // then
+      expect(room.participants.get(PARTICIPANT_ID)?.completedCycles).toBe(2);
+    });
+  });
+
   describe('changeTimerDuration', () => {
     it.each([
       {

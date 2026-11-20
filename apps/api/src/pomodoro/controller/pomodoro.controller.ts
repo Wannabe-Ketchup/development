@@ -17,6 +17,7 @@ import { StartPomodoroService } from '../service/start-pomodoro.service';
 import { ChangeTimerDurationService } from '../service/change-timer-duration.service';
 import { PausePomodoroService } from '../service/pause-pomodoro.service';
 import { ResumePomodoroService } from '../service/resume-pomodoro.service';
+import { ResetPomodoroService } from '../service/reset-pomodoro.service';
 import type { JoinRoomResponse } from '../dto/join-room-response.dto';
 import type { ChangeNicknameRequest } from '../dto/change-nickname-request.dto';
 import { CreateRoomService } from '../service/create-room.service';
@@ -41,6 +42,7 @@ export class PomodoroController {
     private readonly changeTimerDurationService: ChangeTimerDurationService,
     private readonly pausePomodoroService: PausePomodoroService,
     private readonly resumePomodoroService: ResumePomodoroService,
+    private readonly resetPomodoroService: ResetPomodoroService,
     private readonly findInviteCodeService: FindInviteCodeService,
     private readonly enterRoomByInviteCodeService: EnterRoomByInviteCodeService,
   ) {}
@@ -152,5 +154,14 @@ export class PomodoroController {
     @ParticipantId() participantId: string,
   ): void {
     this.resumePomodoroService.resumePomodoro(roomId, participantId);
+  }
+
+  @Post('room/:roomId/participant/pomodoro-reset')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  resetPomodoro(
+    @Param('roomId') roomId: string,
+    @ParticipantId() participantId: string,
+  ): void {
+    this.resetPomodoroService.resetPomodoro(roomId, participantId);
   }
 }

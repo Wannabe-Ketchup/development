@@ -163,6 +163,19 @@ export class Room {
     this._timer = this._timer.resume(now);
   }
 
+  // 흘러간 시간과 회차를 처음으로 돌려 대기 상태로 만든다. 시간 설정과 참여자의 토마토 단계는 그대로다.
+  // 끝나는 순간에 와도 거부하지 않는다. 예약된 전환은 서비스가 취소한다
+  resetPomodoro(participantId: string): void {
+    this.validateParticipant(participantId);
+    if (this.isIdle()) {
+      throw new ConflictException('대기 중에는 초기화할 수 없습니다.');
+    }
+
+    this._mode = ROOM_MODE.IDLE;
+    this._currentCycle = 0;
+    this._timer = this._timer.reset();
+  }
+
   // 휴식은 집중이 실제로 처리된 시각이 아니라 끝나기로 예정된 시각에 시작한다
   finishFocus(): void {
     if (this._mode !== ROOM_MODE.FOCUS) {

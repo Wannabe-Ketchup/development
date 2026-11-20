@@ -462,4 +462,49 @@ describe('PomodoroController', () => {
       });
     },
   );
+
+  describe('POST /pomodoro/room/:roomId/participant/pomodoro-reset', () => {
+    it('리셋 요청은 204로 응답한다', async () => {
+      // given
+      const roomId = 'room-uuid-1';
+      const agent = request.agent(app.getHttpServer());
+      await agent.post('/auth/login/guest').expect(204);
+      app.get(RoomRepository).save(
+        restoreRoom({
+          roomId,
+          participantIds: [],
+          mode: ROOM_MODE.IDLE,
+          currentCycle: 0,
+          timer: idleTimer(),
+        }),
+      );
+      const enterResponse = await agent
+        .post(`/pomodoro/room/${roomId}/participant`)
+        .expect(201);
+      const { participant } = enterResponse.body as {
+        participant: { id: string };
+      };
+      app.get(RoomRepository).save(
+        restoreRoom({
+          roomId,
+          participantIds: [participant.id],
+          mode: ROOM_MODE.FOCUS,
+          currentCycle: 1,
+          timer: Timer.restore({
+            status: 'RUNNING',
+            focusTimeSec: FOCUS_DURATION_SECONDS,
+            breakTimeSec: BREAK_DURATION_SECONDS,
+            totalCycle: CYCLE_COUNT,
+            timerStartedAt: '2026-10-17T09:00:00.000Z',
+            remainingTimeSec: FOCUS_DURATION_SECONDS,
+          }),
+        }),
+      );
+
+      // when & then
+      await agent
+        .post(`/pomodoro/room/${roomId}/participant/pomodoro-reset`)
+        .expect(204);
+    });
+  });
 });

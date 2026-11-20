@@ -14,6 +14,7 @@ import { StartPomodoroService } from './service/start-pomodoro.service';
 import { ChangeTimerDurationService } from './service/change-timer-duration.service';
 import { PausePomodoroService } from './service/pause-pomodoro.service';
 import { ResumePomodoroService } from './service/resume-pomodoro.service';
+import { ResetPomodoroService } from './service/reset-pomodoro.service';
 import { FinishFocusService } from './service/finish-focus.service';
 import { FinishBreakService } from './service/finish-break.service';
 import { DeleteEmptyRoomService } from './service/delete-empty-room.service';
@@ -51,6 +52,7 @@ import { MetricsModule } from '../metrics/metrics.module';
     ChangeTimerDurationService,
     PausePomodoroService,
     ResumePomodoroService,
+    ResetPomodoroService,
     FinishFocusService,
     FinishBreakService,
     DeleteEmptyRoomService,
