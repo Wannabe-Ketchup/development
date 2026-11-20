@@ -3,7 +3,7 @@ import { api } from './http';
 
 const HTTP_STATUS_CONFLICT = 409;
 
-type TimerAction = 'start' | 'pause' | 'resume';
+type TimerAction = 'start' | 'pause' | 'resume' | 'reset';
 
 async function requestTimerAction(
   roomId: string,
@@ -40,6 +40,14 @@ export function resumePomodoro(roomId: string): Promise<void> {
     roomId,
     'resume',
     '뽀모도로를 재개하지 못했습니다.',
+  );
+}
+
+export function resetPomodoro(roomId: string): Promise<void> {
+  return requestTimerAction(
+    roomId,
+    'reset',
+    '뽀모도로를 초기화하지 못했습니다.',
   );
 }
 

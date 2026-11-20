@@ -176,6 +176,15 @@ export async function mockRoomWithSSEConnected(
       errorTriggers.forEach((fn) => fn());
     };
 
+    // 서버가 보낸 것처럼 SSE 이벤트를 발화한다 (window.__emitSSE(type, data)로 호출)
+    const emitters: Array<(type: string, data: string) => void> = [];
+    (window as unknown as Record<string, unknown>).__emitSSE = (
+      type: string,
+      data: string,
+    ) => {
+      emitters.forEach((fn) => fn(type, data));
+    };
+
     class FakeSSEEventSource extends EventTarget {
       static readonly CONNECTING = 0;
       static readonly OPEN = 1;
@@ -213,6 +222,9 @@ export async function mockRoomWithSSEConnected(
           this.dispatchEvent(errorEvent);
         };
         errorTriggers.push(triggerError);
+        emitters.push((type, data) => {
+          this.dispatchEvent(new MessageEvent(type, { data }));
+        });
       }
 
       close() {
@@ -294,4 +306,36 @@ export async function mockTimerDuration(
     },
   );
   return requestBodies;
+}
+
+/**
+ * mockRoomWithSSEConnected로 연결한 가짜 SSE로 서버 이벤트를 보낸다.
+ */
+export async function emitSseEvent(page: Page, type: string, data: Room) {
+  await page.evaluate(
+    ([eventType, eventData]) => {
+      (
+        window as unknown as {
+          __emitSSE: (type: string, data: string) => void;
+        }
+      ).__emitSSE(eventType, eventData);
+    },
+    [type, JSON.stringify(data)],
+  );
+}
+
+/**
+ * 타이머 조작 요청(start, reset 등)을 가로채 요청 횟수를 센다. 결과는 SSE로만 반영되므로 204만 응답한다.
+ * 반환한 객체의 count가 요청 횟수다.
+ */
+export async function mockTimerAction(page: Page, action: string) {
+  const calls = { count: 0 };
+  await page.route(
+    `**/api/pomodoro/room/*/participant/pomodoro-${action}`,
+    async (route) => {
+      calls.count += 1;
+      await route.fulfill({ status: 204 });
+    },
+  );
+  return calls;
 }

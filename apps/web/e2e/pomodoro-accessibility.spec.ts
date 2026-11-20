@@ -4,6 +4,8 @@ import {
   mockEnterRoomOnly,
   mockRoomWithSSEConnected,
   mockTimerDuration,
+  mockTimerAction,
+  emitSseEvent,
 } from './fixtures/api-mocks';
 
 test.describe('뽀모도로 화면 접근성 흐름', () => {
@@ -750,6 +752,82 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       // then
       await expect(settingsDialog).not.toBeVisible();
       await expect(openBtn).toBeFocused();
+    });
+  });
+
+  test.describe('P-G. 리셋 버튼으로 타이머를 처음으로 되돌린다', () => {
+    test('대기 중에는 리셋이 비활성이고, 진행 중에 누르면 요청을 보내 대기로 돌아온다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      const resetCalls = await mockTimerAction(page, 'reset');
+      await page.goto('/pomodoro/r1');
+      const resetBtn = page.getByRole('button', { name: '리셋' });
+      await expect(resetBtn).toBeVisible();
+      const idleRoom = {
+        roomId: 'test-room',
+        participants: [
+          {
+            id: 'self-p1',
+            nickname: '토마토1',
+            statusMessage: '',
+            completedCycles: 1,
+          },
+        ],
+        timer: {
+          status: 'IDLE' as const,
+          focusTimeSec: 1500,
+          breakTimeSec: 300,
+          totalCycle: 4,
+          timerStartedAt: null,
+          remainingTimeSec: 1500,
+        },
+        mode: 'IDLE' as const,
+        currentCycle: 0,
+      };
+      const runningRoom = {
+        ...idleRoom,
+        mode: 'FOCUS' as const,
+        currentCycle: 1,
+        timer: {
+          ...idleRoom.timer,
+          status: 'RUNNING' as const,
+          timerStartedAt: new Date().toISOString(),
+        },
+      };
+
+      // when: 단계 1~2
+      await resetBtn.focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(resetBtn).toHaveAttribute('aria-disabled', 'true');
+      expect(resetCalls.count).toBe(0);
+      await expect(page.getByText('idle')).toBeVisible();
+
+      // when: 단계 3
+      await emitSseEvent(page, 'room_state', runningRoom);
+
+      // then
+      await expect(page.getByText('1st focus')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'pause' })).toBeVisible();
+      await expect(resetBtn).toHaveAttribute('aria-disabled', 'false');
+
+      // when: 단계 4
+      await resetBtn.focus();
+      await page.keyboard.press('Enter');
+      await emitSseEvent(page, 'pomodoro_reset', idleRoom);
+
+      // then
+      await expect.poll(() => resetCalls.count).toBe(1);
+      await expect(page.getByText('idle')).toBeVisible();
+      await expect(page.locator('[data-tour-id="timer"]')).toHaveText(
+        '25 : 00',
+      );
+      await expect(page.getByRole('button', { name: 'start' })).toBeVisible();
+      await expect(resetBtn).toBeFocused();
+      await expect(resetBtn).toHaveAttribute('aria-disabled', 'true');
     });
   });
 });
