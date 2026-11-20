@@ -5,7 +5,7 @@ import ShelfSvg from '@/assets/shelf.svg?react';
 import { LPPlayer } from './components/LPPlayer';
 import { RoomBackground } from './components/RoomBackground';
 import { useTheme } from './hooks/useTheme';
-import { useRoomSSE } from './hooks/useRoomSSE';
+import { useRoomSSE, type RoomStateChange } from './hooks/useRoomSSE';
 import { useSessionChangeAlarm } from './hooks/useSessionChangeAlarm';
 import { useNotificationPermission } from './hooks/useNotificationPermission';
 import { useSessionChangeNotification } from './hooks/useSessionChangeNotification';
@@ -42,6 +42,8 @@ function Pomodoro() {
   const [selfParticipantId, setSelfParticipantId] = useState<string | null>(
     null,
   );
+  // 마지막으로 받은 방 상태가 리셋으로 바뀐 것인지. 세션 변경 알림을 건너뛰는 데 쓴다
+  const [isLastChangeReset, setIsLastChangeReset] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [hasEnterRoomFailed, setHasEnterRoomFailed] = useState(false);
 
@@ -68,10 +70,15 @@ function Pomodoro() {
     };
   }, [roomId]);
 
-  const handleRoomState = useCallback((nextRoom: Room) => {
-    setRoom(nextRoom);
-    setIsConfirmed(true);
-  }, []);
+  // 방 상태와 리셋 여부를 같은 렌더에 반영해야 세션 변경 훅이 둘을 맞춰 본다
+  const handleRoomState = useCallback(
+    (nextRoom: Room, change: RoomStateChange) => {
+      setRoom(nextRoom);
+      setIsLastChangeReset(change.isReset);
+      setIsConfirmed(true);
+    },
+    [],
+  );
 
   const { status: sseStatus } = useRoomSSE(
     roomId ?? undefined,
@@ -79,7 +86,7 @@ function Pomodoro() {
     handleRoomState,
   );
 
-  useSessionChangeAlarm(room?.mode, room?.currentCycle);
+  useSessionChangeAlarm(room?.mode, room?.currentCycle, isLastChangeReset);
 
   // 방 상태를 믿을 수 있을 때만 탭 제목과 브라우저 알림에 쓴다
   const isRoomLive =
@@ -91,6 +98,7 @@ function Pomodoro() {
     liveRoom?.roomId,
     liveRoom?.mode,
     liveRoom?.currentCycle,
+    isLastChangeReset,
     liveRoom?.timer.timerStartedAt,
   );
   useTabTitle(liveRoom);

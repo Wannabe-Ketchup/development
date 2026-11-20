@@ -24,6 +24,7 @@ const renderNotification = (initialProps: SessionProps) =>
         'room-1',
         mode,
         currentCycle,
+        false,
         timerStartedAt,
       ),
     { initialProps },
