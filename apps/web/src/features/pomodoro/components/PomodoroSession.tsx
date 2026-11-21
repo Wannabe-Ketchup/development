@@ -3,7 +3,7 @@ import { formatSessionLabel } from '../lib/session-label';
 import { PausePomodoroButton } from './PausePomodoroButton';
 import { ResumePomodoroButton } from './ResumePomodoroButton';
 import { SessionLabel } from './SessionLabel';
-import { SquigglePill } from './SquigglePill';
+import { SquigglePill } from '@/components/SquigglePill';
 import { StartPomodoroButton } from './StartPomodoroButton';
 
 interface PomodoroSessionProps {
