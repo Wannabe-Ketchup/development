@@ -22,7 +22,7 @@ const SAVE_BUTTON_WOBBLY = {
 // 범위는 shared 규칙에서 가져와 규칙이 바뀌면 문구도 함께 바뀌게 한다
 const FOCUS_RULE = TIMER_DURATION_RULE.focus;
 const BREAK_RULE = TIMER_DURATION_RULE.break;
-const DURATION_RANGE_DESCRIPTION = `집중 ${FOCUS_RULE.minMinutes}~${FOCUS_RULE.maxMinutes}분, 휴식 ${BREAK_RULE.minMinutes}~${BREAK_RULE.maxMinutes}분`;
+const DURATION_RANGE_DESCRIPTION = `집중은 ${FOCUS_RULE.minMinutes}~${FOCUS_RULE.maxMinutes}분, 휴식은 ${BREAK_RULE.minMinutes}~${BREAK_RULE.maxMinutes}분으로 맞출 수 있어요`;
 
 const SAVE_ERROR_MESSAGES: Partial<Record<SaveStatus, string>> = {
   'running-error': '진행 중에는 바꿀 수 없어요',
@@ -55,10 +55,10 @@ export function TimerSettingsModal({
   };
 
   return (
-    <Modal labelledBy={titleId} onClose={onClose} className="w-101 gap-4">
+    <Modal labelledBy={titleId} onClose={onClose} className="w-125 gap-4">
       <div className="flex w-full items-center justify-between">
         <h2 id={titleId} className="text-2xl leading-[normal]">
-          설정
+          시간 설정
         </h2>
         <IconButton
           label="닫기"

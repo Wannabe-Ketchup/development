@@ -574,7 +574,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await page.keyboard.press('Enter');
 
       // then
-      const dialog = page.getByRole('dialog', { name: '설정' });
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
       await expect(dialog).toBeVisible();
       await expect(dialog.getByRole('group', { name: '집중' })).toContainText(
         '25분',
@@ -640,7 +640,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       const openBtn = page.getByRole('button', { name: '시간 설정' });
       await openBtn.focus();
       await page.keyboard.press('Enter');
-      const dialog = page.getByRole('dialog', { name: '설정' });
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
       await expect(dialog).toBeVisible();
 
       // when
@@ -660,7 +660,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await page.goto('/pomodoro/r1');
       await page.getByRole('button', { name: '시간 설정' }).focus();
       await page.keyboard.press('Enter');
-      const dialog = page.getByRole('dialog', { name: '설정' });
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
       const saveBtn = page.getByRole('button', { name: '저장하기' });
       await saveBtn.focus();
 
@@ -699,7 +699,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await page.keyboard.press('Enter');
 
       // then
-      const dialog = page.getByRole('dialog', { name: '설정' });
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
       await expect(dialog.getByRole('group', { name: '집중' })).toContainText(
         '25분',
       );
@@ -742,7 +742,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await page.keyboard.press('Enter');
 
       // then
-      const settingsDialog = page.getByRole('dialog', { name: '설정' });
+      const settingsDialog = page.getByRole('dialog', { name: '시간 설정' });
       await expect(settingsDialog).toBeVisible();
       await expect(tourDialog).not.toBeVisible();
 

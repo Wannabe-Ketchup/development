@@ -102,7 +102,7 @@ e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-E. 초대코드
 
 | 단계 | 포커스 위치 (role "name")             | 동작            | 예상 결과 / ARIA 발화                                                                                         |
 | ---- | ------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------- |
-| 1    | button "시간 설정"                    | Enter           | dialog "설정"이 열리고 group "집중"에 "25분", group "휴식"에 "5분"이 보인다                                   |
+| 1    | button "시간 설정"                    | Enter           | dialog "시간 설정"이 열리고 group "집중"에 "25분", group "휴식"에 "5분"이 보인다                              |
 | 2    | (자동 포커스)                         | —               | 포커스가 dialog 안 첫 요소 button "닫기"로 이동한다                                                           |
 | 3    | button "집중 시간 늘리기"             | Enter           | 집중 값이 "30분"이 되고 status로 발화된다. 포커스는 버튼에 남는다                                             |
 | 4    | button "휴식 시간 줄이기"             | Enter 4번       | 휴식 값이 "1분"이 되고, 버튼이 aria-disabled가 된다. 포커스는 버튼에 남는다                                   |
@@ -111,7 +111,7 @@ e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-E. 초대코드
 | 7    | button "시간 설정"                    | Enter 후 Escape | dialog가 닫히고 button "시간 설정"으로 포커스가 복원된다                                                      |
 | 8    | 저장 응답 409 상황, button "저장하기" | Enter           | alert "진행 중에는 바꿀 수 없어요"가 발화되고 dialog는 열려 있다                                              |
 | 9    | 방이 진행 중, button "시간 설정"      | Enter           | dialog가 열리고 현재 값이 보인다. "…늘리기/줄이기", "저장하기"는 모두 aria-disabled이고 눌러도 변화가 없다    |
-| 10   | 투어 열림, button "시간 설정"         | 포커스 → Enter  | dialog "뽀모도로 사용법"이 사라지고 dialog "설정"만 열린다. 닫으면 button "시간 설정"으로 포커스가 간다       |
+| 10   | 투어 열림, button "시간 설정"         | 포커스 → Enter  | dialog "뽀모도로 사용법"이 사라지고 dialog "시간 설정"만 열린다. 닫으면 button "시간 설정"으로 포커스가 간다  |
 
 e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-F. 시간 설정 모달로 집중·휴식 시간을 바꾼다`
 
