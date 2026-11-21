@@ -2,7 +2,7 @@ import { useState } from 'react';
 import ResetSvg from '@/assets/reset.svg?react';
 import { resetPomodoro } from '@/api/timer';
 import { IconButton } from '@/components/IconButton';
-import { SquigglePill } from './SquigglePill';
+import { SquigglePill } from '@/components/SquigglePill';
 
 interface ResetPomodoroButtonProps {
   roomId: string;
