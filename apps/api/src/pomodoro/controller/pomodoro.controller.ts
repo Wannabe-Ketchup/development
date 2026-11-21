@@ -30,6 +30,10 @@ import type { CreateRoomResponse, ExistsRoomResponse } from '@pomodoro/shared';
 import type { ChangeTimerDurationRequest } from '../dto/change-timer-duration-request.dto';
 import type { ChangeStatusMessageRequest } from '../dto/change-status-message-request.dto';
 import { NotifyDiscord } from '../../common/notification/notify-discord.decorator';
+import { RequestValidationPipe } from '../../common/pipe/request-validation.pipe';
+import { SendChatMessageService } from '../service/send-chat-message.service';
+import { SendChatMessageDto } from '../dto/send-chat-message.dto';
+import { SendChatMessageResponse } from '../dto/send-chat-message-response.dto';
 
 @Controller('pomodoro')
 export class PomodoroController {
@@ -46,6 +50,7 @@ export class PomodoroController {
     private readonly resetPomodoroService: ResetPomodoroService,
     private readonly findInviteCodeService: FindInviteCodeService,
     private readonly enterRoomByInviteCodeService: EnterRoomByInviteCodeService,
+    private readonly sendChatMessageService: SendChatMessageService,
   ) {}
 
   @Get('room/:roomId/exists')
@@ -117,6 +122,22 @@ export class PomodoroController {
       participantId,
       body.statusMessage,
     );
+  }
+
+  // 재전송이어도 처음 저장된 메시지로 201을 응답한다
+  @Post('room/:roomId/chat-message')
+  sendChatMessage(
+    @Param('roomId') roomId: string,
+    @ParticipantId() participantId: string,
+    @Body(RequestValidationPipe) body: SendChatMessageDto,
+  ): SendChatMessageResponse {
+    const message = this.sendChatMessageService.sendChatMessage({
+      roomId,
+      participantId,
+      clientMessageId: body.clientMessageId,
+      content: body.content,
+    });
+    return SendChatMessageResponse.from(message);
   }
 
   @Put('room/:roomId/participant/timer-duration')

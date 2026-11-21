@@ -15,5 +15,7 @@ export * from './dto/response/create-room-response.dto';
 export * from './dto/response/exists-room-response.dto';
 export * from './dto/response/invite-code-response.dto';
 export * from './dto/response/join-room-response.dto';
+export * from './dto/response/send-chat-message-response.dto';
 export * from './dto/request/enter-room-by-invite-code-request.dto';
 export * from './dto/request/change-timer-duration-request.dto';
+export * from './dto/request/send-chat-message-request.dto';
