@@ -11,7 +11,8 @@ export interface IntroBookFace {
   content: ReactNode;
 }
 
-const H2_CLASS_NAME = 'mb-4.5 text-[32px] font-normal tracking-[0.08em]';
+// 본문 글꼴(그리운 프롬솔)에 없는 글자("챱")가 있어 제목은 류뚱체로 쓴다
+const H2_CLASS_NAME = 'mb-4.5 text-[32px] font-normal font-ongleipryudung';
 const P_CLASS_NAME = 'mb-3.5 text-[19px] leading-[1.75] break-keep';
 const HIGHLIGHT_CLASS_NAME =
   'bg-[linear-gradient(transparent_58%,rgba(243,102,115,0.35)_58%)] px-0.5';
