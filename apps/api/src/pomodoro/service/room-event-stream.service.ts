@@ -37,6 +37,7 @@ export class RoomEventStreamService {
       return merge(
         of(this.sseService.createOwnSnapshotEvent(roomStateEvent)),
         this.sseService.subscribe(roomId),
+        this.sseService.heartbeats(),
       );
     }).pipe(
       finalize(() =>
