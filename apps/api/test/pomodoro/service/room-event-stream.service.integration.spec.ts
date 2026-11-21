@@ -1,7 +1,14 @@
+import type { MessageEvent } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SystemClock } from '../../../src/common/clock/system.clock';
 import { InMemoryTimerScheduler } from '../../../src/pomodoro/scheduler/in-memory.timer.scheduler';
-import type { Room as RoomState } from '@pomodoro/shared';
+import {
+  BREAK_DURATION_SECONDS,
+  CYCLE_COUNT,
+  FOCUS_DURATION_SECONDS,
+  ROOM_MODE,
+  type Room as RoomState,
+} from '@pomodoro/shared';
 import { LeaveRoomService } from '../../../src/pomodoro/service/leave-room.service';
 import { RoomEventStreamService } from '../../../src/pomodoro/service/room-event-stream.service';
 import { RoomPresenceTracker } from '../../../src/pomodoro/service/room-presence.tracker';
@@ -10,6 +17,9 @@ import { SseService } from '../../../src/pomodoro/service/sse.service';
 import { InMemoryRoomRepository } from '../../../src/pomodoro/repository/in-memory.room.repository';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
 import { Participant } from '../../../src/pomodoro/domain/participant.entity';
+import { ChatMessage } from '../../../src/pomodoro/domain/chat-message.entity';
+import { ChatMessages } from '../../../src/pomodoro/domain/chat-messages';
+import { Timer } from '../../../src/pomodoro/domain/timer.entity';
 
 describe('RoomEventStreamService', () => {
   const roomId = 'roomId';
@@ -37,6 +47,60 @@ describe('RoomEventStreamService', () => {
     roomRepository.save(room);
     return { roomRepository, sseService, service };
   };
+
+  // A는 00:05에 들어왔고, 그 전(1번)과 뒤(2번)에 B가 보낸 메시지가 있다
+  const roomWithChatMessages = (): Room =>
+    Room.restore({
+      roomId,
+      participants: [
+        Participant.restore({
+          id: participantId,
+          nickname: '케첩',
+          statusMessage: '',
+          completedCycles: 0,
+          joinedAt: '2026-09-02T00:05:00.000Z',
+        }),
+        Participant.restore({
+          id: 'B',
+          nickname: '머스타드',
+          statusMessage: '',
+          completedCycles: 0,
+          joinedAt,
+        }),
+      ],
+      capacity: 4,
+      timer: Timer.restore({
+        status: 'IDLE',
+        focusTimeSec: FOCUS_DURATION_SECONDS,
+        breakTimeSec: BREAK_DURATION_SECONDS,
+        totalCycle: CYCLE_COUNT,
+        timerStartedAt: null,
+        remainingTimeSec: FOCUS_DURATION_SECONDS,
+      }),
+      mode: ROOM_MODE.IDLE,
+      currentCycle: 0,
+      chatMessages: ChatMessages.restore({
+        messages: [
+          ChatMessage.restore({
+            id: 1,
+            senderId: 'B',
+            clientMessageId: '00000000-0000-4000-8000-000000000001',
+            nickname: '머스타드',
+            content: '혼자 있네',
+            sentAt: '2026-09-02T00:01:00.000Z',
+          }),
+          ChatMessage.restore({
+            id: 2,
+            senderId: 'B',
+            clientMessageId: '00000000-0000-4000-8000-000000000002',
+            nickname: '머스타드',
+            content: '어서 오세요',
+            sentAt: '2026-09-02T00:06:00.000Z',
+          }),
+        ],
+        nextId: 3,
+      }),
+    });
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -144,6 +208,51 @@ describe('RoomEventStreamService', () => {
       expect(
         roomRepository.findById(roomId)?.participants.has(participantId),
       ).toBe(true);
+    });
+
+    it('연결이 열리면 room_state 바로 뒤에 그 참가자가 입장한 뒤의 메시지가 chat_history로 온다', () => {
+      // given
+      const { roomRepository, service } = setUp();
+      roomRepository.save(roomWithChatMessages());
+      const received: MessageEvent[] = [];
+
+      // when
+      service
+        .streamEvents(roomId, participantId)
+        .subscribe((event) => received.push(event));
+
+      // then
+      expect(received.map(({ type }) => type)).toEqual([
+        'room_state',
+        'chat_history',
+      ]);
+      expect(received[1].data).toEqual({
+        messages: [
+          {
+            id: 2,
+            senderId: 'B',
+            nickname: '머스타드',
+            content: '어서 오세요',
+            sentAt: '2026-09-02T00:06:00.000Z',
+          },
+        ],
+      });
+    });
+
+    it('새로 열린 연결의 chat_history는 같은 방의 다른 연결에 가지 않는다', () => {
+      // given
+      const { roomRepository, sseService, service } = setUp();
+      roomRepository.save(roomWithChatMessages());
+      const roomChannel: MessageEvent[] = [];
+      sseService
+        .subscribe(roomId)
+        .subscribe((event) => roomChannel.push(event));
+
+      // when
+      service.streamEvents(roomId, participantId).subscribe();
+
+      // then
+      expect(roomChannel.map(({ type }) => type)).not.toContain('chat_history');
     });
   });
 });

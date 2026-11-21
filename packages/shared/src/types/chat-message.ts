@@ -8,3 +8,8 @@ export interface ChatMessage {
   // 서버가 받은 시각(ISO 8601)
   sentAt: string;
 }
+
+// 연결이 열릴 때 그 연결에만 보내는 입장 뒤 메시지 묶음. 나중에 값을 더해도 모양이 깨지지 않게 감싼다
+export interface ChatHistory {
+  messages: ChatMessage[];
+}
