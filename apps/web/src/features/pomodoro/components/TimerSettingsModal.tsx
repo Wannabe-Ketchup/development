@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import { WobblyBox } from '@squiggle-line/react';
-import type { Timer } from '@pomodoro/shared';
-import CloseSvg from '@/assets/close-settings.svg?react';
+import { TIMER_DURATION_RULE, type Timer } from '@pomodoro/shared';
+import CloseSvg from '@/assets/close.svg?react';
 import { IconButton } from '@/components/IconButton';
 import { Modal } from '@/components/Modal';
 import {
@@ -18,6 +18,11 @@ const SAVE_BUTTON_WOBBLY = {
   borderRadius: 30,
   pathClassName: 'fill-none stroke-black',
 };
+
+// 범위는 shared 규칙에서 가져와 규칙이 바뀌면 문구도 함께 바뀌게 한다
+const FOCUS_RULE = TIMER_DURATION_RULE.focus;
+const BREAK_RULE = TIMER_DURATION_RULE.break;
+const DURATION_RANGE_DESCRIPTION = `집중 ${FOCUS_RULE.minMinutes}~${FOCUS_RULE.maxMinutes}분, 휴식 ${BREAK_RULE.minMinutes}~${BREAK_RULE.maxMinutes}분`;
 
 const SAVE_ERROR_MESSAGES: Partial<Record<SaveStatus, string>> = {
   'running-error': '진행 중에는 바꿀 수 없어요',
@@ -50,22 +55,21 @@ export function TimerSettingsModal({
   };
 
   return (
-    <Modal
-      labelledBy={titleId}
-      onClose={onClose}
-      className="w-101 gap-[22px] pb-8"
-    >
+    <Modal labelledBy={titleId} onClose={onClose} className="w-101 gap-4">
       <div className="flex w-full items-center justify-between">
-        <h2 id={titleId} className="text-[32px] leading-[normal] text-black">
+        <h2 id={titleId} className="text-2xl leading-[normal]">
           설정
         </h2>
         <IconButton
           label="닫기"
           icon={CloseSvg}
           onClick={onClose}
-          className="flex size-[26px] items-center justify-center"
+          className="flex size-6 items-center justify-center"
         />
       </div>
+      <p className="text-base leading-[normal] text-gray">
+        {DURATION_RANGE_DESCRIPTION}
+      </p>
       <DurationStepper
         label="집중"
         minutes={focusMinutes}
@@ -94,7 +98,7 @@ export function TimerSettingsModal({
           onClick={() => {
             if (!isSaveDisabled) void handleSave();
           }}
-          className="flex h-15 w-full items-center justify-center rounded-[30px] bg-tomato-body-4 font-gaegu text-[28px] tracking-[0.04em] text-black aria-disabled:cursor-default aria-disabled:opacity-50"
+          className="flex h-15 w-full items-center justify-center rounded-[30px] bg-tomato-body-4 text-2xl text-white aria-disabled:cursor-default aria-disabled:opacity-50"
         >
           저장하기
         </button>

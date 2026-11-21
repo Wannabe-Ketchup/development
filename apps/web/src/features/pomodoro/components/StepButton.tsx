@@ -58,8 +58,9 @@ export function StepButton({
       onClick={() => {
         if (!isDisabled) onClick();
       }}
-      className="group relative size-13 aria-[disabled=true]:cursor-default aria-[disabled=true]:opacity-40"
-      iconClassName="block"
+      className="group relative size-9 aria-[disabled=true]:cursor-default aria-[disabled=true]:opacity-40"
+      // svg에 52px 크기가 박혀 있어 버튼 크기에 맞춰 줄인다
+      iconClassName="block [&_svg]:size-9"
     />
   );
 }
