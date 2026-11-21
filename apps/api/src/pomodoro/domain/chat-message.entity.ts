@@ -17,6 +17,25 @@ export class ChatMessage implements ChatMessageShape {
     public readonly sentAt: string,
   ) {}
 
+  // 검증하지 않는다. repository 매퍼와 테스트 given에서만 호출한다
+  static restore(props: {
+    id: number;
+    senderId: string;
+    clientMessageId: string;
+    nickname: string;
+    content: string;
+    sentAt: string;
+  }): ChatMessage {
+    return new ChatMessage(
+      props.id,
+      props.senderId,
+      props.clientMessageId,
+      props.nickname,
+      props.content,
+      props.sentAt,
+    );
+  }
+
   // 앞뒤 공백을 지운 뒤 검사하고, 지운 값을 저장한다
   static create(props: {
     id: number;
