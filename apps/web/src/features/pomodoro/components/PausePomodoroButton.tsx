@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import PauseSvg from '@/assets/pause.svg?react';
 import { pausePomodoro } from '@/api/timer';
-import { PILL_CONTENT_CLASS_NAME } from './SquigglePill';
+import { PILL_CONTENT_CLASS_NAME } from '@/components/SquigglePill';
 
 interface PausePomodoroButtonProps {
   roomId: string;

@@ -1,6 +1,9 @@
 import { forwardRef } from 'react';
 import { cn } from '@/lib/cn';
-import { PILL_CONTENT_CLASS_NAME, SquigglePill } from './SquigglePill';
+import {
+  PILL_CONTENT_CLASS_NAME,
+  SquigglePill,
+} from '@/components/SquigglePill';
 
 export interface HowToUseButtonProps {
   isOpen: boolean;

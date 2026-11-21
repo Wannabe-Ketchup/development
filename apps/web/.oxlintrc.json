@@ -11,6 +11,7 @@
     "jsx-a11y/no-noninteractive-element-to-interactive-role": "error",
     "jsx-a11y/no-noninteractive-tabindex": "error",
     "jsx-a11y/tabindex-no-positive": "error",
-    "jsx-a11y/no-autofocus": "off"
+    "jsx-a11y/no-autofocus": "off",
+    "jsx-a11y/no-redundant-roles": ["warn", { "ul": ["list"], "ol": ["list"] }]
   }
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import TriangleSvg from '@/assets/triangle.svg?react';
 import { startPomodoro } from '@/api/timer';
-import { PILL_CONTENT_CLASS_NAME } from './SquigglePill';
+import { PILL_CONTENT_CLASS_NAME } from '@/components/SquigglePill';
 
 interface StartPomodoroButtonProps {
   roomId: string;
