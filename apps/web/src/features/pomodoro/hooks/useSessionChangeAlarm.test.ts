@@ -10,7 +10,7 @@ interface SessionProps {
 const renderAlarm = (initialProps: SessionProps) =>
   renderHook(
     ({ mode, currentCycle }: SessionProps) =>
-      useSessionChangeAlarm(mode, currentCycle),
+      useSessionChangeAlarm(mode, currentCycle, false),
     { initialProps },
   );
 

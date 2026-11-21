@@ -7,11 +7,13 @@ export interface Session {
 }
 
 // mode 또는 회차가 직전과 달라질 때마다 onChange를 부른다.
-// 처음 받은 세션, 같은 세션으로 다시 렌더링(일시정지·재개, 참여자 변경)에는 부르지 않는다.
+// 리셋으로 바뀐 세션, 처음 받은 세션, 같은 세션으로 다시 렌더링(일시정지·재개, 참여자 변경)에는 부르지 않는다.
+// 어느 경우든 직전 세션은 갱신한다.
 // 방 정보가 없으면 undefined를 넘긴다. 그동안은 직전 세션을 그대로 기억한다.
 export function useSessionChange(
   mode: RoomMode | undefined,
   currentCycle: number | undefined,
+  isReset: boolean,
   onChange: (session: Session) => void,
 ): void {
   const prevSessionRef = useRef<Session | null>(null);
@@ -27,8 +29,8 @@ export function useSessionChange(
 
     const isSessionChanged =
       prev.mode !== mode || prev.currentCycle !== currentCycle;
-    if (!isSessionChanged) return;
+    if (!isSessionChanged || isReset) return;
 
     onChangeRef.current({ mode, currentCycle });
-  }, [mode, currentCycle]);
+  }, [mode, currentCycle, isReset]);
 }

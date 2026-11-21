@@ -5,7 +5,7 @@ import ShelfSvg from '@/assets/shelf.svg?react';
 import { LPPlayer } from './components/LPPlayer';
 import { RoomBackground } from './components/RoomBackground';
 import { useTheme } from './hooks/useTheme';
-import { useRoomSSE } from './hooks/useRoomSSE';
+import { useRoomSSE, type RoomStateChange } from './hooks/useRoomSSE';
 import { useSessionChangeAlarm } from './hooks/useSessionChangeAlarm';
 import { useNotificationPermission } from './hooks/useNotificationPermission';
 import { useSessionChangeNotification } from './hooks/useSessionChangeNotification';
@@ -19,6 +19,7 @@ import { RoomTimer } from './components/RoomTimer';
 import { Lamp } from './components/Lamp';
 import { DeskProps } from './components/DeskProps';
 import { InviteCodeButton } from './components/InviteCodeButton';
+import { TimerSettingsButton } from './components/TimerSettingsButton';
 import { HowToUseButton } from './components/HowToUseButton';
 import { CoachMarkTour } from './components/CoachMarkTour';
 import { useCoachMarkTour } from './hooks/useCoachMarkTour';
@@ -41,6 +42,8 @@ function Pomodoro() {
   const [selfParticipantId, setSelfParticipantId] = useState<string | null>(
     null,
   );
+  // 마지막으로 받은 방 상태가 리셋으로 바뀐 것인지. 세션 변경 알림을 건너뛰는 데 쓴다
+  const [isLastChangeReset, setIsLastChangeReset] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [hasEnterRoomFailed, setHasEnterRoomFailed] = useState(false);
 
@@ -67,10 +70,15 @@ function Pomodoro() {
     };
   }, [roomId]);
 
-  const handleRoomState = useCallback((nextRoom: Room) => {
-    setRoom(nextRoom);
-    setIsConfirmed(true);
-  }, []);
+  // 방 상태와 리셋 여부를 같은 렌더에 반영해야 세션 변경 훅이 둘을 맞춰 본다
+  const handleRoomState = useCallback(
+    (nextRoom: Room, change: RoomStateChange) => {
+      setRoom(nextRoom);
+      setIsLastChangeReset(change.isReset);
+      setIsConfirmed(true);
+    },
+    [],
+  );
 
   const { status: sseStatus } = useRoomSSE(
     roomId ?? undefined,
@@ -78,7 +86,7 @@ function Pomodoro() {
     handleRoomState,
   );
 
-  useSessionChangeAlarm(room?.mode, room?.currentCycle);
+  useSessionChangeAlarm(room?.mode, room?.currentCycle, isLastChangeReset);
 
   // 방 상태를 믿을 수 있을 때만 탭 제목과 브라우저 알림에 쓴다
   const isRoomLive =
@@ -90,6 +98,7 @@ function Pomodoro() {
     liveRoom?.roomId,
     liveRoom?.mode,
     liveRoom?.currentCycle,
+    isLastChangeReset,
     liveRoom?.timer.timerStartedAt,
   );
   useTabTitle(liveRoom);
@@ -220,7 +229,21 @@ function Pomodoro() {
         )}
 
         {canShowTour && (
-          <InviteCodeButton roomId={roomId} onOpen={tour.closeTour} />
+          <div className="absolute top-9 right-9 z-20 flex items-center gap-7">
+            {/* dim은 버튼 요소에 건다. 모달은 버튼의 형제로 렌더링되어 영향을 받지 않는다 */}
+            <TimerSettingsButton
+              roomId={roomId}
+              timer={room.timer}
+              isEditable={room.mode === ROOM_MODE.IDLE}
+              onOpen={tour.closeTour}
+              className={cn(isDarkMode && 'dark-mode-dim')}
+            />
+            <InviteCodeButton
+              roomId={roomId}
+              onOpen={tour.closeTour}
+              className={cn(isDarkMode && 'dark-mode-dim')}
+            />
+          </div>
         )}
 
         {canShowTour && (

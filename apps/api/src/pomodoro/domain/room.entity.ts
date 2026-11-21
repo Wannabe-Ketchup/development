@@ -122,6 +122,13 @@ export class Room {
     }
   }
 
+  // 대기 상태가 아니면(진행 중·일시정지 중) 거부한다. 일시정지 중에도 mode는 FOCUS/BREAK다
+  private validateIdle(): void {
+    if (!this.isIdle()) {
+      throw new ConflictException('대기 중에만 시간을 바꿀 수 있습니다.');
+    }
+  }
+
   startPomodoro(participantId: string, now: Date): void {
     this.validateParticipant(participantId);
     if (this.isRunning()) {
@@ -131,6 +138,17 @@ export class Room {
     this._mode = ROOM_MODE.FOCUS;
     this._currentCycle = 1;
     this._timer = this._timer.startFocus(now);
+  }
+
+  // 시간은 대기 상태에서만 바꿀 수 있다
+  changeTimerDuration(
+    participantId: string,
+    focusMinutes: number,
+    breakMinutes: number,
+  ): void {
+    this.validateParticipant(participantId);
+    this.validateIdle();
+    this._timer = this._timer.changeDuration(focusMinutes, breakMinutes);
   }
 
   // 모드와 회차는 그대로 두고 타이머만 멈춘다
@@ -143,6 +161,19 @@ export class Room {
   resumePomodoro(participantId: string, now: Date): void {
     this.validateParticipant(participantId);
     this._timer = this._timer.resume(now);
+  }
+
+  // 흘러간 시간과 회차를 처음으로 돌려 대기 상태로 만든다. 시간 설정과 참여자의 토마토 단계는 그대로다.
+  // 끝나는 순간에 와도 거부하지 않는다. 예약된 전환은 서비스가 취소한다
+  resetPomodoro(participantId: string): void {
+    this.validateParticipant(participantId);
+    if (this.isIdle()) {
+      throw new ConflictException('대기 중에는 초기화할 수 없습니다.');
+    }
+
+    this._mode = ROOM_MODE.IDLE;
+    this._currentCycle = 0;
+    this._timer = this._timer.reset();
   }
 
   // 휴식은 집중이 실제로 처리된 시각이 아니라 끝나기로 예정된 시각에 시작한다
@@ -180,6 +211,10 @@ export class Room {
 
   isEmpty(): boolean {
     return this._participants.size === 0;
+  }
+
+  isIdle(): boolean {
+    return this._mode === ROOM_MODE.IDLE;
   }
 
   isRunning(): boolean {
