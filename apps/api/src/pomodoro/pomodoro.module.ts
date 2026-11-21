@@ -10,6 +10,7 @@ import { LeaveRoomService } from './service/leave-room.service';
 import { RoomEventStreamService } from './service/room-event-stream.service';
 import { ChangeNicknameService } from './service/change-nickname.service';
 import { ChangeStatusMessageService } from './service/change-status-message.service';
+import { SendChatMessageService } from './service/send-chat-message.service';
 import { StartPomodoroService } from './service/start-pomodoro.service';
 import { ChangeTimerDurationService } from './service/change-timer-duration.service';
 import { PausePomodoroService } from './service/pause-pomodoro.service';
@@ -49,6 +50,7 @@ import { NotificationModule } from '../common/notification/notification.module';
     CreateRoomService,
     FindInviteCodeService,
     ChangeStatusMessageService,
+    SendChatMessageService,
     StartPomodoroService,
     ChangeTimerDurationService,
     PausePomodoroService,
