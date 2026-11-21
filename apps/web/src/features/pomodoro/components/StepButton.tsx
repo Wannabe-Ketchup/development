@@ -1,39 +1,20 @@
-import type { SVGProps } from 'react';
+import { WobblyBox } from '@squiggle-line/react';
 import MinusSvg from '@/assets/minus.svg?react';
-import MinusPressedSvg from '@/assets/minus-pressed.svg?react';
 import PlusSvg from '@/assets/plus.svg?react';
-import PlusPressedSvg from '@/assets/plus-pressed.svg?react';
 import { IconButton } from '@/components/IconButton';
+import { cn } from '@/lib/cn';
 
-// Figma svg 루트에 인라인 display:block이 있어 svg에 hidden 클래스를 걸면 지지 않는다.
-// 그래서 기본·누름 모양은 각각 span으로 감싸 span의 표시를 바꾼다
-function MinusIcon({ className, ...props }: SVGProps<SVGSVGElement>) {
-  return (
-    <span aria-hidden="true" className={className}>
-      <span className="block group-active:group-aria-[disabled=false]:hidden">
-        <MinusSvg {...props} />
-      </span>
-      <span className="hidden group-active:group-aria-[disabled=false]:block">
-        <MinusPressedSvg {...props} />
-      </span>
-    </span>
-  );
-}
+// 원 테두리는 다른 테두리처럼 squiggle로 그리고, svg에는 −/+ 기호만 둔다
+const CIRCLE_WOBBLY = {
+  wiggle: 4,
+  frequency: 360,
+  smoothen: 10,
+  strokeWidth: 3,
+  borderRadius: 999,
+  pathClassName: 'fill-white stroke-black',
+};
 
-function PlusIcon({ className, ...props }: SVGProps<SVGSVGElement>) {
-  return (
-    <span aria-hidden="true" className={className}>
-      <span className="block group-active:group-aria-[disabled=false]:hidden">
-        <PlusSvg {...props} />
-      </span>
-      <span className="hidden group-active:group-aria-[disabled=false]:block">
-        <PlusPressedSvg {...props} />
-      </span>
-    </span>
-  );
-}
-
-const STEP_ICONS = { minus: MinusIcon, plus: PlusIcon };
+const STEP_ICONS = { minus: MinusSvg, plus: PlusSvg };
 
 interface StepButtonProps {
   label: string;
@@ -43,7 +24,7 @@ interface StepButtonProps {
   onClick: () => void;
 }
 
-// 손그림 원형 -/+ 버튼. 누르는 동안 빨간 누름 모양으로 바뀐다
+// 손그림 원형 -/+ 버튼. 호버·누름에도 모양과 색은 바뀌지 않는다
 export function StepButton({
   label,
   icon,
@@ -51,16 +32,21 @@ export function StepButton({
   onClick,
 }: StepButtonProps) {
   return (
-    <IconButton
-      label={label}
-      icon={STEP_ICONS[icon]}
-      aria-disabled={isDisabled}
-      onClick={() => {
-        if (!isDisabled) onClick();
-      }}
-      className="group relative size-9 aria-[disabled=true]:cursor-default aria-[disabled=true]:opacity-40"
-      // svg에 52px 크기가 박혀 있어 버튼 크기에 맞춰 줄인다
-      iconClassName="block [&_svg]:size-9"
-    />
+    <WobblyBox
+      {...CIRCLE_WOBBLY}
+      className={cn('size-9', isDisabled && 'opacity-40')}
+    >
+      <IconButton
+        label={label}
+        icon={STEP_ICONS[icon]}
+        aria-disabled={isDisabled}
+        onClick={() => {
+          if (!isDisabled) onClick();
+        }}
+        // relative여야 흰 채우기가 기호를 덮지 않는다
+        className="relative flex size-9 items-center justify-center text-black aria-[disabled=true]:cursor-default"
+        iconClassName="size-full"
+      />
+    </WobblyBox>
   );
 }
