@@ -8,6 +8,8 @@ import { RoomRepository } from '../../../src/pomodoro/repository/room.repository
 import { Room } from '../../../src/pomodoro/domain/room.entity';
 import { S3Client } from '@aws-sdk/client-s3';
 import { LoadS3MusicService } from '../../../src/music/service/load-s3-music.service';
+import { FeedbackMailTransport } from '../../../src/feedback/config/mail-transport.provider';
+import { FeedbackUploadDirectory } from '../../../src/feedback/config/feedback-upload-directory';
 
 describe('SessionGuard', () => {
   let app: INestApplication<App>;
@@ -20,6 +22,10 @@ describe('SessionGuard', () => {
       .overrideProvider(S3Client)
       .useValue({})
       .overrideProvider(LoadS3MusicService)
+      .useValue({})
+      .overrideProvider(FeedbackMailTransport)
+      .useValue({})
+      .overrideProvider(FeedbackUploadDirectory)
       .useValue({})
       .compile();
 
