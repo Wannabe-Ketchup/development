@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { WobblyBox } from '@squiggle-line/react';
+import { cn } from '@/lib/cn';
 import { StepButton } from './StepButton';
 
 const VALUE_BOX_WOBBLY = {
@@ -17,6 +18,8 @@ interface DurationStepperProps {
   minutes: number;
   canDecrease: boolean;
   canIncrease: boolean;
+  // 진행 중이라 바꿀 수 없다. 값 상자도 -/+처럼 흐리게 보인다
+  isLocked: boolean;
   onDecrease: () => void;
   onIncrease: () => void;
 }
@@ -26,6 +29,7 @@ export function DurationStepper({
   minutes,
   canDecrease,
   canIncrease,
+  isLocked,
   onDecrease,
   onIncrease,
 }: DurationStepperProps) {
@@ -46,7 +50,10 @@ export function DurationStepper({
           isDisabled={!canDecrease}
           onClick={onDecrease}
         />
-        <WobblyBox {...VALUE_BOX_WOBBLY}>
+        <WobblyBox
+          {...VALUE_BOX_WOBBLY}
+          className={cn(isLocked && 'opacity-40')}
+        >
           {/* output은 role status라 값이 바뀌면 "30분"이 발화된다 */}
           {/* 이 폰트는 한글 "분"을 숫자 기준선보다 아래로 그려서, 기준선이 아니라 가운데로 맞춰야 두 글자의 아랫선이 맞는다 */}
           <output className="flex h-11 w-20 items-center justify-center gap-0.5 rounded-xl bg-white pt-0.5">
