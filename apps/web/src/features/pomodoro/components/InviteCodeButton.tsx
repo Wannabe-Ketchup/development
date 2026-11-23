@@ -35,7 +35,7 @@ export function InviteCodeButton({ roomId, onOpen }: InviteCodeButtonProps) {
         icon={ShareSvg}
         aria-haspopup="dialog"
         onClick={handleOpen}
-        className="absolute top-9 right-9 z-20"
+        className="absolute top-9 right-36 z-20"
       />
       {isOpen && <InviteCodeModal roomId={roomId} onClose={handleClose} />}
     </>
