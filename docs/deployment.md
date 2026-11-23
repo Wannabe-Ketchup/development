@@ -17,7 +17,7 @@ staging 브랜치에 push하면 `Deploy Staging` 워크플로가 lint, build, te
 
 staging을 main에 머지하면 `Deploy Production` 워크플로가 같은 검증을 거친다. 이미지는 새로 빌드하지 않고 staging에서 이미 검증한 이미지를 재사용한다. main의 머지 커밋은 두 번째 부모가 staging의 마지막 커밋이므로, 그 커밋과 머지 커밋의 코드가 완전히 같고 그 SHA의 이미지가 GHCR에 있으면 같은 이미지에 `:<머지 커밋 SHA>`와 `:production` 태그만 더한다. main에 staging에 없는 커밋이 섞여 코드가 다르거나 staging 이미지 빌드가 아직 끝나지 않았다면 main 코드로 새로 빌드한다. 어느 경우든 운영에는 main 코드와 같은 이미지가 올라간다.
 
-이미지에는 환경별 설정이 들어가지 않는다. `SESSION_SECRET`, `AWS_*`, `CDN_DOMAIN` 같은 값은 컨테이너가 시작할 때 각 서버의 `.env`에서 읽기 때문에 같은 이미지가 staging과 운영에서 각자의 설정으로 동작한다. 따라서 `.env`가 잘못돼 배포가 실패하면 다시 빌드해도 소용없고, 서버의 `.env`를 고친 뒤 워크플로를 다시 실행해야 한다.
+이미지에는 환경별 설정이 들어가지 않는다. `SESSION_SECRET`, `AWS_*`, `CDN_DOMAIN`, `FEEDBACK_MAIL_*` 같은 값은 컨테이너가 시작할 때 각 서버의 `.env`에서 읽기 때문에 같은 이미지가 staging과 운영에서 각자의 설정으로 동작한다. 따라서 `.env`가 잘못돼 배포가 실패하면 다시 빌드해도 소용없고, 서버의 `.env`를 고친 뒤 워크플로를 다시 실행해야 한다.
 
 배포 단계에서는 `production/app-compose.yml`을 운영 서버 `APP_DIR`에 복사하고 `TAG=<커밋 SHA>`로 이미지를 받아 Nest를 다시 띄운다. 헬스체크가 통과할 때까지 기다린 뒤 서버 안에서 `/health`가 200인지 한 번 더 확인하며, 실패하면 Nest 로그 50줄을 남기고 워크플로를 실패로 끝낸다. 이 경우 web 빌드는 복사하지 않는다. 마지막으로 web 빌드 결과를 `WEB_DIR`에 덮어쓴다.
 
@@ -100,7 +100,7 @@ sudo certbot certonly --standalone --expand \
 
 운영 서버의 `APP_DIR`에 `production/` 아래 파일을 그대로 둔다. `app-compose.yml`과 `infra-compose.yml`이 같은 `./logs`를 공유해야 Promtail이 Nest 로그를 읽을 수 있으므로 두 파일은 같은 디렉터리에 있어야 한다. 인증서는 nginx를 띄우기 전에 `sudo certbot certonly --standalone -d wannabe-ketchup.com --pre-hook "docker stop nginx" --post-hook "docker start nginx"`로 받는다. nginx 컨테이너가 아직 없을 때는 훅이 실패해도 발급은 진행되며, 훅은 renewal 설정에 저장돼 이후 자동 갱신에 쓰인다.
 
-비밀값은 커밋하지 않는 `.env`에 두고, 루트 `.env.example`의 항목을 운영 값으로 채운다.
+비밀값은 커밋하지 않는 `.env`에 두고, 루트 `.env.example`의 항목을 운영 값으로 채운다. 피드백 메일용 `FEEDBACK_MAIL_USER`, `FEEDBACK_MAIL_APP_PASSWORD`(Gmail 앱 비밀번호)가 없으면 Nest가 시작하지 못하므로, 피드백 기능이 들어간 버전을 배포하기 전에 운영·staging 서버의 `.env`에 두 값을 먼저 넣는다. nginx의 `/api/feedbacks` 업로드 크기(19m) 설정도 함께 서버에 반영한다.
 
 `docker compose -f infra-compose.yml up -d`로 nginx와 Promtail을 먼저 띄운다. Nest는 main에 머지하면 워크플로가 띄우고, 그 전에 직접 띄우려면 staging에서 검증한 커밋 SHA로 `TAG=<SHA> docker compose -f app-compose.yml up -d --wait`를 실행한다. 운영 `app-compose.yml`은 `TAG`가 없으면 실행을 거부한다.
 
