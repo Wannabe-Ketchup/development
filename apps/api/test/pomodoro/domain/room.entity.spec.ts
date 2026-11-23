@@ -10,6 +10,8 @@ import {
   ROOM_MODE,
   type RoomMode,
 } from '@pomodoro/shared';
+import { ChatMessage } from '../../../src/pomodoro/domain/chat-message.entity';
+import { ChatMessages } from '../../../src/pomodoro/domain/chat-messages';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
 import { Participant } from '../../../src/pomodoro/domain/participant.entity';
 import { Timer } from '../../../src/pomodoro/domain/timer.entity';
@@ -60,6 +62,7 @@ function restoreRoom(props: {
   currentCycle: number;
   timer: Timer;
   participants?: Participant[];
+  chatMessages?: ChatMessages;
   emptiedAt?: Date;
 }): Room {
   return Room.restore({
@@ -1115,5 +1118,110 @@ describe('Room', () => {
         expect(seconds).toBe(expected);
       },
     );
+  });
+
+  describe('sendChatMessage', () => {
+    it('메시지에는 보낸 참여자의 ID와 보낸 순간의 닉네임이 담긴다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [
+          Participant.restore({
+            id: PARTICIPANT_ID,
+            nickname: '사과',
+            statusMessage: '',
+            completedCycles: 0,
+            joinedAt: JOINED_AT,
+          }),
+        ],
+      });
+
+      // when
+      const { message } = room.sendChatMessage(PARTICIPANT_ID, {
+        clientMessageId: '00000000-0000-4000-8000-000000000001',
+        content: '안녕하세요',
+        sentAt: '2026-09-02T00:10:00.000Z',
+      });
+
+      // then
+      expect(message).toMatchObject({
+        senderId: PARTICIPANT_ID,
+        nickname: '사과',
+      });
+    });
+
+    it('방에 없는 참여자는 메시지를 보낼 수 없다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+      });
+
+      // when & then
+      expect(() =>
+        room.sendChatMessage('participant-not-in-room', {
+          clientMessageId: '00000000-0000-4000-8000-000000000001',
+          content: '안녕하세요',
+          sentAt: '2026-09-02T00:10:00.000Z',
+        }),
+      ).toThrow(NotFoundException);
+    });
+  });
+
+  describe('chatMessagesSinceJoined', () => {
+    it('다른 참여자가 아니라 자기가 입장한 시각 뒤의 메시지만 받는다', () => {
+      // given
+      const earlyParticipant = Participant.restore({
+        id: 'participant-early',
+        nickname: '케첩',
+        statusMessage: '',
+        completedCycles: 0,
+        joinedAt: '2026-09-02T00:00:00.000Z',
+      });
+      const lateParticipant = Participant.restore({
+        id: 'participant-late',
+        nickname: '사과',
+        statusMessage: '',
+        completedCycles: 0,
+        joinedAt: '2026-09-02T00:05:00.000Z',
+      });
+      const chatMessages = ChatMessages.restore({
+        messages: [
+          ChatMessage.restore({
+            id: 1,
+            senderId: earlyParticipant.id,
+            clientMessageId: '00000000-0000-4000-8000-000000000001',
+            nickname: earlyParticipant.nickname,
+            content: '먼저 왔어요',
+            sentAt: '2026-09-02T00:01:00.000Z',
+          }),
+          ChatMessage.restore({
+            id: 2,
+            senderId: earlyParticipant.id,
+            clientMessageId: '00000000-0000-4000-8000-000000000002',
+            nickname: earlyParticipant.nickname,
+            content: '어서 오세요',
+            sentAt: '2026-09-02T00:06:00.000Z',
+          }),
+        ],
+        nextId: 3,
+      });
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [earlyParticipant, lateParticipant],
+        chatMessages,
+      });
+
+      // when
+      const messages = room.chatMessagesSinceJoined(lateParticipant.id);
+
+      // then
+      expect(messages.map(({ id }) => id)).toEqual([2]);
+    });
   });
 });

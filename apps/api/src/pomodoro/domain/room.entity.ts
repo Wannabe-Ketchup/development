@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ROOM_MODE, type RoomMode } from '@pomodoro/shared';
+import { ChatMessage } from './chat-message.entity';
+import { ChatMessages, type SendChatMessageResult } from './chat-messages';
 import { Participant } from './participant.entity';
 import { Timer } from './timer.entity';
 
@@ -17,6 +19,7 @@ export class Room {
     private _timer: Timer,
     private _mode: RoomMode,
     private _currentCycle: number,
+    private readonly _chatMessages: ChatMessages,
     // 퇴장으로 빈 방이 된 시각. 방을 만들 때는 두지 않아 입장한 적 없는 방과 구분된다
     private _emptiedAt?: Date,
   ) {}
@@ -27,8 +30,17 @@ export class Room {
     const capacity = 4;
     const participants = new Map<string, Participant>();
     const currentCycle = 0;
+    const chatMessages = ChatMessages.create();
 
-    return new Room(roomId, participants, capacity, timer, mode, currentCycle);
+    return new Room(
+      roomId,
+      participants,
+      capacity,
+      timer,
+      mode,
+      currentCycle,
+      chatMessages,
+    );
   }
 
   // 검증하지 않는다. repository 매퍼와 테스트 given에서만 호출한다
@@ -39,6 +51,8 @@ export class Room {
     timer: Timer;
     mode: RoomMode;
     currentCycle: number;
+    // 채팅을 다루지 않는 테스트를 위해 생략하면 빈 목록으로 둔다
+    chatMessages?: ChatMessages;
     emptiedAt?: Date;
   }): Room {
     return new Room(
@@ -50,6 +64,7 @@ export class Room {
       props.timer,
       props.mode,
       props.currentCycle,
+      props.chatMessages ?? ChatMessages.create(),
       props.emptiedAt,
     );
   }
@@ -120,6 +135,33 @@ export class Room {
     if (!this._participants.has(participantId)) {
       throw new NotFoundException('방에 존재하지 않는 참가자입니다.');
     }
+  }
+
+  // 보낸 당시 닉네임을 메시지에 복사해 두므로, 이후 닉네임을 바꾸거나 퇴장해도 그대로 남는다
+  sendChatMessage(
+    participantId: string,
+    props: { clientMessageId: string; content: string; sentAt: string },
+  ): SendChatMessageResult {
+    const sender = this.getParticipant(participantId);
+    return this._chatMessages.send({
+      senderId: sender.id,
+      nickname: sender.nickname,
+      ...props,
+    });
+  }
+
+  // 참여자가 입장한 뒤의 메시지. 연결이 열릴 때 그 연결에 chat_history로 보낸다
+  chatMessagesSinceJoined(participantId: string): ChatMessage[] {
+    const participant = this.getParticipant(participantId);
+    return this._chatMessages.messagesSince(participant.joinedAt);
+  }
+
+  private getParticipant(participantId: string): Participant {
+    const participant = this._participants.get(participantId);
+    if (!participant) {
+      throw new NotFoundException('방에 존재하지 않는 참가자입니다.');
+    }
+    return participant;
   }
 
   // 대기 상태가 아니면(진행 중·일시정지 중) 거부한다. 일시정지 중에도 mode는 FOCUS/BREAK다

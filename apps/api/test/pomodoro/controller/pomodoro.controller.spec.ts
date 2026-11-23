@@ -541,4 +541,86 @@ describe('PomodoroController', () => {
         .expect(204);
     });
   });
+
+  describe('POST /pomodoro/room/:roomId/chat-message', () => {
+    const roomId = 'room-uuid-1';
+    const clientMessageIdOf = (seed: number): string =>
+      `00000000-0000-4000-8000-${String(seed).padStart(12, '0')}`;
+
+    // 게스트로 로그인해 빈 방에 들어간 agent와 그 참여자
+    async function enterRoom() {
+      app.get(RoomRepository).save(
+        restoreRoom({
+          roomId,
+          participantIds: [],
+          mode: ROOM_MODE.IDLE,
+          currentCycle: 0,
+          timer: idleTimer(),
+        }),
+      );
+      const agent = request.agent(app.getHttpServer());
+      await agent.post('/auth/login/guest').expect(204);
+      const enterResponse = await agent
+        .post(`/pomodoro/room/${roomId}/participant`)
+        .expect(201);
+      const { participant } = enterResponse.body as JoinRoomResponse;
+      return { agent, participant };
+    }
+
+    // 고정 시계라 모두 같은 시각에 보낸 메시지가 된다
+    async function sendMessages(
+      agent: ReturnType<typeof request.agent>,
+      count: number,
+    ): Promise<void> {
+      for (let seed = 1; seed <= count; seed += 1) {
+        await agent
+          .post(`/pomodoro/room/${roomId}/chat-message`)
+          .send({ clientMessageId: clientMessageIdOf(seed), content: '안녕' })
+          .expect(201);
+      }
+    }
+
+    it('방 참여자가 메시지를 보내면 201과 clientMessageId를 뺀 저장된 메시지를 응답한다', async () => {
+      // given
+      const { agent, participant } = await enterRoom();
+
+      // when
+      const response = await agent
+        .post(`/pomodoro/room/${roomId}/chat-message`)
+        .send({ clientMessageId: clientMessageIdOf(1), content: '안녕하세요' })
+        .expect(201);
+
+      // then
+      expect(response.body).toEqual({
+        id: 1,
+        senderId: participant.id,
+        nickname: participant.nickname,
+        content: '안녕하세요',
+        sentAt: NOW.toISOString(),
+      });
+    });
+
+    it('clientMessageId가 UUID가 아니면 400을 응답한다', async () => {
+      // given
+      const { agent } = await enterRoom();
+
+      // when & then
+      await agent
+        .post(`/pomodoro/room/${roomId}/chat-message`)
+        .send({ clientMessageId: 'not-a-uuid', content: '안녕하세요' })
+        .expect(400);
+    });
+
+    it('10초 안에 10건을 보낸 참여자가 또 보내면 429를 응답한다', async () => {
+      // given
+      const { agent } = await enterRoom();
+      await sendMessages(agent, 10);
+
+      // when & then
+      await agent
+        .post(`/pomodoro/room/${roomId}/chat-message`)
+        .send({ clientMessageId: clientMessageIdOf(11), content: '안녕' })
+        .expect(429);
+    });
+  });
 });
