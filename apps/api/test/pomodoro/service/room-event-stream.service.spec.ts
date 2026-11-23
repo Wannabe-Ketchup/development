@@ -14,6 +14,7 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   const room = {
     participants: new Map([[participantId, {}]]),
+    chatMessagesSinceJoined: () => [],
   } as unknown as Room;
   const roomSnapshot = {
     roomId,
@@ -168,7 +169,12 @@ describe('RoomEventStreamService.streamEvents', () => {
     roomStream$.next(laterEvent);
 
     // then
-    expect(received).toEqual([expect.anything(), laterEvent]);
+    // 연결 직후 개인 스냅샷 두 개(room_state, chat_history) 뒤에 브로드캐스트가 온다
+    expect(received).toEqual([
+      expect.anything(),
+      expect.anything(),
+      laterEvent,
+    ]);
     subscription.unsubscribe();
   });
 });

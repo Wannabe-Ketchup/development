@@ -43,10 +43,12 @@ export class EnterRoomService {
       nickname = this.generateRandomNickname();
     } while (room.hasNickname(nickname));
 
-    const joinedAt = new Date().toISOString();
+    // 채팅은 보낸 시각(clock)과 이 시각을 비교해 입장한 뒤 메시지를 고르므로 같은 시계를 쓴다
+    const now = this.clock.now();
+    const joinedAt = now.toISOString();
     const participant = Participant.create(participantId, nickname, joinedAt);
     // 입장하면 빈 방이 된 시각이 지워지므로 먼저 읽는다
-    const secondsSinceEmptied = room.secondsSinceEmptied(this.clock.now());
+    const secondsSinceEmptied = room.secondsSinceEmptied(now);
     room.join(participant);
 
     this.roomRepository.save(room);
