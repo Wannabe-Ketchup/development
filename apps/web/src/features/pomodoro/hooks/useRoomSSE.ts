@@ -14,7 +14,8 @@ export function useRoomSSE(
   roomId: string | undefined,
   isEntered: boolean,
   onRoomState: (room: Room, change: RoomStateChange) => void,
-  onChatMessages: (messages: ChatMessage[]) => void,
+  onChatMessage: (message: ChatMessage) => void,
+  onChatHistory: (messages: ChatMessage[]) => void,
 ) {
   const [status, setStatus] = useState<SSEStatus>('connecting');
 
@@ -36,10 +37,10 @@ export function useRoomSSE(
             onRoomState(event.data, { isReset: true });
             break;
           case 'chat_message':
-            onChatMessages([event.data]);
+            onChatMessage(event.data);
             break;
           case 'chat_history':
-            onChatMessages(event.data.messages);
+            onChatHistory(event.data.messages);
             break;
           default:
             break;
@@ -53,7 +54,7 @@ export function useRoomSSE(
     return () => {
       connection.close();
     };
-  }, [roomId, isEntered, onRoomState, onChatMessages]);
+  }, [roomId, isEntered, onRoomState, onChatMessage, onChatHistory]);
 
   return { status };
 }

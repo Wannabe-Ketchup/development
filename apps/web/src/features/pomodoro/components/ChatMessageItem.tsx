@@ -18,7 +18,8 @@ interface ChatMessageItemProps {
 
 export function ChatMessageItem({ message, isMine }: ChatMessageItemProps) {
   return (
-    // 말풍선 선 계산이 무거워, 화면 밖 말풍선은 보일 때까지 크기 측정과 선 계산을 미룬다(content-visibility).
+    // 말풍선 선 계산이 무거워, 보이는 곳에서 먼 말풍선은 가까워질 때까지 크기 측정과 선 계산을 미룬다(content-visibility).
+    // 채팅창을 숨겨 두어도 새로고침 등으로 chat_history를 한꺼번에 받으면 화면이 멈추기 때문이다.
     // 이때 li 밖으로 나간 그림은 잘리므로, 테두리가 흔들려 나가는 만큼 li 안쪽에 여백을 둔다
     <li
       className={cn(

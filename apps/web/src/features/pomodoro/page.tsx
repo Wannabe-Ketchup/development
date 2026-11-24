@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ROOM_MODE, type ChatMessage, type Room } from '@pomodoro/shared';
+import { ROOM_MODE, type Room } from '@pomodoro/shared';
 import DeskSvg from '@/assets/desk.svg?react';
 import ShelfSvg from '@/assets/shelf.svg?react';
 import { LPPlayer } from './components/LPPlayer';
@@ -83,16 +83,19 @@ function Pomodoro() {
     [],
   );
 
-  const { messages: chatMessages, addChatMessages } = useChatMessages();
-
-  const handleChatMessageSent = (message: ChatMessage) =>
-    addChatMessages([message]);
+  const {
+    messages: chatMessages,
+    firstHistoryLastId,
+    addChatMessage,
+    addChatHistory,
+  } = useChatMessages();
 
   const { status: sseStatus } = useRoomSSE(
     roomId ?? undefined,
     selfParticipantId !== null,
     handleRoomState,
-    addChatMessages,
+    addChatMessage,
+    addChatHistory,
   );
 
   useSessionChangeAlarm(room?.mode, room?.currentCycle, isLastChangeReset);
@@ -271,7 +274,8 @@ function Pomodoro() {
               roomId={roomId}
               selfParticipantId={selfParticipantId}
               messages={chatMessages}
-              onSent={handleChatMessageSent}
+              firstHistoryLastId={firstHistoryLastId}
+              onSent={addChatMessage}
             />
           </div>
         )}

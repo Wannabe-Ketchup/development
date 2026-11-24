@@ -46,7 +46,9 @@ describe('useRoomSSE', () => {
         },
       );
       const onRoomState = vi.fn();
-      renderHook(() => useRoomSSE('room-1', true, onRoomState, vi.fn()));
+      renderHook(() =>
+        useRoomSSE('room-1', true, onRoomState, vi.fn(), vi.fn()),
+      );
 
       // when
       callbacks?.onMessage({ type, data: room });
@@ -64,14 +66,26 @@ describe('useRoomSSE', () => {
     sentAt: '2026-01-01T00:00:00.000Z',
   };
 
-  const chatEvents: SseEventPayload[] = [
-    { type: 'chat_message', data: message },
-    { type: 'chat_history', data: { messages: [message] } },
+  const chatEvents: {
+    event: SseEventPayload;
+    messageCalls: ChatMessage[][];
+    historyCalls: ChatMessage[][][];
+  }[] = [
+    {
+      event: { type: 'chat_message', data: message },
+      messageCalls: [[message]],
+      historyCalls: [],
+    },
+    {
+      event: { type: 'chat_history', data: { messages: [message] } },
+      messageCalls: [],
+      historyCalls: [[[message]]],
+    },
   ];
 
   it.each(chatEvents)(
-    '$type 이벤트를 받으면 방 상태는 그대로 두고 메시지 목록만 넘긴다',
-    (event) => {
+    '$event.type 이벤트를 받으면 방 상태는 그대로 두고 맞는 콜백만 부른다',
+    ({ event, messageCalls, historyCalls }) => {
       // given
       let callbacks: SseCallbacks | undefined;
       mockCreateRoomSseConnection.mockImplementation(
@@ -81,14 +95,18 @@ describe('useRoomSSE', () => {
         },
       );
       const onRoomState = vi.fn();
-      const onChatMessages = vi.fn();
-      renderHook(() => useRoomSSE('room-1', true, onRoomState, onChatMessages));
+      const onChatMessage = vi.fn();
+      const onChatHistory = vi.fn();
+      renderHook(() =>
+        useRoomSSE('room-1', true, onRoomState, onChatMessage, onChatHistory),
+      );
 
       // when
       callbacks?.onMessage(event);
 
       // then
-      expect(onChatMessages).toHaveBeenCalledWith([message]);
+      expect(onChatMessage.mock.calls).toEqual(messageCalls);
+      expect(onChatHistory.mock.calls).toEqual(historyCalls);
       expect(onRoomState).not.toHaveBeenCalled();
     },
   );

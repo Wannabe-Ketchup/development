@@ -1,5 +1,9 @@
 import type { ChatMessage } from '@pomodoro/shared';
-import { mergeChatMessages } from './chat-messages';
+import {
+  getLastMessageId,
+  hasUnreadMessage,
+  mergeChatMessages,
+} from './chat-messages';
 
 function createMessage(id: number): ChatMessage {
   return {
@@ -64,5 +68,47 @@ describe('mergeChatMessages', () => {
 
     // then
     expect(merged).toBe(current);
+  });
+});
+
+describe('getLastMessageId', () => {
+  it('마지막 메시지의 번호를 돌려준다', () => {
+    expect(getLastMessageId([createMessage(1), createMessage(7)])).toBe(7);
+  });
+
+  it('메시지가 없으면 0을 돌려준다', () => {
+    expect(getLastMessageId([])).toBe(0);
+  });
+});
+
+describe('hasUnreadMessage', () => {
+  it.each([
+    {
+      name: '읽은 번호 뒤에 다른 사람의 메시지가 있으면',
+      lastReadId: 1,
+      selfId: 'me',
+      expected: true,
+    },
+    {
+      name: '마지막 메시지까지 읽었으면',
+      lastReadId: 2,
+      selfId: 'me',
+      expected: false,
+    },
+    {
+      name: '읽은 번호 뒤가 내 메시지뿐이면',
+      lastReadId: 1,
+      selfId: 'participant-1',
+      expected: false,
+    },
+  ])('$name $expected를 돌려준다', ({ lastReadId, selfId, expected }) => {
+    // given: 모두 participant-1이 보낸 메시지
+    const messages = [createMessage(1), createMessage(2)];
+
+    // when
+    const hasUnread = hasUnreadMessage(messages, lastReadId, selfId);
+
+    // then
+    expect(hasUnread).toBe(expected);
   });
 });

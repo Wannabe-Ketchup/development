@@ -28,21 +28,33 @@ const myMessage: ChatMessage = {
   sentAt: new Date(2026, 0, 1, 14, 4).toISOString(),
 };
 
-function renderChat(messages: ChatMessage[] = []) {
+function renderChat(
+  messages: ChatMessage[] = [],
+  firstHistoryLastId: number | null = 0,
+) {
   const onSent = vi.fn();
-  render(
+  const createChat = (
+    nextMessages: ChatMessage[],
+    nextHistoryLastId: number | null,
+  ) => (
     <Chat
       roomId="room-1"
       selfParticipantId={SELF_ID}
-      messages={messages}
+      messages={nextMessages}
+      firstHistoryLastId={nextHistoryLastId}
       onSent={onSent}
-    />,
+    />
   );
-  return { onSent };
+  const { rerender } = render(createChat(messages, firstHistoryLastId));
+  const receive = (
+    nextMessages: ChatMessage[],
+    nextHistoryLastId: number | null = firstHistoryLastId,
+  ) => rerender(createChat(nextMessages, nextHistoryLastId));
+  return { onSent, receive };
 }
 
 function openChat() {
-  fireEvent.click(screen.getByRole('button', { name: 'chat' }));
+  fireEvent.click(screen.getByRole('button', { name: /^chat/ }));
 }
 
 function getInput() {
@@ -68,7 +80,7 @@ describe('Chat', () => {
   it('처음에는 닫혀 있다', () => {
     renderChat([otherMessage]);
 
-    expect(screen.getByRole('button', { name: 'chat' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^chat/ })).toBeTruthy();
     expect(screen.queryByRole('region', { name: '채팅' })).toBeNull();
     expect(document.activeElement).toBe(document.body);
   });
@@ -82,7 +94,7 @@ describe('Chat', () => {
 
     // then
     expect(screen.getByRole('region', { name: '채팅' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'chat' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^chat/ })).toBeNull();
     expect(document.activeElement).toBe(getInput());
   });
 
@@ -124,7 +136,7 @@ describe('Chat', () => {
     // then
     expect(screen.queryByRole('region', { name: '채팅' })).toBeNull();
     expect(document.activeElement).toBe(
-      screen.getByRole('button', { name: 'chat' }),
+      screen.getByRole('button', { name: /^chat/ }),
     );
   });
 
@@ -231,4 +243,106 @@ describe('Chat', () => {
       expect(getInput().value).toBe('다들 화이팅');
     },
   );
+
+  describe('위로 올려 지난 대화를 보던 중', () => {
+    const SCROLL_HEIGHT_PX = 500;
+
+    // jsdom에는 레이아웃이 없어 높이를 정해 준다
+    function renderScrolledUpChat() {
+      mockSendChatMessage.mockResolvedValue(myMessage);
+      renderChat([otherMessage]);
+      openChat();
+      const list = screen.getByRole('log');
+      Object.defineProperty(list, 'scrollHeight', { value: SCROLL_HEIGHT_PX });
+      list.scrollTop = 100;
+      fireEvent.scroll(list);
+      return list;
+    }
+
+    it('닫았다 열면 맨 아래를 보여 준다', () => {
+      // given
+      const list = renderScrolledUpChat();
+
+      // when
+      fireEvent.click(screen.getByRole('button', { name: '채팅 닫기' }));
+      openChat();
+
+      // then
+      expect(list.scrollTop).toBe(SCROLL_HEIGHT_PX);
+    });
+
+    it('메시지를 보내면 맨 아래를 보여 준다', async () => {
+      // given
+      const list = renderScrolledUpChat();
+      typeMessage('다들 화이팅');
+
+      // when
+      submitMessage();
+
+      // then
+      expect(list.scrollTop).toBe(SCROLL_HEIGHT_PX);
+      await vi.waitFor(() => expect(getInput().value).toBe(''));
+    });
+  });
+
+  describe('안 읽은 메시지 표시', () => {
+    function expectUnread(isUnread: boolean) {
+      const button = screen.getByRole('button', { name: /^chat/ });
+      expect(button.textContent.includes('안 읽은 메시지 있음')).toBe(isUnread);
+      expect(screen.queryByTestId('chat-unread') !== null).toBe(isUnread);
+    }
+
+    it('닫혀 있을 때 다른 사람의 메시지가 오면 표시하고, 열었다 닫으면 사라진다', () => {
+      // given
+      const { receive } = renderChat();
+      expectUnread(false);
+
+      // when
+      receive([otherMessage]);
+
+      // then
+      expectUnread(true);
+      openChat();
+      fireEvent.click(screen.getByRole('button', { name: '채팅 닫기' }));
+      expectUnread(false);
+    });
+
+    it('열려 있을 때 온 메시지는 닫아도 표시하지 않는다', () => {
+      // given
+      const { receive } = renderChat();
+      openChat();
+
+      // when
+      receive([otherMessage]);
+      fireEvent.click(screen.getByRole('button', { name: '채팅 닫기' }));
+
+      // then
+      expectUnread(false);
+    });
+
+    it('내 메시지만 오면 표시하지 않는다', () => {
+      // given
+      const { receive } = renderChat();
+
+      // when
+      receive([myMessage]);
+
+      // then
+      expectUnread(false);
+    });
+
+    it('첫 chat_history로 온 메시지는 표시하지 않고 그 뒤 메시지부터 표시한다', () => {
+      // given: 방 상태가 먼저 오고 chat_history를 기다리는 중
+      const { receive } = renderChat([otherMessage], null);
+      expectUnread(false);
+
+      // when
+      receive([otherMessage], otherMessage.id);
+
+      // then
+      expectUnread(false);
+      receive([otherMessage, { ...otherMessage, id: 3 }], otherMessage.id);
+      expectUnread(true);
+    });
+  });
 });

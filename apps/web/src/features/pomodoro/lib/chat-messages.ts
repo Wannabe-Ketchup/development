@@ -14,3 +14,20 @@ export function mergeChatMessages(
   if (!hasNewMessage) return current;
   return [...messageById.values()].sort((a, b) => a.id - b.id);
 }
+
+// 메시지가 없으면 0. id는 1부터라 어떤 메시지보다 작다
+export function getLastMessageId(messages: ChatMessage[]): number {
+  return messages.at(-1)?.id ?? 0;
+}
+
+// 내가 보낸 메시지는 다른 탭에서 보냈어도 안 읽은 메시지로 보지 않는다
+export function hasUnreadMessage(
+  messages: ChatMessage[],
+  lastReadId: number,
+  selfParticipantId: string,
+): boolean {
+  return messages.some(
+    (message) =>
+      message.id > lastReadId && message.senderId !== selfParticipantId,
+  );
+}

@@ -5,6 +5,7 @@ import type { SendChatMessageFailureReason } from '@/api/chat';
 import CloseSvg from '@/assets/close.svg?react';
 import { IconButton } from '@/components/IconButton';
 import type { SendChatMessageState } from '../hooks/useChatMessageForm';
+import { useStickToBottom } from '../hooks/useStickToBottom';
 import { ChatMessageItem } from './ChatMessageItem';
 
 // 테두리만 그리고 배경은 안쪽 요소에 칠한다(Modal과 같은 이유)
@@ -59,9 +60,14 @@ export function ChatPanel({
   const titleId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const { scrollRef, contentRef, handleScroll, stickToBottom } =
+    useStickToBottom<HTMLDivElement, HTMLUListElement>();
+
+  // 닫을 때도 맨 아래로 보내, 닫힌 동안 온 메시지가 보일 자리에서 미리 그려지게 한다
   useEffect(() => {
+    stickToBottom();
     if (isOpen) inputRef.current?.focus();
-  }, [isOpen]);
+  }, [isOpen, stickToBottom]);
 
   // 한글 조합 중의 Esc는 조합을 취소하는 키라 닫지 않는다
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -96,10 +102,12 @@ export function ChatPanel({
           <path d={DIVIDER_PATH} strokeLinecap="round" />
         </svg>
         <div
+          ref={scrollRef}
           role="log"
+          onScroll={handleScroll}
           className="-mx-2 min-h-0 flex-1 overflow-x-hidden overflow-y-auto py-0.5"
         >
-          <ul className="flex flex-col">
+          <ul ref={contentRef} className="flex flex-col">
             {messages.map((message) => (
               <ChatMessageItem
                 key={message.id}
@@ -118,6 +126,7 @@ export function ChatPanel({
           onSubmit={(event) => {
             event.preventDefault();
             onSend();
+            stickToBottom();
             // 보내기를 클릭했어도 이어서 칠 수 있게 입력창으로 돌려보낸다
             inputRef.current?.focus();
           }}
