@@ -700,6 +700,9 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
 
       // then
       const dialog = page.getByRole('dialog', { name: '시간 설정' });
+      await expect(
+        dialog.getByText('뽀모도로 진행 중에는 설정을 바꿀 수 없어요'),
+      ).toBeVisible();
       await expect(dialog.getByRole('group', { name: '집중' })).toContainText(
         '25분',
       );

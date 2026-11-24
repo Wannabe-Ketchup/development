@@ -4,6 +4,7 @@ export * from './constants/message';
 export * from './constants/nickname';
 export * from './constants/feedback';
 export * from './constants/chat';
+export * from './constants/sse';
 export * from './utils/nickname-weight';
 export * from './utils/timer-duration';
 export * from './types/timer';

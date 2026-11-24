@@ -62,6 +62,7 @@ describe('RoomEventStreamService.streamEvents', () => {
       subscribe,
       emit,
       createOwnSnapshotEvent,
+      heartbeats: jest.fn().mockReturnValue(NEVER),
     } as unknown as SseService;
 
     service = new RoomEventStreamService(

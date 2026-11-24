@@ -23,6 +23,7 @@ const SAVE_BUTTON_WOBBLY = {
 const FOCUS_RULE = TIMER_DURATION_RULE.focus;
 const BREAK_RULE = TIMER_DURATION_RULE.break;
 const DURATION_RANGE_DESCRIPTION = `집중은 ${FOCUS_RULE.minMinutes}~${FOCUS_RULE.maxMinutes}분, 휴식은 ${BREAK_RULE.minMinutes}~${BREAK_RULE.maxMinutes}분으로 맞출 수 있어요`;
+const LOCKED_DESCRIPTION = '뽀모도로 진행 중에는 설정을 바꿀 수 없어요';
 
 const SAVE_ERROR_MESSAGES: Partial<Record<SaveStatus, string>> = {
   'running-error': '진행 중에는 바꿀 수 없어요',
@@ -68,13 +69,14 @@ export function TimerSettingsModal({
         />
       </div>
       <p className="text-base leading-[normal] text-gray">
-        {DURATION_RANGE_DESCRIPTION}
+        {isEditable ? DURATION_RANGE_DESCRIPTION : LOCKED_DESCRIPTION}
       </p>
       <DurationStepper
         label="집중"
         minutes={focusMinutes}
         canDecrease={canStep('focus', 'decrease')}
         canIncrease={canStep('focus', 'increase')}
+        isLocked={!isEditable}
         onDecrease={() => step('focus', 'decrease')}
         onIncrease={() => step('focus', 'increase')}
       />
@@ -83,6 +85,7 @@ export function TimerSettingsModal({
         minutes={breakMinutes}
         canDecrease={canStep('break', 'decrease')}
         canIncrease={canStep('break', 'increase')}
+        isLocked={!isEditable}
         onDecrease={() => step('break', 'decrease')}
         onIncrease={() => step('break', 'increase')}
       />

@@ -215,7 +215,7 @@
       "id": 6,
       "type": "timeseries",
       "title": "SSE 이벤트 전송량",
-      "description": "이벤트 타입별 초당 전송 수 (클라이언트별로 집계: 4명에게 1번 보내면 4)",
+      "description": "이벤트 타입별 초당 전송 수 (클라이언트별로 집계: 4명에게 1번 보내면 4). heartbeat는 빼고 그린다. 연결 수 ÷ 15초로 거의 정해지고, 함께 그리면 다른 선이 바닥에 깔린다",
       "gridPos": {
         "x": 12,
         "y": 16,
@@ -233,7 +233,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (type) (rate(sse_events_sent_total{job=\"nest\",env=\"$env\"}[$__rate_interval]))",
+          "expr": "sum by (type) (rate(sse_events_sent_total{job=\"nest\",env=\"$env\",type!=\"heartbeat\"}[$__rate_interval]))",
           "legendFormat": "{{type}}"
         }
       ],
