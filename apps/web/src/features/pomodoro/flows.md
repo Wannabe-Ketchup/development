@@ -149,3 +149,23 @@ e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-G. 리셋 버�
 | 7    | button "닫기"                        | Enter               | dialog가 닫히고 포커스가 button "피드백 보내기"로 돌아간다                                                                                                       |
 
 e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-H. 피드백 모달로 피드백을 보낸다`
+
+---
+
+## P-I. 채팅창을 열어 메시지를 주고받는다
+
+대상: 키보드 사용자 / 스크린 리더 사용자
+진입 조건: 뽀모도로 화면 진입, SSE 연결 완료, 첫 `chat_history`는 빈 목록. 전송 응답은 단계마다 mock
+
+| 단계 | 포커스 위치 (role "name")            | 동작                     | 예상 결과 / ARIA 발화                                                                                                                      |
+| ---- | ------------------------------------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1    | button "chat"                        | Tab                      | 닫힌 채팅창 안의 textbox "메시지"와 button "채팅 닫기"로는 포커스가 가지 않는다                                                            |
+| 2    | —                                    | SSE로 다른 사람의 메시지 | button의 이름이 "chat 안 읽은 메시지 있음"이 된다                                                                                          |
+| 3    | button "chat 안 읽은 메시지 있음"    | Enter                    | region "채팅"이 열리고 포커스가 textbox "메시지"로 간다. log에 보낸 사람 닉네임·시각·내용이 있는 listitem이 있고, button "chat"은 사라진다 |
+| 4    | textbox "메시지"                     | 입력 후 Enter            | 전송 요청을 보낸다. log에 "나"로 시작하는 listitem이 추가되고, 입력이 비며 포커스는 textbox에 남는다                                       |
+| 5    | 전송 응답 429 상황, textbox "메시지" | 입력 후 Enter            | alert "너무 자주 보냈어요. 잠시 후 다시 보내 주세요"가 발화되고 입력한 내용이 남는다                                                       |
+| 6    | textbox "메시지"                     | Escape                   | region "채팅"이 사라지고 포커스가 button "chat"으로 돌아간다. 안 읽은 메시지 표시가 없다                                                   |
+| 7    | button "chat"                        | Enter                    | region "채팅"이 다시 열리고 쓰던 내용이 그대로 있다                                                                                        |
+| 8    | button "채팅 닫기"                   | Enter                    | region "채팅"이 사라지고 포커스가 button "chat"으로 돌아간다                                                                               |
+
+e2e 파일: `apps/web/e2e/pomodoro-accessibility.spec.ts` › `P-I. 채팅창을 열어 메시지를 주고받는다`
