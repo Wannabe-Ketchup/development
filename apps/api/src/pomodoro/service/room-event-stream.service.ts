@@ -49,6 +49,7 @@ export class RoomEventStreamService {
           this.sseService.createOwnSnapshotEvent(chatHistoryEvent),
         ),
         this.sseService.subscribe(roomId),
+        this.sseService.heartbeats(),
       );
     }).pipe(
       finalize(() =>

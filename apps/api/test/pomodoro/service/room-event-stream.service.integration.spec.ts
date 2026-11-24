@@ -194,6 +194,31 @@ describe('RoomEventStreamService', () => {
       expect(publishedStates).toHaveLength(expectedPublishCount);
     });
 
+    it('연결마다 15초에 한 번씩 그 연결에만 heartbeat가 온다', () => {
+      // given
+      const { service } = setUp();
+      const receivedByA: MessageEvent[] = [];
+      const receivedByB: MessageEvent[] = [];
+      service
+        .streamEvents(roomId, participantId)
+        .subscribe((event) => receivedByA.push(event));
+      service
+        .streamEvents(roomId, 'B')
+        .subscribe((event) => receivedByB.push(event));
+
+      // when
+      jest.advanceTimersByTime(30000);
+
+      // then
+      const expectedHeartbeatCount = 2;
+      expect(receivedByA.filter((e) => e.type === 'heartbeat')).toHaveLength(
+        expectedHeartbeatCount,
+      );
+      expect(receivedByB.filter((e) => e.type === 'heartbeat')).toHaveLength(
+        expectedHeartbeatCount,
+      );
+    });
+
     it('같은 참가자의 탭 두 개 중 하나만 닫히면 10초가 지나도 방에 남는다 (LEAVE-01)', () => {
       // given
       const { roomRepository, service } = setUp();
