@@ -5,6 +5,7 @@ import {
   mockRoomWithSSEConnected,
   mockTimerDuration,
   mockTimerAction,
+  mockChatMessage,
   emitSseEvent,
 } from './fixtures/api-mocks';
 
@@ -918,6 +919,102 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
 
       // then
       await expect(dialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+  });
+
+  test.describe('P-I. 채팅창을 열어 메시지를 주고받는다', () => {
+    test('닫혀 있으면 포커스가 들어가지 않고, 열어 메시지를 주고받은 뒤 닫으면 열기 버튼으로 포커스가 돌아간다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      const chat = await mockChatMessage(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: /^chat/ });
+      const region = page.getByRole('region', { name: '채팅' });
+      const textbox = page.getByRole('textbox', { name: '메시지' });
+      const items = page.getByRole('log').getByRole('listitem');
+      await expect(openBtn).toBeVisible();
+      await emitSseEvent(page, 'chat_history', { messages: [] });
+
+      // when: 단계 1
+      await openBtn.focus();
+      await page.keyboard.press('Tab');
+
+      // then
+      await expect(region).toBeHidden();
+      await expect(page.locator('section :focus')).toHaveCount(0);
+
+      // when: 단계 2
+      await emitSseEvent(page, 'chat_message', {
+        id: 1,
+        senderId: 'other-p2',
+        nickname: '토마토2',
+        content: '안녕하세요',
+        sentAt: new Date(2026, 0, 1, 14, 3).toISOString(),
+      });
+
+      // then
+      await expect(openBtn).toHaveAccessibleName('chat 안 읽은 메시지 있음');
+
+      // when: 단계 3
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(region).toBeVisible();
+      await expect(textbox).toBeFocused();
+      await expect(openBtn).toBeHidden();
+      await expect(items).toHaveCount(1);
+      await expect(items.first()).toContainText('토마토2');
+      await expect(items.first()).toContainText('14:03');
+      await expect(items.first()).toContainText('안녕하세요');
+
+      // when: 단계 4
+      await page.keyboard.type('다들 화이팅');
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(items).toHaveCount(2);
+      await expect(items.last()).toContainText(/^나/);
+      await expect(items.last()).toContainText('다들 화이팅');
+      await expect(textbox).toHaveValue('');
+      await expect(textbox).toBeFocused();
+
+      // when: 단계 5
+      chat.status = 429;
+      await page.keyboard.type('또 보내기');
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(region.getByRole('alert')).toHaveText(
+        '너무 자주 보냈어요. 잠시 후 다시 보내 주세요',
+      );
+      await expect(textbox).toHaveValue('또 보내기');
+      expect(chat.contents).toEqual(['다들 화이팅', '또 보내기']);
+
+      // when: 단계 6
+      await page.keyboard.press('Escape');
+
+      // then
+      await expect(region).toBeHidden();
+      await expect(openBtn).toBeFocused();
+      await expect(openBtn).toHaveAccessibleName('chat');
+
+      // when: 단계 7
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(region).toBeVisible();
+      await expect(textbox).toHaveValue('또 보내기');
+
+      // when: 단계 8
+      await region.getByRole('button', { name: '채팅 닫기' }).focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(region).toBeHidden();
       await expect(openBtn).toBeFocused();
     });
   });

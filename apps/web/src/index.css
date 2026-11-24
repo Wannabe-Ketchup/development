@@ -21,6 +21,8 @@
 
   --color-black: #1b1b1b;
   --color-gray: #bababa;
+  --color-warm-gray: #99918a;
+  --color-warm-gray-dark: #807870;
   --color-white: #ffffff;
   --color-cream: #fffdf9;
 
@@ -28,6 +30,7 @@
   --color-tomato-body-2: #f5ae8d;
   --color-tomato-body-3: #f5908d;
   --color-tomato-body-4: #f36673;
+  --color-tomato-pale: #ffe3de;
   --color-tomato-leaf: #2ae578;
   --color-lamp-on: #ffed92;
   --color-lamp-off: #ffffff;
