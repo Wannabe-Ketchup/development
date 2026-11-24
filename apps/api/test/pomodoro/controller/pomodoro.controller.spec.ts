@@ -18,6 +18,8 @@ import type { Notification } from '../../../src/common/notification/notification
 import { NotificationSender } from '../../../src/common/notification/notification-sender';
 import { Random } from '../../../src/common/random/random';
 import { LoadS3MusicService } from '../../../src/music/service/load-s3-music.service';
+import { FeedbackMailTransport } from '../../../src/feedback/config/mail-transport.provider';
+import { FeedbackUploadDirectory } from '../../../src/feedback/config/feedback-upload-directory';
 import { JoinRoomResponse } from '../../../src/pomodoro/dto/join-room-response.dto';
 import { InviteCode } from '../../../src/pomodoro/domain/invite-code';
 import { InviteCodeRepository } from '../../../src/pomodoro/repository/invite-code.repository';
@@ -92,6 +94,10 @@ describe('PomodoroController', () => {
       .overrideProvider(S3Client)
       .useValue({})
       .overrideProvider(LoadS3MusicService)
+      .useValue({})
+      .overrideProvider(FeedbackMailTransport)
+      .useValue({})
+      .overrideProvider(FeedbackUploadDirectory)
       .useValue({})
       .overrideProvider(Clock)
       .useClass(FixedClock)

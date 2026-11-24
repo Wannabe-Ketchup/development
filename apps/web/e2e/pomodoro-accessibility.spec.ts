@@ -833,4 +833,92 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await expect(resetBtn).toHaveAttribute('aria-disabled', 'true');
     });
   });
+
+  test.describe('P-H. 피드백 모달로 피드백을 보낸다', () => {
+    test('Enter로 열어 내용과 첨부를 넣고 전송하면 완료가 발화되고 닫으면 포커스가 열기 버튼으로 돌아간다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      let releaseResponse!: () => void;
+      const responseReleased = new Promise<void>((resolve) => {
+        releaseResponse = resolve;
+      });
+      await page.route('**/api/feedbacks', async (route) => {
+        await responseReleased;
+        await route.fulfill({ status: 204 });
+      });
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '피드백 보내기' });
+      await openBtn.focus();
+
+      // when: 열기
+      await page.keyboard.press('Enter');
+
+      // then: 포커스는 내용 입력칸, 전송하기는 비활성
+      const dialog = page.getByRole('dialog', { name: '피드백 보내기' });
+      const textbox = dialog.getByRole('textbox', { name: '내용' });
+      await expect(dialog).toBeVisible();
+      await expect(textbox).toBeFocused();
+      await expect(textbox).toHaveAttribute(
+        'placeholder',
+        '어떤 점이 좋았고 어떤 점이 불편했는지 적어주세요',
+      );
+      await expect(
+        dialog.getByRole('button', { name: '전송하기' }),
+      ).toBeDisabled();
+
+      // when: 입력
+      await page.keyboard.type('좋아요');
+
+      // then
+      await expect(textbox).toHaveValue('좋아요');
+      await expect(
+        dialog.getByRole('button', { name: '전송하기' }),
+      ).toBeEnabled();
+
+      // when: Esc
+      await page.keyboard.press('Escape');
+
+      // then: 내용이 있어 닫히지 않는다
+      await expect(dialog).toBeVisible();
+
+      // when: 파일 선택
+      await dialog.getByTestId('feedback-file-input').setInputFiles({
+        name: 'shot.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('png'),
+      });
+
+      // then
+      const list = dialog.getByRole('list', { name: '첨부 파일' });
+      await expect(list.getByRole('listitem')).toHaveCount(1);
+      await expect(
+        list.getByRole('button', { name: 'shot.png 빼기' }),
+      ).toBeVisible();
+
+      // when: 전송
+      await dialog.getByRole('button', { name: '전송하기' }).focus();
+      await page.keyboard.press('Enter');
+
+      // then: 응답이 오기 전에는 전송 중으로 비활성
+      await expect(
+        dialog.getByRole('button', { name: '전송 중' }),
+      ).toBeDisabled();
+
+      // when: 응답 도착
+      releaseResponse();
+
+      // then: status 발화
+      await expect(dialog.getByRole('status')).toHaveText('피드백을 보냈어요');
+
+      // when: 닫기
+      await expect(dialog.getByRole('button', { name: '닫기' })).toBeFocused();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+  });
 });

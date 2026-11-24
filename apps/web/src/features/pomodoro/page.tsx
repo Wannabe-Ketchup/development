@@ -21,6 +21,7 @@ import { DeskProps } from './components/DeskProps';
 import { InviteCodeButton } from './components/InviteCodeButton';
 import { TimerSettingsButton } from './components/TimerSettingsButton';
 import { HowToUseButton } from './components/HowToUseButton';
+import { FeedbackButton } from './components/FeedbackButton';
 import { CoachMarkTour } from './components/CoachMarkTour';
 import { useCoachMarkTour } from './hooks/useCoachMarkTour';
 import { TOTAL_STEPS } from './lib/coach-mark-steps';
@@ -240,6 +241,10 @@ function Pomodoro() {
             />
             <InviteCodeButton
               roomId={roomId}
+              onOpen={tour.closeTour}
+              className={cn(isDarkMode && 'dark-mode-dim')}
+            />
+            <FeedbackButton
               onOpen={tour.closeTour}
               className={cn(isDarkMode && 'dark-mode-dim')}
             />

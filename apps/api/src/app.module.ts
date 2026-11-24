@@ -9,6 +9,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PomodoroModule } from './pomodoro/pomodoro.module';
 import { HealthModule } from './health/health.module';
 import { MusicModule } from './music/music.module';
+import { FeedbackModule } from './feedback/feedback.module';
 import { LoggerModule } from './common/logger.module';
 import { HttpLoggerMiddleware } from './common/middleware/http-logger.middleware';
 import { AlsModule } from './common/als.module';
@@ -26,6 +27,7 @@ import { NotificationModule } from './common/notification/notification.module';
     PomodoroModule,
     HealthModule,
     MusicModule,
+    FeedbackModule,
     AlsModule,
     LoggerModule,
     AuthModule,
