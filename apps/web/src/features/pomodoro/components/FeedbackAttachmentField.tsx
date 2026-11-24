@@ -6,6 +6,7 @@ import {
 import ClipSvg from '@/assets/clip.svg?react';
 import CloseSvg from '@/assets/close.svg?react';
 import { IconButton } from '@/components/IconButton';
+import { cn } from '@/lib/cn';
 import {
   BYTES_PER_MB,
   checkFeedbackAttachments,
@@ -29,6 +30,7 @@ export function FeedbackAttachmentField({
   onFilesChange,
 }: FeedbackAttachmentFieldProps) {
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFilesSelected = (selected: File[]) => {
@@ -49,19 +51,41 @@ export function FeedbackAttachmentField({
 
   return (
     <>
-      <div className={`flex flex-col gap-3 p-4 ${boxClassName}`}>
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 text-base"
-          >
+      <div
+        className={cn(
+          'flex flex-col gap-3 p-4',
+          boxClassName,
+          isDragOver && 'border-black',
+        )}
+        onDragOver={(e) => {
+          if (disabled) return;
+          e.preventDefault();
+          setIsDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          // 상자 안의 자식 요소로 옮겨 갈 때도 dragleave가 오므로 상자를 벗어날 때만 끈다
+          if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+          setIsDragOver(false);
+        }}
+        onDrop={(e) => {
+          if (disabled) return;
+          e.preventDefault();
+          setIsDragOver(false);
+          handleFilesSelected(Array.from(e.dataTransfer.files));
+        }}
+      >
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => fileInputRef.current?.click()}
+          className="flex w-full items-center justify-between gap-2"
+        >
+          <span className="flex items-center gap-2 text-base">
             <ClipSvg aria-hidden="true" className="size-6" />
             사진, 동영상 첨부
-          </button>
+          </span>
           <span className="text-sm text-gray">최대 {MAX_TOTAL_MB}MB</span>
-        </div>
+        </button>
         <input
           ref={fileInputRef}
           type="file"
