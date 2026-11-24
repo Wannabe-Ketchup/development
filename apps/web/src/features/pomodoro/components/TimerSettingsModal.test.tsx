@@ -88,6 +88,16 @@ describe('TimerSettingsModal', () => {
     expect(changeTimerDuration).not.toHaveBeenCalled();
   });
 
+  it('대기 상태가 아니면 진행 중에는 설정을 바꿀 수 없다고 안내한다', () => {
+    // given
+    renderModal({ isEditable: false });
+
+    // then
+    expect(
+      screen.getByText('뽀모도로 진행 중에는 설정을 바꿀 수 없어요'),
+    ).toBeTruthy();
+  });
+
   it('진행 중이라 저장이 거절되면 모달에 알리고 닫히지 않는다', async () => {
     // given
     vi.mocked(changeTimerDuration).mockResolvedValue({
