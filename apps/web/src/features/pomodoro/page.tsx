@@ -5,6 +5,7 @@ import ShelfSvg from '@/assets/shelf.svg?react';
 import { LPPlayer } from './components/LPPlayer';
 import { RoomBackground } from './components/RoomBackground';
 import { useTheme } from './hooks/useTheme';
+import { useChatMessages } from './hooks/useChatMessages';
 import { useRoomSSE, type RoomStateChange } from './hooks/useRoomSSE';
 import { useSessionChangeAlarm } from './hooks/useSessionChangeAlarm';
 import { useNotificationPermission } from './hooks/useNotificationPermission';
@@ -25,6 +26,7 @@ import { FeedbackButton } from './components/FeedbackButton';
 import { CoachMarkTour } from './components/CoachMarkTour';
 import { useCoachMarkTour } from './hooks/useCoachMarkTour';
 import { TOTAL_STEPS } from './lib/coach-mark-steps';
+import { Chat } from './components/Chat';
 import { PomodoroSession } from './components/PomodoroSession';
 
 const SEAT_SPACING_PX = 205;
@@ -81,10 +83,19 @@ function Pomodoro() {
     [],
   );
 
+  const {
+    messages: chatMessages,
+    firstHistoryLastId,
+    addChatMessage,
+    addChatHistory,
+  } = useChatMessages();
+
   const { status: sseStatus } = useRoomSSE(
     roomId ?? undefined,
     selfParticipantId !== null,
     handleRoomState,
+    addChatMessage,
+    addChatHistory,
   );
 
   useSessionChangeAlarm(room?.mode, room?.currentCycle, isLastChangeReset);
@@ -247,6 +258,24 @@ function Pomodoro() {
             <FeedbackButton
               onOpen={tour.closeTour}
               className={cn(isDarkMode && 'dark-mode-dim')}
+            />
+          </div>
+        )}
+
+        {/* 연결이 잠깐 끊겨도(sseStatus error) 쓰던 내용이 사라지지 않게 마운트를 유지한다. 그동안은 위 안내가 덮는다 */}
+        {roomId && selfParticipantId && isConfirmed && (
+          <div
+            className={cn(
+              'absolute top-7 left-8 z-20',
+              isDarkMode && 'dark-mode-dim',
+            )}
+          >
+            <Chat
+              roomId={roomId}
+              selfParticipantId={selfParticipantId}
+              messages={chatMessages}
+              firstHistoryLastId={firstHistoryLastId}
+              onSent={addChatMessage}
             />
           </div>
         )}

@@ -1,5 +1,10 @@
 import type { Page } from '@playwright/test';
-import type { Room } from '@pomodoro/shared';
+import type {
+  ChatMessage,
+  Room,
+  SendChatMessageRequest,
+  SseEventDataMap,
+} from '@pomodoro/shared';
 
 interface ParticipantSetup {
   id: string;
@@ -311,7 +316,11 @@ export async function mockTimerDuration(
 /**
  * mockRoomWithSSEConnected로 연결한 가짜 SSE로 서버 이벤트를 보낸다.
  */
-export async function emitSseEvent(page: Page, type: string, data: Room) {
+export async function emitSseEvent<T extends keyof SseEventDataMap>(
+  page: Page,
+  type: T,
+  data: SseEventDataMap[T],
+) {
   await page.evaluate(
     ([eventType, eventData]) => {
       (
@@ -337,5 +346,35 @@ export async function mockTimerAction(page: Page, action: string) {
       await route.fulfill({ status: 204 });
     },
   );
+  return calls;
+}
+
+/**
+ * 채팅 전송 요청(POST)을 가로채 본문을 모은다. 201이면 저장된 메시지로 응답하고, 그 밖의 상태 코드는 빈 본문으로 응답한다.
+ * 상태 코드는 반환한 객체의 status를 바꿔 단계마다 정한다.
+ */
+export async function mockChatMessage(page: Page) {
+  const calls = {
+    status: 201,
+    contents: [] as string[],
+  };
+  await page.route('**/api/pomodoro/room/*/chat-message', async (route) => {
+    const { content } = route
+      .request()
+      .postDataJSON() as SendChatMessageRequest;
+    calls.contents.push(content);
+    if (calls.status !== 201) {
+      await route.fulfill({ status: calls.status });
+      return;
+    }
+    const message: ChatMessage = {
+      id: 100 + calls.contents.length,
+      senderId: 'self-p1',
+      nickname: '토마토1',
+      content,
+      sentAt: new Date(2026, 0, 1, 14, 4).toISOString(),
+    };
+    await route.fulfill({ status: 201, json: message });
+  });
   return calls;
 }
