@@ -23,11 +23,11 @@ export function ChatMessageItem({ message, isMine }: ChatMessageItemProps) {
     // 이때 li 밖으로 나간 그림은 잘리므로, 테두리가 흔들려 나가는 만큼 li 안쪽에 여백을 둔다
     <li
       className={cn(
-        'flex flex-col gap-1 px-2 py-1 [contain-intrinsic-size:auto_48px] [content-visibility:auto]',
+        'flex flex-col gap-1 px-2 py-1 [contain-intrinsic-size:auto_57px] [content-visibility:auto]',
         isMine ? 'items-end' : 'items-start',
       )}
     >
-      <p className="max-w-full text-xs leading-none break-all text-warm-gray-dark">
+      <p className="max-w-full text-[13px] leading-none break-all text-warm-gray-dark">
         {isMine ? '나' : message.nickname}
         <time dateTime={message.sentAt} className="ml-2 text-warm-gray">
           {formatChatTime(message.sentAt)}
@@ -42,7 +42,7 @@ export function ChatMessageItem({ message, isMine }: ChatMessageItemProps) {
         className="max-w-[85%]"
       >
         {/* relative여야 말풍선 채우기가 글자를 덮지 않는다 */}
-        <p className="relative px-3 py-0.5 text-sm wrap-anywhere whitespace-pre-wrap">
+        <p className="relative px-3 py-1 text-base wrap-anywhere break-keep whitespace-pre-wrap">
           {message.content}
         </p>
       </WobblyBox>

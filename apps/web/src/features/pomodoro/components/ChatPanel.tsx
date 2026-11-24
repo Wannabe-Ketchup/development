@@ -26,7 +26,7 @@ const INPUT_WOBBLY = {
   pathClassName: 'fill-white stroke-black',
 };
 // squiggle의 흔들림은 도형의 짧은 변에 비례해 선에는 생기지 않으므로 완만한 곡선을 직접 그린다
-const DIVIDER_PATH = 'M 1 3 C 30 5 60 4 95 3 S 160 1 190 2 S 255 4 283 3';
+const DIVIDER_PATH = 'M 1 3 C 33 5 65 4 103 3 S 173 1 206 2 S 276 4 307 3';
 
 const FAILURE_MESSAGE: Record<SendChatMessageFailureReason, string> = {
   'rate-limited': '너무 자주 보냈어요. 잠시 후 다시 보내 주세요',
@@ -45,7 +45,8 @@ interface ChatPanelProps {
   onClose: () => void;
 }
 
-// 열어 둔 채 방을 조작할 수 있어야 해서 Modal을 쓰지 않는다(showModal은 뒤 화면을 막는다)
+// 열어 둔 채 방을 조작할 수 있어야 해서 Modal을 쓰지 않는다(showModal은 뒤 화면을 막는다).
+// 1440px 화면에 4명이 있으면 조명과 왼쪽 참여자 일부가 가려진다. 더 넓히면 참여자를 많이 가린다
 export function ChatPanel({
   isOpen,
   messages,
@@ -80,24 +81,23 @@ export function ChatPanel({
       <section
         aria-labelledby={titleId}
         onKeyDown={handleKeyDown}
-        className="flex h-59.5 w-79 flex-col rounded-[20px] bg-cream px-4 pt-2 pb-2.5"
+        className="flex h-105 w-85 flex-col rounded-[20px] bg-cream px-4 pt-3 pb-3.5"
       >
-        <div className="flex items-center justify-between pb-1">
-          <h2 id={titleId} className="text-xl leading-[normal]">
+        <div className="flex items-center justify-between pb-1.5">
+          <h2 id={titleId} className="text-2xl leading-[normal]">
             채팅
           </h2>
           <IconButton
             label="채팅 닫기"
             icon={CloseSvg}
-            iconClassName="size-5"
             onClick={onClose}
             className="flex size-6 items-center justify-center"
           />
         </div>
         <svg
           aria-hidden="true"
-          viewBox="0 0 284 6"
-          className="h-1.5 w-71 shrink-0 fill-none stroke-black stroke-2"
+          viewBox="0 0 308 6"
+          className="h-1.5 w-77 shrink-0 fill-none stroke-black stroke-2"
         >
           <path d={DIVIDER_PATH} strokeLinecap="round" />
         </svg>
@@ -118,7 +118,10 @@ export function ChatPanel({
           </ul>
         </div>
         {sendState.status === 'failed' && (
-          <p role="alert" className="pt-1 text-xs leading-none text-error">
+          <p
+            role="alert"
+            className="pt-1.5 text-[13px] leading-none text-error"
+          >
             {FAILURE_MESSAGE[sendState.reason]}
           </p>
         )}
@@ -143,7 +146,7 @@ export function ChatPanel({
               autoComplete="off"
               readOnly={sendState.status === 'sending'}
               onChange={(event) => onDraftChange(event.target.value)}
-              className="relative h-7 w-full bg-transparent px-3 text-base outline-none placeholder:text-warm-gray"
+              className="relative h-9 w-full bg-transparent px-3 text-base outline-none placeholder:text-warm-gray"
             />
           </WobblyBox>
           <button
