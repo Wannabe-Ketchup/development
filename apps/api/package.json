@@ -83,7 +83,8 @@
       "**/*.(t|j)s"
     ],
     "moduleNameMapper": {
-      "^@pomodoro/shared$": "<rootDir>/../../packages/shared/src/index.ts"
+      "^@pomodoro/shared$": "<rootDir>/../../packages/shared/src/index.ts",
+      "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"

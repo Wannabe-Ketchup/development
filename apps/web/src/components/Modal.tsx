@@ -78,7 +78,8 @@ export function Modal({
     <dialog
       ref={dialogRef}
       aria-labelledby={labelledBy}
-      className="fixed inset-auto top-1/2 left-1/2 m-0 max-h-none w-max max-w-none -translate-x-1/2 -translate-y-1/2 overflow-visible bg-transparent p-0 backdrop:bg-black/32"
+      className="fixed inset-auto top-1/2 left-1/2 m-0 max-h-none w-max max-w-none -translate-x-1/2 -translate-y-1/2 overflow-visible bg-transparent p-0 select-none backdrop:bg-black/32"
+      // 브라우저가 모달 dialog에 user-select: text를 기본으로 줘서 body의 select-none을 이어받지 못하므로 여기서 다시 막는다. 입력칸은 전역 규칙으로 선택된다
       // showModal()은 top layer에 그려져 축소 스테이지의 transform을 받지 않으므로 배율을 직접 건다.
       // 화면보다 커도 브라우저 기본 max-width/height로 찌그러지지 않게 풀고, 가운데 기준(translate + 기본 origin)으로 줄여 중앙을 유지한다.
       // WobblyBox는 contentRect(transform 전 크기)로 재서 테두리가 어긋나지 않는다

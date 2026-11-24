@@ -130,7 +130,10 @@ export async function mockEnterRoomOnly(page: Page) {
  * addInitScript로 페이지 로드 전에 fake EventSource를 주입해, SSE URL에 대해
  * 연결을 유지하면서 room_state 이벤트를 즉시 발화하고 onerror를 발화하지 않는다.
  */
-export async function mockRoomWithSSEConnected(page: Page) {
+export async function mockRoomWithSSEConnected(
+  page: Page,
+  options?: { roomOverrides?: Partial<Room> },
+) {
   const SELF_ID = 'self-p1';
 
   const room: Room = {
@@ -146,6 +149,7 @@ export async function mockRoomWithSSEConnected(page: Page) {
     timer: DEFAULT_TIMER,
     mode: 'IDLE',
     currentCycle: 1,
+    ...options?.roomOverrides,
   };
 
   await page.route('**/api/pomodoro/room/*/participant', async (route) => {
@@ -170,6 +174,15 @@ export async function mockRoomWithSSEConnected(page: Page) {
     const errorTriggers: Array<() => void> = [];
     (window as unknown as Record<string, unknown>).__triggerSSEError = () => {
       errorTriggers.forEach((fn) => fn());
+    };
+
+    // 서버가 보낸 것처럼 SSE 이벤트를 발화한다 (window.__emitSSE(type, data)로 호출)
+    const emitters: Array<(type: string, data: string) => void> = [];
+    (window as unknown as Record<string, unknown>).__emitSSE = (
+      type: string,
+      data: string,
+    ) => {
+      emitters.forEach((fn) => fn(type, data));
     };
 
     class FakeSSEEventSource extends EventTarget {
@@ -209,6 +222,9 @@ export async function mockRoomWithSSEConnected(page: Page) {
           this.dispatchEvent(errorEvent);
         };
         errorTriggers.push(triggerError);
+        emitters.push((type, data) => {
+          this.dispatchEvent(new MessageEvent(type, { data }));
+        });
       }
 
       close() {
@@ -270,4 +286,56 @@ export async function mockSSEError(page: Page) {
   await page.route('**/api/sse/pomodoro/**', async (route) => {
     await route.abort('failed');
   });
+}
+
+/**
+ * 시간 설정 저장 요청(PUT)을 가로채 본문을 모으고 지정한 상태 코드로 응답한다.
+ * 반환한 배열에 요청 본문이 쌓인다.
+ */
+export async function mockTimerDuration(
+  page: Page,
+  options?: { status?: number },
+) {
+  const requestBodies: unknown[] = [];
+  await page.route(
+    '**/api/pomodoro/room/*/participant/timer-duration',
+    async (route) => {
+      if (route.request().method() !== 'PUT') return route.fallback();
+      requestBodies.push(route.request().postDataJSON());
+      await route.fulfill({ status: options?.status ?? 204 });
+    },
+  );
+  return requestBodies;
+}
+
+/**
+ * mockRoomWithSSEConnected로 연결한 가짜 SSE로 서버 이벤트를 보낸다.
+ */
+export async function emitSseEvent(page: Page, type: string, data: Room) {
+  await page.evaluate(
+    ([eventType, eventData]) => {
+      (
+        window as unknown as {
+          __emitSSE: (type: string, data: string) => void;
+        }
+      ).__emitSSE(eventType, eventData);
+    },
+    [type, JSON.stringify(data)],
+  );
+}
+
+/**
+ * 타이머 조작 요청(start, reset 등)을 가로채 요청 횟수를 센다. 결과는 SSE로만 반영되므로 204만 응답한다.
+ * 반환한 객체의 count가 요청 횟수다.
+ */
+export async function mockTimerAction(page: Page, action: string) {
+  const calls = { count: 0 };
+  await page.route(
+    `**/api/pomodoro/room/*/participant/pomodoro-${action}`,
+    async (route) => {
+      calls.count += 1;
+      await route.fulfill({ status: 204 });
+    },
+  );
+  return calls;
 }

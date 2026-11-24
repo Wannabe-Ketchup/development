@@ -10,6 +10,8 @@ import {
   ROOM_MODE,
   type RoomMode,
 } from '@pomodoro/shared';
+import { ChatMessage } from '../../../src/pomodoro/domain/chat-message.entity';
+import { ChatMessages } from '../../../src/pomodoro/domain/chat-messages';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
 import { Participant } from '../../../src/pomodoro/domain/participant.entity';
 import { Timer } from '../../../src/pomodoro/domain/timer.entity';
@@ -60,6 +62,7 @@ function restoreRoom(props: {
   currentCycle: number;
   timer: Timer;
   participants?: Participant[];
+  chatMessages?: ChatMessages;
   emptiedAt?: Date;
 }): Room {
   return Room.restore({
@@ -933,6 +936,164 @@ describe('Room', () => {
     );
   });
 
+  describe('resetPomodoro', () => {
+    // 시간 설정이 유지되는지 보려고 기본값과 다른 집중 30분·휴식 10분으로 둔다
+    const customTimer = (
+      status: 'RUNNING' | 'PAUSED',
+      timerStartedAt: string | null,
+      remainingTimeSec: number,
+    ) =>
+      Timer.restore({
+        status,
+        focusTimeSec: 1800,
+        breakTimeSec: 600,
+        totalCycle: CYCLE_COUNT,
+        timerStartedAt,
+        remainingTimeSec,
+      });
+
+    it.each([
+      {
+        state: '집중 진행 중',
+        mode: ROOM_MODE.FOCUS,
+        currentCycle: 2,
+        timer: () => customTimer('RUNNING', '2026-10-17T09:00:00.000Z', 1800),
+      },
+      {
+        state: '휴식 진행 중',
+        mode: ROOM_MODE.BREAK,
+        currentCycle: 2,
+        timer: () => customTimer('RUNNING', '2026-10-17T09:30:00.000Z', 600),
+      },
+      {
+        state: '일시정지 중',
+        mode: ROOM_MODE.FOCUS,
+        currentCycle: 3,
+        timer: () => customTimer('PAUSED', null, 900),
+      },
+    ])(
+      '$state에 리셋하면 대기 상태가 되고 회차가 0, 남은 시간은 설정된 집중 시간이며 집중·휴식 시간은 그대로다',
+      ({ mode, currentCycle, timer }) => {
+        // given
+        const room = restoreRoom({ mode, currentCycle, timer: timer() });
+
+        // when
+        room.resetPomodoro(PARTICIPANT_ID);
+
+        // then
+        expect(room.mode).toBe(ROOM_MODE.IDLE);
+        expect(room.currentCycle).toBe(0);
+        expect(room.timer.status).toBe('IDLE');
+        expect(room.timer.timerStartedAt).toBeNull();
+        expect(room.timer.remainingTimeSec).toBe(1800);
+        expect(room.timer.focusTimeSec).toBe(1800);
+        expect(room.timer.breakTimeSec).toBe(600);
+      },
+    );
+
+    it('대기 중에는 리셋할 수 없다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+      });
+
+      // when & then
+      expect(() => room.resetPomodoro(PARTICIPANT_ID)).toThrow(
+        ConflictException,
+      );
+    });
+
+    it('방 참여자가 아니면 리셋할 수 없다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.FOCUS,
+        currentCycle: 1,
+        timer: runningTimer('2026-10-17T09:00:00.000Z', FOCUS_DURATION_SECONDS),
+      });
+
+      // when & then
+      expect(() => room.resetPomodoro('stranger')).toThrow(NotFoundException);
+      expect(room.mode).toBe(ROOM_MODE.FOCUS);
+    });
+
+    it('리셋해도 참여자의 토마토 단계(마친 바퀴)는 그대로다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.BREAK,
+        currentCycle: CYCLE_COUNT,
+        timer: runningTimer('2026-10-17T10:55:00.000Z', BREAK_DURATION_SECONDS),
+        participants: [restoreParticipant(PARTICIPANT_ID, 2)],
+      });
+
+      // when
+      room.resetPomodoro(PARTICIPANT_ID);
+
+      // then
+      expect(room.participants.get(PARTICIPANT_ID)?.completedCycles).toBe(2);
+    });
+  });
+
+  describe('changeTimerDuration', () => {
+    it.each([
+      {
+        state: '집중 중',
+        mode: ROOM_MODE.FOCUS,
+        timer: () =>
+          runningTimer('2026-10-17T09:00:00.000Z', FOCUS_DURATION_SECONDS),
+      },
+      {
+        state: '휴식 중',
+        mode: ROOM_MODE.BREAK,
+        timer: () =>
+          runningTimer('2026-10-17T09:25:00.000Z', BREAK_DURATION_SECONDS),
+      },
+      {
+        state: '일시정지 중',
+        mode: ROOM_MODE.FOCUS,
+        timer: () => pausedTimer(600),
+      },
+    ])('$state에는 시간을 바꿀 수 없다', ({ mode, timer }) => {
+      // given
+      const room = restoreRoom({
+        mode,
+        currentCycle: 1,
+        timer: timer(),
+      });
+
+      // when & then
+      expect(() => room.changeTimerDuration(PARTICIPANT_ID, 30, 10)).toThrow(
+        ConflictException,
+      );
+      expect(room.timer).toEqual(timer());
+    });
+
+    it('시간을 바꾼 뒤 마지막 회차 휴식이 끝나 대기로 돌아가도 바꾼 시간이 유지된다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.BREAK,
+        currentCycle: CYCLE_COUNT,
+        timer: Timer.restore({
+          status: 'RUNNING',
+          focusTimeSec: 1800,
+          breakTimeSec: 600,
+          totalCycle: CYCLE_COUNT,
+          timerStartedAt: '2026-10-17T09:25:00.000Z',
+          remainingTimeSec: 600,
+        }),
+      });
+
+      // when
+      room.finishBreak();
+
+      // then
+      expect(room.mode).toBe(ROOM_MODE.IDLE);
+      expect(room.timer.focusTimeSec).toBe(1800);
+      expect(room.timer.breakTimeSec).toBe(600);
+    });
+  });
+
   describe('remainingSecondsInPhase', () => {
     it.each([
       { now: '2026-10-17T09:20:00.000Z', expected: 300 },
@@ -957,5 +1118,110 @@ describe('Room', () => {
         expect(seconds).toBe(expected);
       },
     );
+  });
+
+  describe('sendChatMessage', () => {
+    it('메시지에는 보낸 참여자의 ID와 보낸 순간의 닉네임이 담긴다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [
+          Participant.restore({
+            id: PARTICIPANT_ID,
+            nickname: '사과',
+            statusMessage: '',
+            completedCycles: 0,
+            joinedAt: JOINED_AT,
+          }),
+        ],
+      });
+
+      // when
+      const { message } = room.sendChatMessage(PARTICIPANT_ID, {
+        clientMessageId: '00000000-0000-4000-8000-000000000001',
+        content: '안녕하세요',
+        sentAt: '2026-09-02T00:10:00.000Z',
+      });
+
+      // then
+      expect(message).toMatchObject({
+        senderId: PARTICIPANT_ID,
+        nickname: '사과',
+      });
+    });
+
+    it('방에 없는 참여자는 메시지를 보낼 수 없다', () => {
+      // given
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+      });
+
+      // when & then
+      expect(() =>
+        room.sendChatMessage('participant-not-in-room', {
+          clientMessageId: '00000000-0000-4000-8000-000000000001',
+          content: '안녕하세요',
+          sentAt: '2026-09-02T00:10:00.000Z',
+        }),
+      ).toThrow(NotFoundException);
+    });
+  });
+
+  describe('chatMessagesSinceJoined', () => {
+    it('다른 참여자가 아니라 자기가 입장한 시각 뒤의 메시지만 받는다', () => {
+      // given
+      const earlyParticipant = Participant.restore({
+        id: 'participant-early',
+        nickname: '케첩',
+        statusMessage: '',
+        completedCycles: 0,
+        joinedAt: '2026-09-02T00:00:00.000Z',
+      });
+      const lateParticipant = Participant.restore({
+        id: 'participant-late',
+        nickname: '사과',
+        statusMessage: '',
+        completedCycles: 0,
+        joinedAt: '2026-09-02T00:05:00.000Z',
+      });
+      const chatMessages = ChatMessages.restore({
+        messages: [
+          ChatMessage.restore({
+            id: 1,
+            senderId: earlyParticipant.id,
+            clientMessageId: '00000000-0000-4000-8000-000000000001',
+            nickname: earlyParticipant.nickname,
+            content: '먼저 왔어요',
+            sentAt: '2026-09-02T00:01:00.000Z',
+          }),
+          ChatMessage.restore({
+            id: 2,
+            senderId: earlyParticipant.id,
+            clientMessageId: '00000000-0000-4000-8000-000000000002',
+            nickname: earlyParticipant.nickname,
+            content: '어서 오세요',
+            sentAt: '2026-09-02T00:06:00.000Z',
+          }),
+        ],
+        nextId: 3,
+      });
+      const room = restoreRoom({
+        mode: ROOM_MODE.IDLE,
+        currentCycle: 0,
+        timer: idleTimer(),
+        participants: [earlyParticipant, lateParticipant],
+        chatMessages,
+      });
+
+      // when
+      const messages = room.chatMessagesSinceJoined(lateParticipant.id);
+
+      // then
+      expect(messages.map(({ id }) => id)).toEqual([2]);
+    });
   });
 });

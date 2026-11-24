@@ -13,7 +13,7 @@ import {
   type BubbleTail,
 } from '../lib/bubble-placement';
 import { useTargetRect } from '../hooks/useTargetRect';
-import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { useStageScale } from '@/hooks/useStageScale';
 import {
   CoachMarkSpotlight,

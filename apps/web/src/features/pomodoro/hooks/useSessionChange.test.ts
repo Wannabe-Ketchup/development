@@ -5,6 +5,7 @@ import { useSessionChange } from './useSessionChange';
 interface SessionProps {
   mode: RoomMode | undefined;
   currentCycle: number | undefined;
+  isReset?: boolean;
 }
 
 describe('useSessionChange', () => {
@@ -13,8 +14,8 @@ describe('useSessionChange', () => {
     onChange: () => void,
   ) =>
     renderHook(
-      ({ mode, currentCycle }: SessionProps) =>
-        useSessionChange(mode, currentCycle, onChange),
+      ({ mode, currentCycle, isReset = false }: SessionProps) =>
+        useSessionChange(mode, currentCycle, isReset, onChange),
       { initialProps },
     );
 
@@ -77,5 +78,41 @@ describe('useSessionChange', () => {
 
     // then
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('리셋으로 대기로 돌아가면 onChange를 부르지 않는다', () => {
+    // given
+    const onChange = vi.fn();
+    const { rerender } = renderSessionChange(
+      { mode: ROOM_MODE.FOCUS, currentCycle: 2 },
+      onChange,
+    );
+
+    // when
+    rerender({ mode: ROOM_MODE.IDLE, currentCycle: 0, isReset: true });
+
+    // then
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('리셋 뒤 시작하면 onChange를 부른다', () => {
+    // given
+    const onChange = vi.fn();
+    const { rerender } = renderSessionChange(
+      { mode: ROOM_MODE.FOCUS, currentCycle: 2 },
+      onChange,
+    );
+    rerender({ mode: ROOM_MODE.IDLE, currentCycle: 0, isReset: true });
+
+    // when
+    rerender({ mode: ROOM_MODE.FOCUS, currentCycle: 1, isReset: false });
+
+    // then
+    const expectedCallCount = 1;
+    expect(onChange).toHaveBeenCalledTimes(expectedCallCount);
+    expect(onChange).toHaveBeenCalledWith({
+      mode: ROOM_MODE.FOCUS,
+      currentCycle: 1,
+    });
   });
 });

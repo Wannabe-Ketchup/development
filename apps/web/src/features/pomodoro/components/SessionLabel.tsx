@@ -1,4 +1,7 @@
-import { PILL_CONTENT_CLASS_NAME, SquigglePill } from './SquigglePill';
+import {
+  PILL_CONTENT_CLASS_NAME,
+  SquigglePill,
+} from '@/components/SquigglePill';
 
 interface SessionLabelProps {
   label: string;

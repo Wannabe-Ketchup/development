@@ -70,12 +70,15 @@ describe('Pomodoro 페이지', () => {
   it('SSE로 room_state를 수신하면 본인 좌석의 흐림 처리와 로딩 표시가 사라진다', async () => {
     // given
     mockEnterRoom.mockResolvedValue({ participant: selfParticipant, room });
-    let emitRoomState: (nextRoom: Room) => void = () => {};
+    let emitRoomState: (
+      nextRoom: Room,
+      change: { isReset: boolean },
+    ) => void = () => {};
     mockUseRoomSSE.mockImplementation(
       (
         _roomId: string,
         _isEntered: boolean,
-        onRoomState: (nextRoom: Room) => void,
+        onRoomState: (nextRoom: Room, change: { isReset: boolean }) => void,
       ) => {
         emitRoomState = onRoomState;
         return { status: 'connected' };
@@ -92,12 +95,59 @@ describe('Pomodoro 페이지', () => {
         { ...selfParticipant, statusMessage: '', completedCycles: 0 },
       ],
     };
-    emitRoomState(confirmedRoom);
+    emitRoomState(confirmedRoom, { isReset: false });
 
     // then
     await waitFor(() => {
       expect(screen.queryByTestId('self-seat-pending')).toBeNull();
     });
+  });
+
+  it('리셋으로 바뀐 방 상태를 받으면 대기 화면이 되고 알림음이 울리지 않는다', async () => {
+    // given
+    const playSpy = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockResolvedValue(undefined);
+    const runningRoom: Room = {
+      ...room,
+      mode: ROOM_MODE.FOCUS,
+      currentCycle: 1,
+      timer: {
+        ...room.timer,
+        status: 'RUNNING',
+        timerStartedAt: '2026-11-01T10:00:00.000Z',
+      },
+    };
+    mockEnterRoom.mockResolvedValue({
+      participant: selfParticipant,
+      room: runningRoom,
+    });
+    let emitRoomState: (
+      nextRoom: Room,
+      change: { isReset: boolean },
+    ) => void = () => {};
+    mockUseRoomSSE.mockImplementation(
+      (
+        _roomId: string,
+        _isEntered: boolean,
+        onRoomState: (nextRoom: Room, change: { isReset: boolean }) => void,
+      ) => {
+        emitRoomState = onRoomState;
+        return { status: 'connected' };
+      },
+    );
+    render(<Pomodoro />);
+    await waitFor(() => screen.getByText('1st focus'));
+
+    // when
+    emitRoomState(room, { isReset: true });
+
+    // then
+    await waitFor(() => {
+      expect(screen.getByText('idle')).toBeTruthy();
+    });
+    expect(playSpy).not.toHaveBeenCalled();
+    playSpy.mockRestore();
   });
 
   it('SSE 연결이 실패하면 에러 상태를 표시한다', async () => {

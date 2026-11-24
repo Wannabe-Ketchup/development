@@ -3,6 +3,9 @@ import {
   mockRoomWith,
   mockEnterRoomOnly,
   mockRoomWithSSEConnected,
+  mockTimerDuration,
+  mockTimerAction,
+  emitSseEvent,
 } from './fixtures/api-mocks';
 
 test.describe('뽀모도로 화면 접근성 흐름', () => {
@@ -555,7 +558,280 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
     });
   });
 
-  test.describe('P-F. 피드백 모달로 피드백을 보낸다', () => {
+  test.describe('P-F. 시간 설정 모달로 집중·휴식 시간을 바꾼다', () => {
+    test('Enter로 열어 집중·휴식 시간을 바꾸고 저장하면 요청을 보내고 열기 버튼으로 포커스가 돌아온다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      const requestBodies = await mockTimerDuration(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '시간 설정' });
+      await expect(openBtn).toBeVisible();
+      await openBtn.focus();
+
+      // when: 단계 1~2
+      await page.keyboard.press('Enter');
+
+      // then
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByRole('group', { name: '집중' })).toContainText(
+        '25분',
+      );
+      await expect(dialog.getByRole('group', { name: '휴식' })).toContainText(
+        '5분',
+      );
+      await expect(page.getByRole('button', { name: '닫기' })).toBeFocused();
+
+      // when: 단계 3
+      const increaseFocusBtn = page.getByRole('button', {
+        name: '집중 시간 늘리기',
+      });
+      await increaseFocusBtn.focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog.getByRole('group', { name: '집중' })).toContainText(
+        '30분',
+      );
+      await expect(page.getByRole('status').first()).toHaveText('30분');
+      await expect(increaseFocusBtn).toBeFocused();
+
+      // when: 단계 4
+      const decreaseBreakBtn = page.getByRole('button', {
+        name: '휴식 시간 줄이기',
+      });
+      await decreaseBreakBtn.focus();
+      for (let i = 0; i < 4; i++) await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog.getByRole('group', { name: '휴식' })).toContainText(
+        '1분',
+      );
+      await expect(decreaseBreakBtn).toHaveAttribute('aria-disabled', 'true');
+      await expect(decreaseBreakBtn).toBeFocused();
+
+      // when: 단계 5
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog.getByRole('group', { name: '휴식' })).toContainText(
+        '1분',
+      );
+      await expect(decreaseBreakBtn).toBeFocused();
+
+      // when: 단계 6
+      await page.getByRole('button', { name: '저장하기' }).focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+      expect(requestBodies).toEqual([{ focusMinutes: 30, breakMinutes: 1 }]);
+    });
+
+    test('Escape로 닫히고 열기 버튼으로 포커스가 복원된다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '시간 설정' });
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
+      await expect(dialog).toBeVisible();
+
+      // when
+      await page.keyboard.press('Escape');
+
+      // then
+      await expect(dialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+
+    test('저장이 409로 거절되면 진행 중이라고 알리고 모달은 열려 있다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await mockTimerDuration(page, { status: 409 });
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: '시간 설정' }).focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
+      const saveBtn = page.getByRole('button', { name: '저장하기' });
+      await saveBtn.focus();
+
+      // when
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(page.getByRole('alert')).toHaveText(
+        '진행 중에는 바꿀 수 없어요',
+      );
+      await expect(dialog).toBeVisible();
+    });
+
+    test('방이 진행 중이면 현재 값만 보이고 조절·저장 버튼은 눌러도 변화가 없다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page, {
+        roomOverrides: {
+          mode: 'FOCUS',
+          timer: {
+            status: 'RUNNING',
+            focusTimeSec: 1500,
+            breakTimeSec: 300,
+            totalCycle: 4,
+            timerStartedAt: new Date().toISOString(),
+            remainingTimeSec: 1500,
+          },
+        },
+      });
+      const requestBodies = await mockTimerDuration(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: '시간 설정' }).focus();
+
+      // when
+      await page.keyboard.press('Enter');
+
+      // then
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
+      await expect(dialog.getByRole('group', { name: '집중' })).toContainText(
+        '25분',
+      );
+      const names = [
+        '집중 시간 늘리기',
+        '집중 시간 줄이기',
+        '휴식 시간 늘리기',
+        '휴식 시간 줄이기',
+        '저장하기',
+      ];
+      for (const name of names) {
+        const button = page.getByRole('button', { name });
+        await expect(button).toHaveAttribute('aria-disabled', 'true');
+        await button.focus();
+        await page.keyboard.press('Enter');
+        await expect(button).toBeFocused();
+      }
+      await expect(dialog.getByRole('group', { name: '집중' })).toContainText(
+        '25분',
+      );
+      await expect(dialog.getByRole('group', { name: '휴식' })).toContainText(
+        '5분',
+      );
+      expect(requestBodies).toEqual([]);
+    });
+
+    test('투어가 열린 채 설정 모달을 열면 투어는 사라지고 닫으면 열기 버튼으로 포커스가 간다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: 'how to use' }).click();
+      const tourDialog = page.getByRole('dialog', { name: '뽀모도로 사용법' });
+      await expect(tourDialog).toBeVisible();
+      const openBtn = page.getByRole('button', { name: '시간 설정' });
+
+      // when
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      const settingsDialog = page.getByRole('dialog', { name: '시간 설정' });
+      await expect(settingsDialog).toBeVisible();
+      await expect(tourDialog).not.toBeVisible();
+
+      // when
+      await page.keyboard.press('Escape');
+
+      // then
+      await expect(settingsDialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+  });
+
+  test.describe('P-G. 리셋 버튼으로 타이머를 처음으로 되돌린다', () => {
+    test('대기 중에는 리셋이 비활성이고, 진행 중에 누르면 요청을 보내 대기로 돌아온다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      const resetCalls = await mockTimerAction(page, 'reset');
+      await page.goto('/pomodoro/r1');
+      const resetBtn = page.getByRole('button', { name: '리셋' });
+      await expect(resetBtn).toBeVisible();
+      const idleRoom = {
+        roomId: 'test-room',
+        participants: [
+          {
+            id: 'self-p1',
+            nickname: '토마토1',
+            statusMessage: '',
+            completedCycles: 1,
+          },
+        ],
+        timer: {
+          status: 'IDLE' as const,
+          focusTimeSec: 1500,
+          breakTimeSec: 300,
+          totalCycle: 4,
+          timerStartedAt: null,
+          remainingTimeSec: 1500,
+        },
+        mode: 'IDLE' as const,
+        currentCycle: 0,
+      };
+      const runningRoom = {
+        ...idleRoom,
+        mode: 'FOCUS' as const,
+        currentCycle: 1,
+        timer: {
+          ...idleRoom.timer,
+          status: 'RUNNING' as const,
+          timerStartedAt: new Date().toISOString(),
+        },
+      };
+
+      // when: 단계 1~2
+      await resetBtn.focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(resetBtn).toHaveAttribute('aria-disabled', 'true');
+      expect(resetCalls.count).toBe(0);
+      await expect(page.getByText('idle')).toBeVisible();
+
+      // when: 단계 3
+      await emitSseEvent(page, 'room_state', runningRoom);
+
+      // then
+      await expect(page.getByText('1st focus')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'pause' })).toBeVisible();
+      await expect(resetBtn).toHaveAttribute('aria-disabled', 'false');
+
+      // when: 단계 4
+      await resetBtn.focus();
+      await page.keyboard.press('Enter');
+      await emitSseEvent(page, 'pomodoro_reset', idleRoom);
+
+      // then
+      await expect.poll(() => resetCalls.count).toBe(1);
+      await expect(page.getByText('idle')).toBeVisible();
+      await expect(page.locator('[data-tour-id="timer"]')).toHaveText(
+        '25 : 00',
+      );
+      await expect(page.getByRole('button', { name: 'start' })).toBeVisible();
+      await expect(resetBtn).toBeFocused();
+      await expect(resetBtn).toHaveAttribute('aria-disabled', 'true');
+    });
+  });
+
+  test.describe('P-H. 피드백 모달로 피드백을 보낸다', () => {
     test('Enter로 열어 내용과 첨부를 넣고 전송하면 완료가 발화되고 닫으면 포커스가 열기 버튼으로 돌아간다', async ({
       page,
     }) => {

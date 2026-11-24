@@ -2,12 +2,12 @@
 
 ## 서버 구성
 
-서버는 두 대다. staging 서버(zizon-tomato.cloud)는 staging 배포 환경이면서 모니터링 서버를 겸해 Prometheus, Loki, Grafana가 이곳에만 있다. 운영 서버(wannabe-ketchup.com)에는 앱과 nginx, 로그를 보내는 Promtail만 둔다.
+서버는 두 대다. staging 서버(zizon-tomato.cloud)는 staging 배포 환경이면서 모니터링 서버를 겸해 Prometheus, Loki, Grafana가 이곳에만 있다. 운영 서버(wannabe-ketchup.com)에는 앱과 nginx, 로그를 보내는 Promtail, 서버 메트릭을 내보내는 node exporter만 둔다.
 
 | 서버       | 저장소 위치                                                                                              | 컨테이너                                         |
 | ---------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | staging    | 루트의 `app-compose.yml`, `infra-compose.yml`, `nginx/`, `prometheus/`, `loki/`, `promtail/`, `grafana/` | nest, nginx, prometheus, loki, promtail, grafana |
-| production | `production/` 아래 전부                                                                                  | nest, nginx, promtail                            |
+| production | `production/` 아래 전부                                                                                  | nest, nginx, promtail, node-exporter             |
 
 compose 파일은 두 개로 나뉜다. `app-compose.yml`은 Nest 하나이고 GitHub Actions가 배포할 때마다 갱신한다. `infra-compose.yml`은 nginx와 모니터링 구성요소이며 자동 배포에 포함되지 않아 서버에서 직접 반영한다. infra가 `ketchup-network`를 만들고 app이 그 네트워크에 붙으므로 서버를 처음 띄울 때는 infra를 먼저 올린다. 두 파일이 같은 디렉터리에 있어 compose는 둘을 한 프로젝트로 보고, infra를 실행할 때 nest를 "orphan container"라고 경고한다. 이 경고는 무시하며, `--remove-orphans`를 붙이면 nest가 삭제되므로 쓰지 않는다.
 
@@ -18,6 +18,8 @@ staging 브랜치에 push하면 `Deploy Staging` 워크플로가 lint, build, te
 staging을 main에 머지하면 `Deploy Production` 워크플로가 같은 검증을 거친다. 이미지는 새로 빌드하지 않고 staging에서 이미 검증한 이미지를 재사용한다. main의 머지 커밋은 두 번째 부모가 staging의 마지막 커밋이므로, 그 커밋과 머지 커밋의 코드가 완전히 같고 그 SHA의 이미지가 GHCR에 있으면 같은 이미지에 `:<머지 커밋 SHA>`와 `:production` 태그만 더한다. main에 staging에 없는 커밋이 섞여 코드가 다르거나 staging 이미지 빌드가 아직 끝나지 않았다면 main 코드로 새로 빌드한다. 어느 경우든 운영에는 main 코드와 같은 이미지가 올라간다.
 
 이미지에는 환경별 설정이 들어가지 않는다. `SESSION_SECRET`, `AWS_*`, `CDN_DOMAIN`, `FEEDBACK_MAIL_*` 같은 값은 컨테이너가 시작할 때 각 서버의 `.env`에서 읽기 때문에 같은 이미지가 staging과 운영에서 각자의 설정으로 동작한다. 따라서 `.env`가 잘못돼 배포가 실패하면 다시 빌드해도 소용없고, 서버의 `.env`를 고친 뒤 워크플로를 다시 실행해야 한다.
+
+디스코드 방 생성 알림은 `NODE_ENV`가 `production`이고 `.env`에 `DISCORD_WEBHOOK_URL`이 있을 때만 보낸다. 운영 서버 `.env`에 이 값을 넣는다. 세션 쿠키의 `secure`는 `NODE_ENV`가 `dev`가 아니면 켜진다.
 
 배포 단계에서는 `production/app-compose.yml`을 운영 서버 `APP_DIR`에 복사하고 `TAG=<커밋 SHA>`로 이미지를 받아 Nest를 다시 띄운다. 헬스체크가 통과할 때까지 기다린 뒤 서버 안에서 `/health`가 200인지 한 번 더 확인하며, 실패하면 Nest 로그 50줄을 남기고 워크플로를 실패로 끝낸다. 이 경우 web 빌드는 복사하지 않는다. 마지막으로 web 빌드 결과를 `WEB_DIR`에 덮어쓴다.
 
@@ -39,9 +41,31 @@ GitHub Actions를 쓸 수 없는 급한 상황이면 운영 서버에 접속해 
 
 메트릭은 staging Prometheus가 15초마다 가져간다. staging Nest는 도커 네트워크 안에서 `nest:3000/metrics`로, 운영 Nest는 `https://wannabe-ketchup.com/api/metrics`로 수집한다. 운영 nginx는 이 경로를 staging 서버 IP에만 열고 다른 곳에서 오면 403을 돌려준다. 운영 데이터에는 `env="production"`, staging 데이터에는 `env="staging"` 라벨이 붙고, Grafana의 API와 Nest Runtime 대시보드 상단 `환경` 변수로 둘을 고른다.
 
+운영 서버 전체의 메모리·스왑·CPU·디스크는 node exporter 컨테이너가 내보내고, staging Prometheus가 `https://wannabe-ketchup.com/api/node-metrics`로 수집한다(`job="node"`). 이 경로도 운영 nginx가 staging 서버 IP에만 연다. node exporter는 포트를 열지 않고, 서버 파일을 읽기 전용으로 붙여 컨테이너가 아니라 서버 전체 값을 읽는다. 메모리를 아끼려고 필요한 수집기만 켜고 `mem_limit`을 32MB로 둔다. staging 서버는 수집하지 않으므로 Server 대시보드에는 `환경` 변수가 없고 운영 값만 나온다. 스왑 사용량은 한 번 늘면 잘 줄지 않으니, 지금 느려지고 있는지는 스왑 쓰기·읽기로 본다.
+
 로그는 각 서버의 Promtail이 Nest 로그 파일(`logs/*.log`)을 읽어 staging Loki로 보낸다. staging Promtail은 도커 네트워크 안에서 `loki:3100`으로 바로 보내고, 운영 Promtail은 staging nginx를 거친다. staging nginx는 `/loki/api/v1/push` 한 경로만 운영 서버 IP에 열며, Loki의 조회 API는 밖으로 열지 않는다. 메트릭과 같이 운영 로그에는 `env="production"`, staging 로그에는 `env="staging"` 라벨이 붙는다. Promtail은 어디까지 보냈는지 기록해 두므로 재시작해도 이어서 보내고, Loki가 잠시 멈추면 재시도한다. 원본 로그 파일은 각 서버에 30일 동안 남는다. Grafana에서는 Explore에서 Loki를 고르고 `{env="production", job="nest"}`처럼 조회하며, `level`은 라벨로, `traceId`는 `trace_id` structured metadata로 들어 있어 `{env="production"} | trace_id="<값>"`으로 한 요청의 로그를 모아 볼 수 있다. 평소에는 Logs 대시보드에서 레벨별 로그 수와 에러 로그를 보고, 상단 `env` 변수로 환경을 고른 뒤 `레벨`·`traceId`·`검색어` 변수로 전체 로그를 거른다. 로그를 펼쳐 `trace_id`의 "이 요청의 로그 보기"를 누르면 그 요청의 로그만 남는다. 이 링크는 `grafana/provisioning/datasources/datasource.yml`의 Loki `derivedFields`에 정의돼 있어, 대시보드와 함께 이 파일도 서버에 반영해야 한다. nginx 로그는 Loki로 보내지 않는다.
 
 메트릭과 로그는 모두 90일 동안 보관한다. Prometheus는 90일 전이라도 3GB를 넘으면 오래된 데이터부터 지운다. Loki는 용량 기준 삭제가 없으므로 staging 디스크 사용량(`df -h`)을 가끔 확인한다. Grafana는 `https://monitoring.zizon-tomato.cloud`로 접속하며, staging nginx가 같은 서버의 Grafana로 넘긴다. 회원가입은 막혀 있고 `grafana/.env`의 관리자 비밀번호로 로그인한다.
+
+운영 서버 알림은 Grafana가 디스코드 채널 하나로 보낸다. 규칙은 `grafana/provisioning/alerting/`에 파일로 있고, Grafana 화면에서는 고칠 수 없다. 디스코드 webhook 주소는 알면 누구나 채널에 글을 쓸 수 있으므로 저장소에 두지 않고 staging 서버의 `grafana/.env`에 `DISCORD_WEBHOOK_URL`로 넣는다. 이 값이 비어 있으면 Grafana가 알림 설정을 읽지 못해 시작하지 않는다. 로컬에서는 가짜 주소를 넣는다. 로컬 Prometheus는 운영 서버를 수집하지 못해(운영 nginx가 staging IP에만 연다) 서버 응답 없음이 울리므로, 진짜 주소를 넣으면 팀 채널로 간다. 알림 메시지에는 지금 값과 할 일이 함께 온다. 메시지 형식은 `templates.yml`에 있다. 울릴 때는 summary, 할 일, 알림 링크를 보내고, 해결됐을 때는 알림 이름과 울린 시각부터 해결된 시각까지만 보낸다. Grafana 기본 형식은 해결 메시지에도 울릴 때의 summary("느려지는 중입니다" 등)를 그대로 붙여서 바꿨다. 해결 메시지는 Grafana가 최대 5분씩 모아 보내므로 실제로 해결된 때보다 늦게 올 수 있다. 해결 시각은 메시지에 적힌 시각으로 본다.
+
+| 알림                | 조건                                                    | 확인 간격 |
+| ------------------- | ------------------------------------------------------- | --------- |
+| 서버 응답 없음      | `up{job="nest",env="production"}`이 30초 넘게 0         | 10초      |
+| 동시 접속 상한 임박 | SSE 연결 1900 이상 (nginx가 2000부터 거절)              | 10초      |
+| 서버 느려짐         | 이벤트 루프 지연 p99가 1분 넘게 100ms 초과              | 10초      |
+| 증설 준비           | 하루 최대 SSE 연결 1400 이상                            | 1시간     |
+| 스왑 읽기 지속      | 스왑 읽기 2분 평균이 1분 넘게 초당 25페이지(100KB) 초과 | 10초      |
+| OOM 종료            | 최근 5분 안에 메모리 부족으로 강제 종료 1번 이상        | 10초      |
+| node exporter 멈춤  | nest는 수집되는데 node exporter `up`이 2분 넘게 0       | 10초      |
+
+서버가 죽으면 나머지 알림은 값이 없어지는데, 이때는 직전 상태를 유지하고 서버 응답 없음 하나만 울린다. 알림은 조건이 풀리면 해제 메시지와 함께 저절로 꺼지고, 계속 울리는 동안에는 4시간마다 다시 보낸다. 증설 준비는 한 번 넘으면 하루 동안 울린 상태로 남으므로 하루에 한 번만 다시 보낸다. 동시 접속 상한 임박과 증설 준비 기준은 운영 nginx의 SSE 상한 2000에서 정했으므로, 상한을 바꾸면 두 기준도 함께 바꾼다. 운영 서버에서 부하 테스트를 할 때는 미리 Grafana의 Alerting > Silences에서 `env=production`으로 테스트 시간 동안 알림을 끈다.
+
+메모리·스왑 알림 세 개는 `server-rules.yml`에 따로 있다. 스왑 읽기 기준은 2026-11-11 운영 부하 테스트의 2분 평균에서 정했다. 2000명에 1000명이 더 몰려도 최대 58KB/초였고, 3000명에 이벤트 초당 10개일 때는 124에서 164KB/초가 이어지며 p99가 1초에서 2초로 튀었고, 서버가 멈췄을 때는 1000KB/초를 넘었다. node exporter는 페이지 수로 세므로 운영 서버 페이지 크기(4KB)로 나눠 초당 25페이지로 적었다. 스왑 쓰기는 보지 않는다. 쓰기는 안 쓰는 메모리를 디스크로 치우는 것이라 사람이 몰릴 때 정상에서도 튀고, 느려지는 건 필요한 메모리를 다시 읽어 올 때다. 운영 서버의 우분투 자동 업데이트(목록 받기 `apt-daily`, 보안 업데이트 설치 `apt-daily-upgrade`)는 한 번에 메모리를 최대 약 340MB 써서 이 알림을 울릴 수 있다. 2026-11-17 21:15에 처음 울렸는데, 16초짜리 작업이 2분 평균에 약 2분 동안 남아 "1분 넘게"를 넘었다. 우분투 기본값은 하루 중 아무 때나(설치는 한국 시간 오후 3시에서 4시 사이) 돌아서 사용자가 많은 시간에 서버를 느리게 할 수 있다. 그래서 운영 서버에서 두 작업이 한국 시간 새벽 4시에서 5시 사이에만 돌게 했고(아래 운영 서버 처음 설정), 알림의 할 일에 "해결 시각이 새벽 4시에서 5시 15분 사이면 넘어간다"를 적었다. 5시 15분은 설치가 5시 전에 시작하고 2분 평균에 2분쯤 남는 것을 감안한 값이다. 지속 시간을 늘리거나 그 시간에 알림을 끄는 방법은 쓰지 않았다. 테스트에서 경고 구간이 1분 반 이어진 뒤 서버가 멈췄으므로 2분 이상으로 늘리면 멈추기 전에 울리지 못하고, 알림을 끄면 그 시간에 생긴 진짜 문제를 놓친다. OOM 종료는 nest가 몇 초 만에 다시 떠서 서버 응답 없음이 울리지 않을 수 있으므로 따로 알린다. nest가 강제 종료됐다면 진행 중이던 방과 로그인 세션이 초기화된 것이다. 이 값은 컨테이너가 `mem_limit`에 걸려 꺼진 것도 센다. node exporter 멈춤은 그동안 스왑·OOM 알림이 값을 보지 못하므로 알리며, 서버 전체가 죽어 nest도 수집되지 않을 때는 울리지 않는다. 알림 그룹의 확인 간격은 10초의 배수여야 한다. 그렇지 않으면 Grafana가 알림 파일을 읽지 못해 시작하지 않는다.
+
+처음 반영할 때는 `.env`에 값을 먼저 넣고 파일을 복사한다. 알림 파일을 바꾸면 서버에 복사한 뒤 `docker compose -f infra-compose.yml restart grafana`로 다시 읽힌다. `grafana/.env`를 바꿨을 때는 `restart`로는 반영되지 않으므로 `docker compose -f infra-compose.yml up -d --force-recreate grafana`로 컨테이너를 다시 만든다.
+
+node exporter 수집은 두 서버에 나눠 반영하며 운영을 먼저 한다. staging Prometheus가 먼저 수집을 시작하면 운영 nginx에 경로가 없어 수집이 실패하는데 nest는 수집되므로, node exporter 멈춤이 2분 뒤 울린다. 운영을 먼저 올리면 staging이 아직 수집하지 않을 뿐 아무 영향이 없다. 운영 안에서는 순서가 상관없다. nginx는 node-exporter 컨테이너가 없어도 뜬다(이 경로만 502). 운영 서버에는 `production/infra-compose.yml`과 `production/nginx/nginx.conf`를 복사하고 `docker compose -f infra-compose.yml up -d node-exporter`로 띄운 뒤, 위 nginx 반영 순서대로 `nginx -t`와 reload를 한다. staging 서버에는 `prometheus/prometheus.yml`, `grafana/dashboards/server.json`, `grafana/provisioning/alerting/`을 복사하고 `docker compose -f infra-compose.yml restart prometheus grafana`로 다시 읽힌다.
 
 ## 검색 노출과 캐시
 
@@ -72,7 +96,7 @@ nginx 설정은 자동 배포되지 않는다. 설정 파일을 서버에 복사
 
 ## 서버 IP
 
-두 서버는 서로의 공인 IP만 허용한다. IP는 각 서버의 nginx 설정에 직접 적는다. staging의 `nginx/nginx.conf`에는 운영 서버 IP가 Loki 수신 경로의 `allow`로, 운영의 `production/nginx/nginx.conf`에는 staging 서버 IP가 `/api/metrics`의 `allow`로 들어 있다.
+두 서버는 서로의 공인 IP만 허용한다. IP는 각 서버의 nginx 설정에 직접 적는다. staging의 `nginx/nginx.conf`에는 운영 서버 IP가 Loki 수신 경로의 `allow`로, 운영의 `production/nginx/nginx.conf`에는 staging 서버 IP가 `/api/metrics`와 `/api/node-metrics`의 `allow`로 들어 있다.
 
 두 서버 모두 Elastic IP가 아니어서 인스턴스를 중지했다가 시작하면 공인 IP가 바뀐다. 재부팅으로는 바뀌지 않는다. IP가 바뀌면 그 서버 도메인의 DNS A 레코드를 고치고, 상대 서버 nginx 설정의 `allow` IP를 바꿔 커밋한 뒤 그 파일을 상대 서버에 복사하고 `docker exec nginx nginx -s reload`로 반영한다.
 
@@ -84,7 +108,7 @@ nginx 설정은 자동 배포되지 않는다. 설정 파일을 서버에 복사
 
 ### staging 서버
 
-staging 서버의 `/home/ubuntu/wannabe-ketchup`은 git clone이 아니라 필요한 파일만 복사해 둔 디렉터리다. `app-compose.yml`은 워크플로가 복사하고, 나머지 infra 파일은 저장소에서 직접 복사한다. 복사할 것은 `infra-compose.yml`, `nginx/nginx.conf`, `prometheus/`, `loki/`, `promtail/`, `grafana/provisioning/`, `grafana/dashboards/`이다. 저장소에 없는 `grafana/.env`는 서버에서 만들어 `GF_SECURITY_ADMIN_PASSWORD`에 긴 비밀번호를 넣는다. Grafana가 인터넷에 공개되므로 이 비밀번호가 유일한 보호 수단이다.
+staging 서버의 `/home/ubuntu/wannabe-ketchup`은 git clone이 아니라 필요한 파일만 복사해 둔 디렉터리다. `app-compose.yml`은 워크플로가 복사하고, 나머지 infra 파일은 저장소에서 직접 복사한다. 복사할 것은 `infra-compose.yml`, `nginx/nginx.conf`, `prometheus/`, `loki/`, `promtail/`, `grafana/provisioning/`, `grafana/dashboards/`이다. 저장소에 없는 `grafana/.env`는 서버에서 만들어 `GF_SECURITY_ADMIN_PASSWORD`에 긴 비밀번호를, `DISCORD_WEBHOOK_URL`에 알림 채널의 webhook 주소를 넣는다. Grafana가 인터넷에 공개되므로 이 비밀번호가 유일한 보호 수단이다.
 
 파일을 올리기 전에 `monitoring.zizon-tomato.cloud`의 DNS A 레코드를 staging 서버 IP로 추가하고, 기존 인증서에 서브도메인을 더한다. 인증서가 서브도메인을 담고 있지 않으면 새 nginx 설정의 Grafana 블록은 인증서 경고를 낸다.
 
@@ -102,8 +126,23 @@ sudo certbot certonly --standalone --expand \
 
 비밀값은 커밋하지 않는 `.env`에 두고, 루트 `.env.example`의 항목을 운영 값으로 채운다. 피드백 메일용 `FEEDBACK_MAIL_USER`, `FEEDBACK_MAIL_APP_PASSWORD`(Gmail 앱 비밀번호)가 없으면 Nest가 시작하지 못하므로, 피드백 기능이 들어간 버전을 배포하기 전에 운영·staging 서버의 `.env`에 두 값을 먼저 넣는다. nginx의 `/api/feedbacks` 업로드 크기(19m) 설정도 함께 서버에 반영한다.
 
-`docker compose -f infra-compose.yml up -d`로 nginx와 Promtail을 먼저 띄운다. Nest는 main에 머지하면 워크플로가 띄우고, 그 전에 직접 띄우려면 staging에서 검증한 커밋 SHA로 `TAG=<SHA> docker compose -f app-compose.yml up -d --wait`를 실행한다. 운영 `app-compose.yml`은 `TAG`가 없으면 실행을 거부한다.
+`docker compose -f infra-compose.yml up -d`로 nginx, Promtail, node exporter를 먼저 띄운다. Nest는 main에 머지하면 워크플로가 띄우고, 그 전에 직접 띄우려면 staging에서 검증한 커밋 SHA로 `TAG=<SHA> docker compose -f app-compose.yml up -d --wait`를 실행한다. 운영 `app-compose.yml`은 `TAG`가 없으면 실행을 거부한다.
+
+우분투 자동 업데이트가 한국 시간 새벽에만 돌게 타이머를 덮어쓴다. 이유는 위 모니터링 절의 스왑 읽기 알림 설명에 있다. 서버 시간대는 UTC다. 원래 타이머 파일은 그대로 두고 덮어쓰기 파일만 추가하므로, 지우면 기본값으로 돌아간다.
+
+```bash
+sudo mkdir -p /etc/systemd/system/apt-daily.timer.d /etc/systemd/system/apt-daily-upgrade.timer.d
+# 목록 받기: 한국 시간 4시에서 4시 30분 사이 (OnCalendar= 빈 줄은 기본 시각을 지운다)
+printf '[Timer]\nOnCalendar=\nOnCalendar=*-*-* 19:00 UTC\nRandomizedDelaySec=30m\n' | sudo tee /etc/systemd/system/apt-daily.timer.d/override.conf
+# 보안 업데이트 설치: 한국 시간 4시 30분에서 5시 사이, 목록 받기 뒤
+printf '[Timer]\nOnCalendar=\nOnCalendar=*-*-* 19:30 UTC\nRandomizedDelaySec=30m\n' | sudo tee /etc/systemd/system/apt-daily-upgrade.timer.d/override.conf
+sudo systemctl daemon-reload
+sudo systemctl restart apt-daily.timer apt-daily-upgrade.timer
+systemctl list-timers apt-daily.timer apt-daily-upgrade.timer --no-pager
+```
+
+마지막 명령의 NEXT가 각각 19:00에서 19:30 사이, 19:30에서 20:00 사이(UTC)면 적용된 것이다. 목록 받기를 하루 한 번으로 줄여도 설치가 원래 하루 한 번이라 업데이트가 늦어지지 않는다.
 
 ### 적용 확인
 
-staging Grafana에서 `up{env="production"}`이 1인지, Explore의 Loki에서 `{env="production"}`과 `{env="staging"}` 로그가 들어오는지 확인한다. staging 로그가 들어오지 않으면 staging 서버에서 `docker logs promtail`을 확인한다. 운영 로그가 들어오지 않으면 운영 서버에서 `docker logs promtail`을, staging 서버에서 nginx 로그의 403 기록을 확인한다. 403이 보이면 nginx 설정의 `allow` IP가 실제 서버 IP와 다른 것이다.
+staging Grafana에서 `up{env="production"}`이 nest(`job="nest"`)와 node exporter(`job="node"`) 모두 1인지, Server 대시보드의 디스크 남은 용량에 값이 나오는지, Explore의 Loki에서 `{env="production"}`과 `{env="staging"}` 로그가 들어오는지 확인한다. staging 로그가 들어오지 않으면 staging 서버에서 `docker logs promtail`을 확인한다. 운영 로그가 들어오지 않으면 운영 서버에서 `docker logs promtail`을, staging 서버에서 nginx 로그의 403 기록을 확인한다. 403이 보이면 nginx 설정의 `allow` IP가 실제 서버 IP와 다른 것이다.

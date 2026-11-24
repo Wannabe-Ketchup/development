@@ -4,6 +4,7 @@ import { useTomatoDrag } from './hooks/useTomatoDrag';
 import { SofaSection } from './components/SofaSection';
 import { GuideSection } from './components/GuideSection';
 import { TableSection } from './components/TableSection';
+import { IntroBookButton } from './components/IntroBookButton';
 
 function Home() {
   const { tomatoState, tableRef, handlers, cancel } = useTomatoDrag();
@@ -11,7 +12,7 @@ function Home() {
   const scale = useStageScale();
 
   return (
-    <main className="flex h-full w-full items-center justify-center bg-[#FFFDF7]">
+    <main className="relative flex h-full w-full items-center justify-center bg-[#FFFDF7]">
       <div className="flex items-center gap-20">
         <SofaSection tomatoStatus={tomatoState.status} handlers={handlers} />
         <GuideSection tomatoStatus={tomatoState.status} />
@@ -21,6 +22,8 @@ function Home() {
           onCancel={cancel}
         />
       </div>
+
+      <IntroBookButton onOpen={cancel} />
 
       {tomatoState.status === 'dragging' && (
         <div

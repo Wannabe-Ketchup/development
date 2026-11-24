@@ -2,14 +2,17 @@ import { useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import FeedbackSvg from '@/assets/feedback.svg?react';
 import { IconButton } from '@/components/IconButton';
+import { cn } from '@/lib/cn';
 import { FeedbackModal } from './FeedbackModal';
 
 interface FeedbackButtonProps {
   // 모달을 열기 직전에 호출된다. page는 여기서 투어를 닫는다
   onOpen: () => void;
+  // 위치와 다크모드 처리는 놓이는 쪽(page)이 정한다
+  className?: string;
 }
 
-export function FeedbackButton({ onOpen }: FeedbackButtonProps) {
+export function FeedbackButton({ onOpen, className }: FeedbackButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -32,7 +35,7 @@ export function FeedbackButton({ onOpen }: FeedbackButtonProps) {
         icon={FeedbackSvg}
         aria-haspopup="dialog"
         onClick={handleOpen}
-        className="absolute top-9 right-9 z-20"
+        className={cn('flex size-20 items-center justify-center', className)}
       />
       {isOpen && <FeedbackModal onClose={handleClose} />}
     </>
