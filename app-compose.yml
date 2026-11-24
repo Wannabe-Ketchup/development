@@ -9,7 +9,7 @@ services:
     volumes:
       - ./logs:/app/logs
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=staging
       - PORT=3000
     healthcheck:
       test:
