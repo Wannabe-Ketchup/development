@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createRoomSseConnection } from '../../../api/sse';
-import type { Room, SseEventPayload } from '@pomodoro/shared';
+import type { ChatMessage, Room, SseEventPayload } from '@pomodoro/shared';
 
 export interface RoomStateChange {
   // 리셋으로 바뀐 방 상태인지. 리셋은 세션이 바뀌어도 알리지 않는다
@@ -14,6 +14,7 @@ export function useRoomSSE(
   roomId: string | undefined,
   isEntered: boolean,
   onRoomState: (room: Room, change: RoomStateChange) => void,
+  onChatMessages: (messages: ChatMessage[]) => void,
 ) {
   const [status, setStatus] = useState<SSEStatus>('connecting');
 
@@ -34,6 +35,12 @@ export function useRoomSSE(
           case 'pomodoro_reset':
             onRoomState(event.data, { isReset: true });
             break;
+          case 'chat_message':
+            onChatMessages([event.data]);
+            break;
+          case 'chat_history':
+            onChatMessages(event.data.messages);
+            break;
           default:
             break;
         }
@@ -46,7 +53,7 @@ export function useRoomSSE(
     return () => {
       connection.close();
     };
-  }, [roomId, isEntered, onRoomState]);
+  }, [roomId, isEntered, onRoomState, onChatMessages]);
 
   return { status };
 }

@@ -5,6 +5,7 @@ import ShelfSvg from '@/assets/shelf.svg?react';
 import { LPPlayer } from './components/LPPlayer';
 import { RoomBackground } from './components/RoomBackground';
 import { useTheme } from './hooks/useTheme';
+import { useChatMessages } from './hooks/useChatMessages';
 import { useRoomSSE, type RoomStateChange } from './hooks/useRoomSSE';
 import { useSessionChangeAlarm } from './hooks/useSessionChangeAlarm';
 import { useNotificationPermission } from './hooks/useNotificationPermission';
@@ -81,10 +82,13 @@ function Pomodoro() {
     [],
   );
 
+  const { addChatMessages } = useChatMessages();
+
   const { status: sseStatus } = useRoomSSE(
     roomId ?? undefined,
     selfParticipantId !== null,
     handleRoomState,
+    addChatMessages,
   );
 
   useSessionChangeAlarm(room?.mode, room?.currentCycle, isLastChangeReset);
