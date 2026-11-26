@@ -161,7 +161,24 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
                 placeholder="초대 코드를 입력하세요"
                 value={inviteCode}
                 onChange={(event) => {
-                  setInviteCode(event.target.value);
+                  const input = event.currentTarget;
+                  const value = input.value;
+                  const uppercaseValue = value.replace(/[a-z]/g, (letter) =>
+                    letter.toUpperCase(),
+                  );
+
+                  if (uppercaseValue !== value) {
+                    const { selectionStart, selectionEnd, selectionDirection } =
+                      input;
+                    input.value = uppercaseValue;
+                    input.setSelectionRange(
+                      selectionStart,
+                      selectionEnd,
+                      selectionDirection ?? 'none',
+                    );
+                  }
+
+                  setInviteCode(uppercaseValue);
                   setError(null);
                 }}
                 onKeyDown={(event) => {
