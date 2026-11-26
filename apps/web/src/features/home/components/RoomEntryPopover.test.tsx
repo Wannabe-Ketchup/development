@@ -79,16 +79,20 @@ describe('RoomEntryPopover', () => {
     expect(mockShake).toHaveBeenCalledTimes(expectedShakeCount);
   });
 
-  it('초대 코드로 입장하면 입장 응답의 방 ID로 이동한다', async () => {
+  it('소문자가 섞인 초대 코드를 대문자로 표시하고 공백을 제거한 코드로 방에 입장한다', async () => {
     // given
     mockEnterRoomByInviteCode.mockResolvedValue({
       participant: { id: 'p-1', nickname: '졸린토마토' },
       room: { roomId: 'room-1' },
     });
     openInviteCodeInput();
+    const input =
+      screen.getByPlaceholderText<HTMLInputElement>('초대 코드를 입력하세요');
 
     // when
-    enterWithCode('K7P2QX');
+    fireEvent.change(input, { target: { value: ' k7P2qX ' } });
+    expect(input.value).toBe(' K7P2QX ');
+    fireEvent.click(screen.getByRole('button', { name: '입장하기' }));
 
     // then
     expect(mockEnterRoomByInviteCode).toHaveBeenCalledWith('K7P2QX');
@@ -196,7 +200,7 @@ describe('RoomEntryPopover', () => {
     // given
     openInviteCodeInput();
     fireEvent.change(screen.getByPlaceholderText('초대 코드를 입력하세요'), {
-      target: { value: 'room-1' },
+      target: { value: 'k7p2qx' },
     });
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }));
 
@@ -206,7 +210,7 @@ describe('RoomEntryPopover', () => {
     );
 
     // then
-    const expectedCode = 'room-1';
+    const expectedCode = 'K7P2QX';
     expect(screen.getByDisplayValue(expectedCode)).toBeTruthy();
   });
 
