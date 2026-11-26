@@ -82,7 +82,10 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   it('최초로 확정된 참가자의 스트림을 요청하면 방 전체에 최신 상태가 즉시 브로드캐스트된다', () => {
     // given
-    connectParticipant.mockReturnValue(true);
+    connectParticipant.mockReturnValue({
+      connectionId: 1,
+      isFirstConnection: true,
+    });
     subscribe.mockReturnValue(NEVER);
 
     // when
@@ -94,7 +97,10 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   it('최초로 확정된 참가자 본인도 자신의 스트림에서 최신 상태를 받는다', async () => {
     // given
-    connectParticipant.mockReturnValue(true);
+    connectParticipant.mockReturnValue({
+      connectionId: 1,
+      isFirstConnection: true,
+    });
     subscribe.mockReturnValue(NEVER);
     const personalMessageEvent = {
       type: 'room_state',
@@ -113,7 +119,10 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   it('재연결/재사용된 참가자는 방송을 트리거하지 않는다', () => {
     // given
-    connectParticipant.mockReturnValue(false);
+    connectParticipant.mockReturnValue({
+      connectionId: 1,
+      isFirstConnection: false,
+    });
     subscribe.mockReturnValue(NEVER);
     createOwnSnapshotEvent.mockReturnValue({
       type: 'room_state',
@@ -129,7 +138,10 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   it('재연결/재사용된 참가자는 개인 전용 스냅샷만 받고, 방 전체에 브로드캐스트되지 않는다', async () => {
     // given
-    connectParticipant.mockReturnValue(false);
+    connectParticipant.mockReturnValue({
+      connectionId: 1,
+      isFirstConnection: false,
+    });
     subscribe.mockReturnValue(NEVER);
     const personalMessageEvent = {
       type: 'room_state',
@@ -149,7 +161,10 @@ describe('RoomEventStreamService.streamEvents', () => {
 
   it('재연결/재사용된 참가자도 그 이후 방에서 발생하는 브로드캐스트는 계속 수신한다', () => {
     // given
-    connectParticipant.mockReturnValue(false);
+    connectParticipant.mockReturnValue({
+      connectionId: 1,
+      isFirstConnection: false,
+    });
     createOwnSnapshotEvent.mockReturnValue({
       type: 'room_state',
       data: roomSnapshot,

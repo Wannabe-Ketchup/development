@@ -121,7 +121,9 @@ describe('EnterRoomService', () => {
 
       // when: 입장하고 연결을 유지한다
       moduleRef.get(EnterRoomService).joinRoom(roomId, participantId);
-      moduleRef.get(RoomPresenceTracker).connectParticipant(participantId);
+      moduleRef
+        .get(RoomPresenceTracker)
+        .connectParticipant(roomId, participantId);
 
       // then: 예약된 타이머가 하나도 남지 않고, 30분이 지나도 방이 남는다
       expect(jest.getTimerCount()).toBe(0);
