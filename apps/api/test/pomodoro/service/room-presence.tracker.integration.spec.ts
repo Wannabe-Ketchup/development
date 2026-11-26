@@ -4,6 +4,8 @@ import { InMemoryTimerScheduler } from '../../../src/pomodoro/scheduler/in-memor
 import type { Room as RoomState } from '@pomodoro/shared';
 import { LeaveRoomService } from '../../../src/pomodoro/service/leave-room.service';
 import { RoomPresenceTracker } from '../../../src/pomodoro/service/room-presence.tracker';
+import { Registry } from 'prom-client';
+import { MetricsService } from '../../../src/metrics/metrics.service';
 import { SseService } from '../../../src/pomodoro/service/sse.service';
 import { InMemoryRoomRepository } from '../../../src/pomodoro/repository/in-memory.room.repository';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
@@ -22,7 +24,7 @@ describe('RoomPresenceTracker', () => {
       const ghostId = 'A';
       const joinedAt = '2026-09-02T00:00:00.000Z';
       const roomRepository = new InMemoryRoomRepository();
-      const sseService = new SseService();
+      const sseService = new SseService(new MetricsService(new Registry()));
       const tracker = new RoomPresenceTracker(
         new LeaveRoomService(
           roomRepository,
