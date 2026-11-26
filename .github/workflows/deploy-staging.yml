@@ -88,8 +88,9 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          source: app-compose.yml
+          source: staging/app-compose.yml
           target: ${{ secrets.APP_DIR }}
+          strip_components: 1
 
       - name: Pull image and restart on host
         uses: appleboy/ssh-action@v1
