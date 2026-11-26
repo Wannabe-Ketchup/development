@@ -81,10 +81,10 @@ export function ChatPanel({
       <section
         aria-labelledby={titleId}
         onKeyDown={handleKeyDown}
-        className="flex h-105 w-85 flex-col rounded-[20px] bg-cream px-4 pt-3 pb-3.5"
+        className="flex h-105 w-85 flex-col rounded-[20px] bg-cream px-4 pt-3 pb-3.5 font-(family-name:--font-ongleipryudung) tracking-[5%] [-webkit-text-stroke:0.5px_currentColor]"
       >
         <div className="flex items-center justify-between pb-1.5">
-          <h2 id={titleId} className="text-2xl leading-[normal]">
+          <h2 id={titleId} className="text-[22px] leading-[normal]">
             채팅
           </h2>
           <IconButton
@@ -118,10 +118,7 @@ export function ChatPanel({
           </ul>
         </div>
         {sendState.status === 'failed' && (
-          <p
-            role="alert"
-            className="pt-1.5 text-[13px] leading-none text-error"
-          >
+          <p role="alert" className="pt-1.5 text-sm leading-none text-error">
             {FAILURE_MESSAGE[sendState.reason]}
           </p>
         )}
