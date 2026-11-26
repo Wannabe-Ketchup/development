@@ -55,6 +55,14 @@ export class RoomPresenceTracker implements OnModuleDestroy {
     }
   }
 
+  // 다른 방에 입장한 참여자를 유예 없이 이 방에서 퇴장시킨다
+  leaveImmediately(roomId: string, participantId: string): void {
+    const key = TimerKey.presence(roomId, participantId);
+    this.cancelGraceTimer(key);
+    this.connectionIds.delete(key);
+    this.leaveRoomService.leaveRoom(roomId, participantId);
+  }
+
   onModuleDestroy(): void {
     this.graceTimers.forEach((timer) => clearTimeout(timer));
     this.graceTimers.clear();

@@ -72,11 +72,17 @@ describe('EnterRoomService.joinRoom', () => {
     } as unknown as RoomQueryService;
 
     save = jest.fn();
-    roomRepository = { save, findById: jest.fn(), delete: jest.fn() };
+    roomRepository = {
+      save,
+      findById: jest.fn(),
+      findByParticipantId: jest.fn(),
+      delete: jest.fn(),
+    };
 
     registerPendingParticipant = jest.fn();
     roomPresenceTracker = {
       registerPendingParticipant,
+      leaveImmediately: jest.fn(),
     } as unknown as RoomPresenceTracker;
 
     service = new EnterRoomService(

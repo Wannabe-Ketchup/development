@@ -157,5 +157,26 @@ describe('RoomPresenceTracker', () => {
       // then
       expect(connection.isFirstConnection).toBe(true);
     });
+
+    it('바로 퇴장시킨 방의 옛 연결이 늦게 끊겨도, 그 방에 다시 들어와 연결한 참여자는 10초 뒤에도 남아 있다', () => {
+      // given: 옛 연결 기록을 지운 뒤 같은 방에 다시 들어와 새로 연결한 상태
+      jest.useFakeTimers();
+      const roomRepository = new InMemoryRoomRepository();
+      roomRepository.save(restoreRoom('room-a', ['P', 'Q']));
+      const tracker = createTracker(roomRepository);
+      const oldConnection = tracker.connectParticipant('room-a', 'P');
+      tracker.leaveImmediately('room-a', 'P');
+      roomRepository.save(restoreRoom('room-a', ['P', 'Q']));
+      tracker.connectParticipant('room-a', 'P');
+
+      // when
+      tracker.disconnectParticipant('room-a', 'P', oldConnection.connectionId);
+      jest.advanceTimersByTime(GRACE_PERIOD_MS);
+
+      // then
+      expect(roomRepository.findById('room-a')?.participants.has('P')).toBe(
+        true,
+      );
+    });
   });
 });
