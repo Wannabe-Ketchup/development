@@ -244,6 +244,122 @@
         },
         "overrides": []
       }
+    },
+    {
+      "id": 7,
+      "type": "row",
+      "title": "채팅",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "채팅 전송 수 (분당)",
+      "description": "1분 동안 성공(201)한 채팅 전송 요청 수. 응답을 못 받아 다시 보낸 요청도 성공으로 세므로 저장된 메시지 수보다 조금 많을 수 있다",
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(http_requests_total{job=\"nest\",env=\"$env\",method=\"POST\",route=\"/pomodoro/room/:roomId/chat-message\",status_code=\"201\"}[$__rate_interval])) * 60",
+          "legendFormat": "전송"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "채팅 전송 p95",
+      "description": "성공(201)한 채팅 전송 요청의 95%가 이 시간 안에 응답했다. 같은 방 연결에 메시지를 넘기는 일까지 요청 안에서 하므로 그 시간도 들어간다. 받는 사람 화면에 보일 때까지의 시간은 아니다. 전송이 적으면 한두 건에 크게 흔들리고, 없으면 비어 있다. 버킷 경계 사이 값은 보간된 추정치",
+      "gridPos": {
+        "x": 8,
+        "y": 25,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job=\"nest\",env=\"$env\",method=\"POST\",route=\"/pomodoro/room/:roomId/chat-message\",status_code=\"201\"}[$__rate_interval])))",
+          "legendFormat": "p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "채팅 전송 실패 비율",
+      "description": "채팅 전송 요청 중 실패한 비율을 status별로 나눈다. 429는 10초에 10건 제한, 404는 없는 방이거나 방에 없는 참여자, 400은 잘못된 요청 본문이다. 서버까지 오지 못한 실패(네트워크 끊김, 화면의 10초 시간 초과)는 포함되지 않는다. 요청이 없으면 비어 있다",
+      "gridPos": {
+        "x": 16,
+        "y": 25,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (status_code) (rate(http_requests_total{job=\"nest\",env=\"$env\",method=\"POST\",route=\"/pomodoro/room/:roomId/chat-message\",status_code!=\"201\"}[$__rate_interval])) / ignoring(status_code) group_left sum(rate(http_requests_total{job=\"nest\",env=\"$env\",method=\"POST\",route=\"/pomodoro/room/:roomId/chat-message\"}[$__rate_interval]))",
+          "legendFormat": "{{status_code}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      }
     }
   ]
 }
