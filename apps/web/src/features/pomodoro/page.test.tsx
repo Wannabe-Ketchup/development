@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { ROOM_MODE } from '@pomodoro/shared';
 import type { Room } from '@pomodoro/shared';
 import Pomodoro from './page';
@@ -162,6 +162,77 @@ describe('Pomodoro 페이지', () => {
     await waitFor(() => {
       expect(screen.getByTestId('sse-error')).toBeTruthy();
     });
+  });
+
+  it('방 상태의 참가자 목록에서 내가 빠지면 다른 방에 입장해서 이 방에서 퇴장되었다는 안내가 보이고 실시간 연결을 끊는다', async () => {
+    // given
+    mockEnterRoom.mockResolvedValue({ participant: selfParticipant, room });
+    let emitRoomState: (
+      nextRoom: Room,
+      change: { isReset: boolean },
+    ) => void = () => {};
+    mockUseRoomSSE.mockImplementation(
+      (
+        _roomId: string,
+        _isEntered: boolean,
+        onRoomState: (nextRoom: Room, change: { isReset: boolean }) => void,
+      ) => {
+        emitRoomState = onRoomState;
+        return { status: 'connected' };
+      },
+    );
+    render(<Pomodoro />);
+    await waitFor(() => screen.getByText(selfParticipant.nickname));
+
+    // when
+    act(() => {
+      emitRoomState(
+        { ...room, participants: [existingParticipant] },
+        { isReset: false },
+      );
+    });
+
+    // then
+    await waitFor(() => {
+      expect(screen.getByTestId('moved-room-notice')).toBeTruthy();
+    });
+    const lastCallArgs = mockUseRoomSSE.mock.calls.at(-1);
+    expect(lastCallArgs?.[1]).toBe(false);
+  });
+
+  it('퇴장 안내가 보이면 실시간 연결 실패 안내는 보이지 않는다', async () => {
+    // given
+    mockEnterRoom.mockResolvedValue({ participant: selfParticipant, room });
+    let emitRoomState: (
+      nextRoom: Room,
+      change: { isReset: boolean },
+    ) => void = () => {};
+    mockUseRoomSSE.mockImplementation(
+      (
+        _roomId: string,
+        _isEntered: boolean,
+        onRoomState: (nextRoom: Room, change: { isReset: boolean }) => void,
+      ) => {
+        emitRoomState = onRoomState;
+        return { status: 'error' };
+      },
+    );
+    render(<Pomodoro />);
+    await waitFor(() => screen.getByTestId('sse-error'));
+
+    // when
+    act(() => {
+      emitRoomState(
+        { ...room, participants: [existingParticipant] },
+        { isReset: false },
+      );
+    });
+
+    // then
+    await waitFor(() => {
+      expect(screen.getByTestId('moved-room-notice')).toBeTruthy();
+    });
+    expect(screen.queryByTestId('sse-error')).toBeNull();
   });
 
   it("휴식 중인 방에 입장하면 참여자의 상태 메시지 자리에 '휴식 중…'이 보인다", async () => {
