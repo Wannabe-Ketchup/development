@@ -90,6 +90,28 @@ nginx 설정은 자동 배포되지 않는다. 설정 파일을 서버에 복사
 
 방 링크가 검색에서 빠지는지는 브라우저 개발자 도구에서 `/pomodoro/<아무 값>`을 열고 `<head>`에 `<meta name="robots" content="noindex">`가 있는지로 확인한다. 공유 카드는 운영 배포 후 카카오 공유 디버거와 X·슬랙에 링크를 붙여 확인한다.
 
+## 개인정보처리방침
+
+처리방침은 web 빌드에 `public/privacy.html`로 함께 배포된다(`docs/domain/privacy.md`). `try_files $uri`가 파일을 먼저 잡고 `no-cache`라 배포하면 바로 반영된다. 파일이 빠지면 SPA fallback이 홈을 200으로 돌려줘서 모를 수 있으므로 배포 후 본문이 나오는지 확인한다.
+
+```bash
+curl -s https://wannabe-ketchup.com/privacy.html | grep "개인정보처리방침"
+curl -s https://wannabe-ketchup.com/privacy.html | grep -c "{{"   # 0이어야 한다(채우지 않은 자리 없음)
+```
+
+Google 인증 플랫폼의 브랜딩에는 홈페이지 `https://wannabe-ketchup.com`, 개인정보처리방침 `https://wannabe-ketchup.com/privacy.html`을 넣는다. staging은 `noindex`라 넣지 않는다.
+
+nginx 접근 로그(`APP_DIR/nginx/logs`)는 처리방침의 보관 기간에 맞춰 90일만 남긴다. logrotate는 호스트에서 돌고 nginx는 컨테이너라, 파일을 나눈 뒤 `docker kill --signal=USR1 nginx`로 로그 파일을 다시 열게 한다(서비스 중단 없음). 운영·staging 서버 모두 `production/logrotate/nginx`의 `APP_DIR`을 서버의 실제 경로로 바꿔 `/etc/logrotate.d/nginx-app`에 두고 시험한다.
+
+```bash
+sudo logrotate -d /etc/logrotate.d/nginx-app   # 설정만 점검(파일은 건드리지 않음)
+sudo logrotate -f /etc/logrotate.d/nginx-app   # 실제로 한 번 나눠 본다
+ls -l APP_DIR/nginx/logs                        # access.log-<날짜> 가 생기고 새 access.log 가 있어야 한다
+curl -s -o /dev/null https://<도메인>/ && tail -n 1 APP_DIR/nginx/logs/access.log   # 새 파일에 방금 요청이 써져야 한다
+```
+
+처음 적용할 때 그동안 쌓인 기록은 첫 로테이트 파일(`access.log-<날짜>`) 하나로 묶인다. logrotate는 이 파일을 만든 날로부터 90일 동안 남기므로, 그 안의 오래된 줄은 90일을 넘겨 남는다. 그래서 첫 파일의 맨 앞 줄(`head -n 1`) 날짜가 90일이 되기 전에 이 파일을 직접 지운다(`sudo rm`). `error.log`도 같다.
+
 ## 인증서
 
 두 서버 모두 certbot `--standalone`으로 Let's Encrypt 인증서를 받는다. staging 인증서 하나(`/etc/letsencrypt/live/zizon-tomato.cloud/`)에 `zizon-tomato.cloud`와 `monitoring.zizon-tomato.cloud`가 함께 들어 있다. standalone 방식은 발급·갱신 때 certbot이 80번 포트를 직접 열어야 하는데, 평소에는 nginx 컨테이너가 80번을 쓰고 있다. 그래서 발급할 때 `--pre-hook "docker stop nginx" --post-hook "docker start nginx"`를 함께 넘겨 renewal 설정에 저장해 두고, 자동 갱신 때도 nginx를 잠깐 내렸다가 올리게 한다. 갱신 중 몇 초 동안 사이트가 끊긴다. 훅이 저장됐는지는 `/etc/letsencrypt/renewal/<도메인>.conf`의 `pre_hook`, `post_hook` 줄로 확인하고, `sudo certbot renew --dry-run`으로 갱신을 미리 시험한다.
