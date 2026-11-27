@@ -36,7 +36,8 @@ export function ResetPomodoroButton({
         icon={ResetSvg}
         aria-disabled={!isResettable || isResetting}
         onClick={handleClick}
-        className="relative flex size-14 items-center justify-center text-black"
+        // 알약과 같은 지름 48
+        className="relative flex size-12 items-center justify-center text-black"
       />
     </SquigglePill>
   );

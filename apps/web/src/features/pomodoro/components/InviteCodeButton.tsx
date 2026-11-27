@@ -42,7 +42,10 @@ export function InviteCodeButton({
         icon={ShareSvg}
         aria-haspopup="dialog"
         onClick={handleOpen}
-        className={cn('flex size-20 items-center justify-center', className)}
+        className={cn(
+          'flex size-18 items-center justify-center [&_svg]:size-18',
+          className,
+        )}
       />
       {isOpen && <InviteCodeModal roomId={roomId} onClose={handleClose} />}
     </>

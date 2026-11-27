@@ -49,6 +49,35 @@ describe('ParticipantStatusMessage', () => {
     expect(screen.queryByText(message)).toBeNull();
   });
 
+  it('폰에서는 비어 있을 때의 안내 문구를 한 줄로, 넓은 화면에서는 두 줄로 보여 준다', () => {
+    // when
+    const { unmount } = render(
+      <ParticipantStatusMessage
+        roomId="room-1"
+        message=""
+        isSelf
+        isBreak={false}
+        hasOneLinePlaceholder
+      />,
+    );
+
+    // then
+    expect(screen.getByText('지금 무엇을 하고있나요?')).toBeTruthy();
+    unmount();
+
+    // when
+    renderStatusMessage({ message: '' });
+
+    // then
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.textContent === '지금 무엇을\n하고있나요?' &&
+          element.children.length === 0,
+      ),
+    ).toBeTruthy();
+  });
+
   it('휴식이 끝나면 원래 상태 메시지를 다시 보여 주고, 휴식 중에 바뀐 메시지가 있으면 바뀐 메시지를 보여 준다', () => {
     // given
     const { rerender } = renderStatusMessage({

@@ -5,6 +5,10 @@ import { IconButton } from '@/components/IconButton';
 import { cn } from '@/lib/cn';
 import { useNicknameEditor } from '../hooks/useNicknameEditor';
 
+// 좁은 화면(compact-safe-area 안)에서는 누르는 영역만 48px로 넓힌다. 모양과 배치는 그대로다
+const COMPACT_TOUCH_CLASS_NAME =
+  'in-[.compact-safe-area]:-m-4 in-[.compact-safe-area]:p-4';
+
 interface ParticipantNicknameProps {
   roomId: string;
   nickname: string;
@@ -53,7 +57,7 @@ export function ParticipantNickname({
       >
         {draft === null ? (
           <>
-            <span className="text-2xl leading-[normal] whitespace-pre">
+            <span className="text-title leading-[normal] whitespace-pre in-[.compact-safe-area]:text-title-sm">
               {displayedNickname}
             </span>
             <IconButton
@@ -61,7 +65,7 @@ export function ParticipantNickname({
               icon={EditSvg}
               iconClassName="size-4"
               onClick={startEditing}
-              className="-m-2 p-2"
+              className={cn('-m-2 p-2', COMPACT_TOUCH_CLASS_NAME)}
             />
           </>
         ) : (
@@ -73,7 +77,7 @@ export function ParticipantNickname({
               onChange={(event) => changeDraft(event.target.value)}
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}
-              className="field-sizing-content min-w-0 bg-transparent text-2xl leading-[normal] outline-none"
+              className="field-sizing-content min-w-0 bg-transparent text-title leading-[normal] outline-none in-[.compact-safe-area]:text-title-sm"
             />
             <IconButton
               label="닉네임 확인"
@@ -81,7 +85,7 @@ export function ParticipantNickname({
               iconClassName="size-4"
               onMouseDown={(event) => event.preventDefault()}
               onClick={confirmEditing}
-              className="-m-2 p-2"
+              className={cn('-m-2 p-2', COMPACT_TOUCH_CLASS_NAME)}
             />
           </>
         )}
@@ -89,7 +93,7 @@ export function ParticipantNickname({
       {error && (
         <p
           role="alert"
-          className="absolute top-full left-1/2 -translate-x-1/2 text-xs whitespace-nowrap text-error"
+          className="absolute top-full left-1/2 -translate-x-1/2 text-caption whitespace-nowrap text-error"
         >
           {error}
         </p>

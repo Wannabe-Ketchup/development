@@ -137,15 +137,16 @@ textarea {
   }
 }
 
+/* 음표·김은 그림 크기가 화면마다 달라, 그림 너비 기준(%)으로 칸을 넘긴다 */
 @keyframes note-slide {
   to {
-    transform: translateX(-384px);
+    transform: translateX(-100%);
   }
 }
 
 @keyframes steam-slide {
   to {
-    transform: translateX(-280px);
+    transform: translateX(-100%);
   }
 }
 
