@@ -58,17 +58,17 @@ export function TimerSettingsModal({
   return (
     <Modal labelledBy={titleId} onClose={onClose} className="w-125 gap-4">
       <div className="flex w-full items-center justify-between">
-        <h2 id={titleId} className="text-2xl leading-[normal]">
+        <h2 id={titleId} className="text-title leading-[normal]">
           시간 설정
         </h2>
         <IconButton
           label="닫기"
           icon={CloseSvg}
           onClick={onClose}
-          className="flex size-6 items-center justify-center"
+          className="flex size-6 items-center justify-center in-[.compact-safe-area]:-m-3 in-[.compact-safe-area]:size-12"
         />
       </div>
-      <p className="text-base leading-[normal] text-gray">
+      <p className="text-body-sm leading-[normal] text-gray">
         {isEditable ? DURATION_RANGE_DESCRIPTION : LOCKED_DESCRIPTION}
       </p>
       <DurationStepper
@@ -90,7 +90,7 @@ export function TimerSettingsModal({
         onIncrease={() => step('break', 'increase')}
       />
       {errorMessage && (
-        <p role="alert" className="text-base leading-[normal] text-error">
+        <p role="alert" className="text-body-sm leading-[normal] text-error">
           {errorMessage}
         </p>
       )}
@@ -101,7 +101,7 @@ export function TimerSettingsModal({
           onClick={() => {
             if (!isSaveDisabled) void handleSave();
           }}
-          className="flex h-15 w-full items-center justify-center rounded-[30px] bg-tomato-body-4 text-2xl text-white aria-disabled:cursor-default aria-disabled:opacity-50"
+          className="flex h-15 w-full items-center justify-center rounded-[30px] bg-tomato-body-4 text-title text-white aria-disabled:cursor-default aria-disabled:opacity-50"
         >
           저장하기
         </button>
