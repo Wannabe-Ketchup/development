@@ -35,6 +35,9 @@
   --color-lamp-on: #ffed92;
   --color-lamp-off: #ffffff;
   --color-error: #f36673;
+  /* 방 배경 이미지(wall·floor)의 평균 색. 이미지 밖 브라우저 영역을 칠할 때 쓴다 */
+  --color-room-wall: #f8efe2;
+  --color-room-floor: #e1b98e;
 
   --font-dearfromsol: 'DearFromsol', 'OngleipRyudung';
   --font-ongleipryudung: 'OngleipRyudung';
@@ -114,6 +117,38 @@ body {
   @apply cursor-default font-dearfromsol tracking-[10%] text-black select-none;
 }
 
+/* 방 화면에서 페이지 밖(당겨서 늘어나는 곳 등)을 위는 벽, 아래는 바닥 색으로 칠한다.
+   iOS 26 Safari는 상단 상태 표시줄을 페이지 배경색으로 칠하므로 배경색은 벽 색으로 둔다(그라데이션은 읽지 않는다).
+   모달·사용 안내가 열리면 화면을 덮는 막과 같은 비율로 어둡게 섞는다. Safari는 반투명한 막을 상태 표시줄·주소창에 쓰지 않아서다.
+   비율은 모달 막(bg-black/30, Modal·ChatSheet)과 사용 안내 막(CoachMarkSpotlight 0.6)과 맞춘다 */
+html:has([data-room-page]) {
+  --room-edge-dim: 0%;
+  --room-edge-wall: color-mix(
+    in srgb,
+    var(--color-room-wall),
+    black var(--room-edge-dim)
+  );
+  --room-edge-floor: color-mix(
+    in srgb,
+    var(--color-room-floor),
+    black var(--room-edge-dim)
+  );
+  background-color: var(--room-edge-wall);
+  background-image: linear-gradient(
+    to bottom,
+    var(--room-edge-wall) 50%,
+    var(--room-edge-floor) 50%
+  );
+}
+
+html:has([data-room-page]):has(dialog:modal) {
+  --room-edge-dim: 30%;
+}
+
+html:has([data-room-page]):has(#coach-mark-tour) {
+  --room-edge-dim: 60%;
+}
+
 button,
 a {
   @apply cursor-pointer;
@@ -188,4 +223,13 @@ textarea {
   .animate-shake {
     animation: none;
   }
+}
+
+/* 폰 Safari가 상태 표시줄·주소창 뒤를 칠할 때 쓰는 화면 위·아래 끝 띠의 색. 모달이 열리면 함께 어두워진다 */
+@utility room-edge-top {
+  background-color: var(--room-edge-wall);
+}
+
+@utility room-edge-bottom {
+  background-color: var(--room-edge-floor);
 }
