@@ -12,23 +12,23 @@ export interface IntroBookFace {
 }
 
 // 본문 글꼴(그리운 프롬솔)에 없는 글자("챱")가 있어 제목은 류뚱체로 쓴다
-const H2_CLASS_NAME = 'mb-4.5 text-[32px] font-normal font-ongleipryudung';
-const P_CLASS_NAME = 'mb-3.5 text-[19px] leading-[1.75] break-keep';
+const H2_CLASS_NAME = 'mb-4.5 text-book-title font-normal font-ongleipryudung';
+const P_CLASS_NAME = 'mb-3.5 text-book-body leading-[1.75] break-keep';
 const HIGHLIGHT_CLASS_NAME =
   'bg-[linear-gradient(transparent_58%,rgba(243,102,115,0.35)_58%)] px-0.5';
 const CENTER_CLASS_NAME =
   'flex h-full flex-col items-center justify-center text-center';
 const FAQ_LIST_CLASS_NAME = 'm-0';
 const FAQ_QUESTION_CLASS_NAME =
-  "mb-2 text-xl before:text-tomato-body-4 before:content-['Q._']";
+  "mb-2 text-body-lg before:text-tomato-body-4 before:content-['Q._']";
 const FAQ_ANSWER_CLASS_NAME =
-  'mb-7 ml-0 text-lg leading-[1.65] break-keep text-[#4a4743]';
+  'mb-7 ml-0 text-body leading-[1.65] break-keep text-[#4a4743]';
 const STEP_ITEM_CLASS_NAME = 'mb-6.5 flex gap-4';
 // list-none 목록은 Safari VoiceOver가 목록으로 읽지 않아 ul·ol에 role="list"를 함께 둔다
 const FEATURE_LIST_CLASS_NAME = 'm-0 mb-3 list-none p-0';
 const FEATURE_ITEM_CLASS_NAME =
-  "relative mb-2 pl-4 text-[17px] leading-[1.6] break-keep before:absolute before:top-[0.7em] before:left-0.5 before:size-1.5 before:rounded-full before:bg-tomato-body-4 before:content-['']";
-const TOC_ITEM_CLASS_NAME = 'mb-4.5 flex items-baseline gap-2.5 text-[21px]';
+  "relative mb-2 pl-4 text-book-list leading-[1.6] break-keep before:absolute before:top-[0.7em] before:left-0.5 before:size-1.5 before:rounded-full before:bg-tomato-body-4 before:content-['']";
+const TOC_ITEM_CLASS_NAME = 'mb-4.5 flex items-baseline gap-2.5 text-book-toc';
 const TOC_DOTS_CLASS_NAME =
   '-translate-y-1.25 flex-1 border-b-2 border-dotted border-gray';
 
@@ -55,7 +55,7 @@ function StepNumber({ number }: StepNumberProps) {
   return (
     <span
       aria-hidden="true"
-      className="relative grid size-10 flex-none place-items-center text-xl"
+      className="relative grid size-10 flex-none place-items-center text-body-lg"
     >
       <svg
         className="absolute inset-0 h-full w-full overflow-visible"

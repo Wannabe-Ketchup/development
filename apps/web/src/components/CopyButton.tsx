@@ -49,7 +49,7 @@ export function CopyButton({
           onClick={() => {
             if (text !== null) void copy(text);
           }}
-          className="flex h-15 w-full items-center justify-center rounded-full bg-tomato-body-4 text-2xl text-white disabled:cursor-default disabled:opacity-50"
+          className="flex h-15 w-full items-center justify-center rounded-full bg-tomato-body-4 text-title text-white disabled:cursor-default disabled:opacity-50"
         >
           {buttonLabel}
         </button>

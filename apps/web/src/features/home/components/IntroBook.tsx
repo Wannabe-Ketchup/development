@@ -309,7 +309,7 @@ function IntroBookFace({ page, spread, isFlipping }: IntroBookFaceProps) {
         <span
           aria-hidden="true"
           className={cn(
-            'absolute bottom-4.5 text-[15px] text-[#6b6863]',
+            'absolute bottom-4.5 text-book-caption text-[#6b6863]',
             isBack ? 'left-7.5' : 'right-7.5',
           )}
         >
@@ -340,7 +340,7 @@ function IntroBookBookmarks({ spread, onSelect }: IntroBookBookmarksProps) {
           type="button"
           aria-current={owner === bookmark.spread ? 'true' : undefined}
           onClick={() => onSelect(bookmark.spread)}
-          className="relative -mt-1.5 flex h-15 w-34 items-center justify-center bg-transparent pl-10 text-xl whitespace-nowrap text-black transition-transform first:mt-0 hover:translate-x-1.5 focus-visible:translate-x-1.5 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-black focus-visible:outline-dashed aria-[current=true]:translate-x-2.5 motion-reduce:transition-none"
+          className="relative -mt-1.5 flex h-15 w-34 items-center justify-center bg-transparent pl-10 text-body-lg whitespace-nowrap text-black transition-transform first:mt-0 hover:translate-x-1.5 focus-visible:translate-x-1.5 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-black focus-visible:outline-dashed aria-[current=true]:translate-x-2.5 motion-reduce:transition-none"
         >
           <IntroBookBookmarkArtwork
             index={index}
@@ -360,7 +360,7 @@ interface IntroBookControlsProps {
 
 function IntroBookControls({ spread, onFlip }: IntroBookControlsProps) {
   return (
-    <div className="flex w-full items-center justify-center gap-7 text-[22px] text-black">
+    <div className="flex w-full items-center justify-center gap-7 text-title-sm text-black">
       <NavButton
         label="이전 장"
         disabled={spread <= 1}

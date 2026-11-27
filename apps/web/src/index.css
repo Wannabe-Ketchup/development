@@ -39,6 +39,44 @@
   --font-dearfromsol: 'DearFromsol', 'OngleipRyudung';
   --font-ongleipryudung: 'OngleipRyudung';
 
+  /* 글자 크기 위계. Tailwind 기본 크기(sm, 2xl 등)는 지우고 이 토큰만 쓴다.
+     값은 화면에 보이는 px 그대로다(어느 화면도 비율로 줄이지 않는다. 홈만 창 크기에 맞춰 줄인다).
+     줄 간격은 토큰으로 바꾸기 전 Tailwind 기본값을 그대로 옮겼다(없는 것은 부모를 따른다).
+     토큰을 더하거나 지우면 lib/cn.ts의 FONT_SIZE_TOKENS도 고친다 */
+  --text-*: initial;
+  /* 방 타이머. 화면마다 하나씩 */
+  --text-timer: 6.5rem; /* 104 데스크톱 */
+  --text-timer--line-height: 1;
+  --text-timer-tablet: 6rem; /* 96 */
+  --text-timer-mobile: 5rem; /* 80 */
+  --text-timer-sm: 4.5rem; /* 72 작은 폰 */
+  /* 큰 제목: 홈 안내, 초대코드 */
+  --text-headline: 2.25rem; /* 36 */
+  --text-headline--line-height: 2.5rem;
+  /* 제목: 모달 제목, 큰 버튼, 알약, 닉네임·상태 메시지 */
+  --text-title: 1.5rem; /* 24 */
+  --text-title--line-height: 2rem;
+  /* 작은 제목: 채팅창 제목, 시간 설정 숫자 */
+  --text-title-sm: 1.375rem; /* 22 */
+  /* 큰 본문: 좁은 화면 알약, 시간 설정 라벨 */
+  --text-body-lg: 1.25rem; /* 20 */
+  --text-body-lg--line-height: 1.75rem;
+  /* 본문: 투어 설명, 홈 입력·버튼 */
+  --text-body: 1.125rem; /* 18 */
+  --text-body--line-height: 1.75rem;
+  /* 기본 본문: 모달 본문, 채팅 메시지·입력 */
+  --text-body-sm: 1rem; /* 16 */
+  --text-body-sm--line-height: 1.5rem;
+  /* 보조·오류: 투어 단계, 첨부 용량, 입력 오류 */
+  --text-caption: 0.875rem; /* 14 */
+  --text-caption--line-height: 1.25rem;
+  /* 홈 사용 설명서. 책처럼 따로 맞춘 크기 */
+  --text-book-title: 2rem; /* 32 */
+  --text-book-toc: 1.3125rem; /* 21 */
+  --text-book-body: 1.1875rem; /* 19 */
+  --text-book-list: 1.0625rem; /* 17 */
+  --text-book-caption: 0.9375rem; /* 15 */
+
   --cursor-default: url('./assets/cursor_default.svg') 4 4, default;
   --cursor-pointer: url('./assets/cursor_pointer.svg') 4 4, pointer;
   --cursor-grab: url('./assets/cursor_grab.svg') 4 4, grab;
