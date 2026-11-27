@@ -77,8 +77,11 @@ export function CoachMarkBubble({
     Math.ceil(amplitude) + BUBBLE_STROKE_WIDTH_PX + SVG_PADDING_BASE_PX;
 
   return (
+    // 테두리 svg는 박스 밖으로 넘쳐 그려진다. Safari는 크기가 바뀔 때 박스 밖 부분을 지우지 않아 이전 단계 테두리 선이 남으므로,
+    // 말풍선을 따로 그리는 층(will-change)으로 만들어 넘친 부분까지 통째로 다시 그리게 한다
     <div
       ref={bubbleRef}
+      className="will-change-transform"
       style={{ opacity: isReady ? 1 : 0, transition: 'opacity 0.15s ease' }}
     >
       <div ref={boxRef} className="relative">
@@ -109,9 +112,11 @@ export function CoachMarkBubble({
 
         <div className="relative z-10 p-4">
           <div className="flex max-w-75 flex-col gap-3">
-            <p className="text-lg leading-relaxed break-keep">{description}</p>
+            <p className="text-body leading-relaxed break-keep">
+              {description}
+            </p>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm">
+              <span className="text-caption">
                 {currentStep}/{totalSteps}단계
               </span>
               <div className="flex gap-2">
@@ -120,7 +125,7 @@ export function CoachMarkBubble({
                   type="button"
                   disabled={!canGoPrev}
                   onClick={onPrev}
-                  className="rounded-lg border-2 border-black px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border-2 border-black px-3 py-1.5 text-caption disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   이전
                 </button>
@@ -129,7 +134,7 @@ export function CoachMarkBubble({
                     ref={nextBtnRef}
                     type="button"
                     onClick={onNext}
-                    className="rounded-lg border-2 border-black bg-black px-3 py-1.5 text-sm text-white"
+                    className="rounded-lg border-2 border-black bg-black px-3 py-1.5 text-caption text-white"
                   >
                     다음
                   </button>
@@ -138,7 +143,7 @@ export function CoachMarkBubble({
                     ref={nextBtnRef}
                     type="button"
                     disabled
-                    className="rounded-lg border-2 border-black bg-black px-3 py-1.5 text-sm text-white opacity-40"
+                    className="rounded-lg border-2 border-black bg-black px-3 py-1.5 text-caption text-white opacity-40"
                   >
                     다음
                   </button>
@@ -147,7 +152,7 @@ export function CoachMarkBubble({
                   ref={closeBtnRef}
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg border-2 border-black px-3 py-1.5 text-sm"
+                  className="rounded-lg border-2 border-black px-3 py-1.5 text-caption"
                 >
                   닫기
                 </button>

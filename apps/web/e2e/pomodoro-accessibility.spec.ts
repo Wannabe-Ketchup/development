@@ -212,7 +212,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       for (let i = 0; i < 3; i++) {
         await page.getByRole('button', { name: '다음' }).click();
       }
-      await expect(page.getByText('4/6단계')).toBeVisible();
+      await expect(page.getByText('4/7단계')).toBeVisible();
 
       // when: 하이라이트된 닉네임의 수정 버튼을 클릭
       await page.getByRole('button', { name: '닉네임 수정' }).click();
@@ -248,7 +248,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await expect(dialog).toBeVisible();
     });
 
-    test('다음/이전 버튼으로 6개 스텝을 순차 이동하고 설명·스텝 번호가 변경된다', async ({
+    test('다음/이전 버튼으로 7개 스텝을 순차 이동하고 설명·스텝 번호가 변경된다', async ({
       page,
     }) => {
       // given: 투어 열기
@@ -262,8 +262,8 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       ).toBeVisible();
 
       // when/then: 1→2→3→4→5→6 순차 이동 확인
-      // exact: true를 사용해 aria-live 영역("6단계 중 N단계. {설명}")과 실제 <p> 요소를 구분한다.
-      await expect(page.getByText('1/6단계')).toBeVisible();
+      // exact: true를 사용해 aria-live 영역("7단계 중 N단계. {설명}")과 실제 <p> 요소를 구분한다.
+      await expect(page.getByText('1/7단계')).toBeVisible();
       await expect(
         page.getByText(
           '시작·중지 버튼으로 타이머를 조작하고, 남은 시간과 현재 세션을 확인할 수 있어요.',
@@ -272,7 +272,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       ).toBeVisible();
 
       await page.getByRole('button', { name: '다음' }).click();
-      await expect(page.getByText('2/6단계')).toBeVisible();
+      await expect(page.getByText('2/7단계')).toBeVisible();
       await expect(
         page.getByText(
           '함께 공부하는 사람들을 확인할 수 있어요. 토마토 색상은 완료한 세션 수를, 노트북과 커피는 각 참가자의 집중·휴식 상태를 나타내요.',
@@ -281,20 +281,28 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       ).toBeVisible();
 
       await page.getByRole('button', { name: '다음' }).click();
-      await expect(page.getByText('3/6단계')).toBeVisible();
+      await expect(page.getByText('3/7단계')).toBeVisible();
 
       await page.getByRole('button', { name: '다음' }).click();
-      await expect(page.getByText('4/6단계')).toBeVisible();
+      await expect(page.getByText('4/7단계')).toBeVisible();
 
       await page.getByRole('button', { name: '다음' }).click();
-      await expect(page.getByText('5/6단계')).toBeVisible();
+      await expect(page.getByText('5/7단계')).toBeVisible();
 
       await page.getByRole('button', { name: '다음' }).click();
-      await expect(page.getByText('6/6단계')).toBeVisible();
+      await expect(page.getByText('6/7단계')).toBeVisible();
+
+      await page.getByRole('button', { name: '다음' }).click();
+      await expect(page.getByText('7/7단계')).toBeVisible();
+      await expect(
+        page.getByText('같은 방 사람들과 메시지를 주고받을 수 있어요.', {
+          exact: true,
+        }),
+      ).toBeVisible();
 
       // 이전 버튼으로 되돌아가기
       await page.getByRole('button', { name: '이전' }).click();
-      await expect(page.getByText('5/6단계')).toBeVisible();
+      await expect(page.getByText('6/7단계')).toBeVisible();
     });
 
     test('첫 스텝 "이전" / 마지막 스텝 "다음"이 비활성화되고 Tab이 비활성 버튼을 건너뛴다', async ({
@@ -324,11 +332,11 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await page.keyboard.press('Shift+Tab');
       await expect(nextBtn).toBeFocused();
 
-      // when: 마지막 스텝으로 이동 (5회 다음 클릭)
-      for (let i = 0; i < 5; i++) {
+      // when: 마지막 스텝으로 이동 (6회 다음 클릭)
+      for (let i = 0; i < 6; i++) {
         await nextBtn.click();
       }
-      await expect(page.getByText('6/6단계')).toBeVisible();
+      await expect(page.getByText('7/7단계')).toBeVisible();
 
       // then: 마지막 스텝 "다음" 버튼은 disabled
       await expect(nextBtn).toBeDisabled();
@@ -341,7 +349,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await expect(closeBtn).toBeFocused();
     });
 
-    test('`aria-live` 영역이 스텝 전환 시 "6단계 중 N단계. {설명}" 형식으로 재공표된다', async ({
+    test('`aria-live` 영역이 스텝 전환 시 "7단계 중 N단계. {설명}" 형식으로 재공표된다', async ({
       page,
     }) => {
       // given: 투어 열기
@@ -359,7 +367,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
         '[aria-live="polite"][aria-atomic="true"]',
       );
       await expect(liveRegion).toContainText(
-        '6단계 중 1단계. 시작·중지 버튼으로 타이머를 조작하고, 남은 시간과 현재 세션을 확인할 수 있어요.',
+        '7단계 중 1단계. 시작·중지 버튼으로 타이머를 조작하고, 남은 시간과 현재 세션을 확인할 수 있어요.',
       );
 
       // when: 다음 클릭
@@ -367,7 +375,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
 
       // then: 2단계 aria-live 텍스트로 교체
       await expect(liveRegion).toContainText(
-        '6단계 중 2단계. 함께 공부하는 사람들을 확인할 수 있어요. 토마토 색상은 완료한 세션 수를, 노트북과 커피는 각 참가자의 집중·휴식 상태를 나타내요.',
+        '7단계 중 2단계. 함께 공부하는 사람들을 확인할 수 있어요. 토마토 색상은 완료한 세션 수를, 노트북과 커피는 각 참가자의 집중·휴식 상태를 나타내요.',
       );
     });
 
@@ -395,6 +403,26 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       const sseError = page.getByTestId('sse-error');
       await expect(sseError).toBeVisible({ timeout: 5000 });
       await expect(dialog).not.toBeVisible();
+    });
+
+    test('투어가 열린 채 채팅을 열면 투어는 사라지고 포커스가 메시지 입력으로 간다', async ({
+      page,
+    }) => {
+      // given: 투어가 열린 상태
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: 'how to use' }).click();
+      const tourDialog = page.getByRole('dialog', { name: '뽀모도로 사용법' });
+      await expect(tourDialog).toBeVisible();
+
+      // when
+      await page.getByRole('button', { name: 'chat' }).focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(page.getByRole('region', { name: '채팅' })).toBeVisible();
+      await expect(tourDialog).not.toBeVisible();
+      await expect(page.getByRole('textbox', { name: '메시지' })).toBeFocused();
     });
 
     test('SSE 연결 완료 전에는 How to use 버튼이 접근성 트리에 노출되지 않는다', async ({
