@@ -56,7 +56,7 @@ describe('App', () => {
     },
   );
 
-  describe('지원하지 않는 화면 크기에서', () => {
+  describe('화면 크기에 따라', () => {
     const originalWidth = window.innerWidth;
     const originalHeight = window.innerHeight;
 
@@ -65,17 +65,33 @@ describe('App', () => {
       window.innerHeight = originalHeight;
     });
 
-    it('지원하지 않는 화면 크기에서도 방 주소는 검색에서 제외된다', () => {
+    it('지원하지 않는 화면 크기에서도 없는 주소는 검색에서 제외된다', () => {
       // given
-      window.innerWidth = 390;
-      window.innerHeight = 844;
+      window.innerWidth = 1200;
+      window.innerHeight = 400;
+      history.pushState({}, '', '/asdf');
+
+      // when
+      render(<App />);
+
+      // then
+      expect(
+        screen.queryByRole('heading', { name: '페이지를 찾을 수 없어요' }),
+      ).toBeNull();
+      expect(countRobots()).toBe(1);
+    });
+
+    it('방은 낮은 창에서도 안내 없이 방 화면을 그린다', () => {
+      // given
+      window.innerWidth = 1200;
+      window.innerHeight = 400;
       history.pushState({}, '', '/pomodoro/abc123');
 
       // when
       render(<App />);
 
       // then
-      expect(screen.queryByText('pomodoro')).toBeNull();
+      screen.getByText('pomodoro');
       expect(countRobots()).toBe(1);
     });
   });

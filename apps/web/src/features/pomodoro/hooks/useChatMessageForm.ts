@@ -12,7 +12,8 @@ export type SendChatMessageState =
   | { status: 'failed'; reason: SendChatMessageFailureReason };
 
 interface UseChatMessageFormParams {
-  roomId: string;
+  // 입장 전이면 null이고 보낼 수 없다
+  roomId: string | null;
   onSent: (message: ChatMessage) => void;
 }
 
@@ -28,7 +29,8 @@ export function useChatMessageForm({
   const isSendingRef = useRef(false);
   const clientMessageIdRef = useRef<string | null>(null);
 
-  const canSend = draft.trim() !== '' && state.status !== 'sending';
+  const canSend =
+    roomId !== null && draft.trim() !== '' && state.status !== 'sending';
 
   // 내용을 고치면 다른 메시지로 본다. 같은 ID로 보내면 서버가 처음 메시지의 재전송으로 여겨 고친 내용을 버린다
   const changeDraft = (nextDraft: string) => {
@@ -39,7 +41,7 @@ export function useChatMessageForm({
   };
 
   const send = async () => {
-    if (!canSend || isSendingRef.current) return;
+    if (!canSend || roomId === null || isSendingRef.current) return;
     isSendingRef.current = true;
     clientMessageIdRef.current ??= crypto.randomUUID();
     setState({ status: 'sending' });
@@ -62,3 +64,5 @@ export function useChatMessageForm({
 
   return { draft, state, canSend, changeDraft, send };
 }
+
+export type ChatMessageForm = ReturnType<typeof useChatMessageForm>;

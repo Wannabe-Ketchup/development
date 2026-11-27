@@ -1,8 +1,11 @@
+import { useState } from 'react';
+import { useChatMessageForm } from '../hooks/useChatMessageForm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { ChatMessage } from '@pomodoro/shared';
 import { sendChatMessage, SendChatMessageError } from '@/api/chat';
 import { Chat } from './Chat';
+import type { RoomChat } from '../hooks/useRoomSession';
 
 vi.mock('@/api/chat', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/chat')>()),
@@ -28,6 +31,32 @@ const myMessage: ChatMessage = {
   sentAt: new Date(2026, 0, 1, 14, 4).toISOString(),
 };
 
+// 세션이 들고 있는 채팅 상태(쓰던 내용·전송 상태·읽은 위치)를 대신한다
+function ChatWithSessionState({
+  messages,
+  firstHistoryLastId,
+  onSent,
+}: Pick<RoomChat, 'messages' | 'firstHistoryLastId'> & {
+  onSent: RoomChat['addChatMessage'];
+}) {
+  const form = useChatMessageForm({ roomId: 'room-1', onSent });
+  const [lastClosedId, setLastClosedId] = useState(0);
+  return (
+    <Chat
+      selfParticipantId={SELF_ID}
+      chat={{
+        messages,
+        firstHistoryLastId,
+        addChatMessage: onSent,
+        form,
+        lastClosedId,
+        changeLastClosedId: setLastClosedId,
+      }}
+      onOpen={() => {}}
+    />
+  );
+}
+
 function renderChat(
   messages: ChatMessage[] = [],
   firstHistoryLastId: number | null = 0,
@@ -37,9 +66,7 @@ function renderChat(
     nextMessages: ChatMessage[],
     nextHistoryLastId: number | null,
   ) => (
-    <Chat
-      roomId="room-1"
-      selfParticipantId={SELF_ID}
+    <ChatWithSessionState
       messages={nextMessages}
       firstHistoryLastId={nextHistoryLastId}
       onSent={onSent}

@@ -1,18 +1,21 @@
 import type { ReactNode } from 'react';
 import { StageScaleContext } from '@/hooks/useStageScale';
 import { useViewportSize } from '@/hooks/useViewportSize';
-import { getViewportMode } from '@/lib/viewport-mode';
+import { getPageViewportMode } from '@/lib/viewport-mode';
 
-interface ViewportStageProps {
+interface PageViewportStageProps {
   children: ReactNode;
   // 지원하지 않는 화면에서 children 대신 보여 줄 안내
   notice: ReactNode;
 }
 
-// 모드 분기는 여기 한 곳에서만 한다. unsupported이면 children을 마운트하지 않아 방에 입장하지 않는다.
-export function ViewportStage({ children, notice }: ViewportStageProps) {
+// 홈·404의 화면 분기. unsupported이면 children을 마운트하지 않는다.
+export function PageViewportStage({
+  children,
+  notice,
+}: PageViewportStageProps) {
   const size = useViewportSize();
-  const viewportMode = getViewportMode(size);
+  const viewportMode = getPageViewportMode(size);
 
   switch (viewportMode.mode) {
     case 'full':

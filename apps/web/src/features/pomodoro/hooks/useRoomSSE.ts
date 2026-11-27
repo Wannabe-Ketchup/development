@@ -7,7 +7,7 @@ export interface RoomStateChange {
   isReset: boolean;
 }
 
-type SSEStatus = 'connecting' | 'connected' | 'error';
+export type SSEStatus = 'connecting' | 'connected' | 'error';
 
 // 방 입장이 끝난 뒤에만 연결한다. 입장 전에 연결하면 서버가 참가자를 찾지 못해 거절한다.
 export function useRoomSSE(

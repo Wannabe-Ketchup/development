@@ -15,6 +15,9 @@ interface UnsupportedViewportNoticeProps {
   background: ReactNode;
 }
 
+const NOTICE_MESSAGE =
+  '휴대폰과 태블릿에서는 초대받은 방 링크로 들어올 수 있어요. 방 만들기는 PC에서 해 주세요!';
+
 // 닫을 수 없는 모달이다. 이 화면에서는 링크 복사 말고 할 수 있는 일이 없다
 export function UnsupportedViewportNotice({
   background,
@@ -27,19 +30,17 @@ export function UnsupportedViewportNotice({
       {/* 시안 크기 그대로 두고, 화면보다 크면 Modal이 통째로 줄인다 */}
       <Modal
         labelledBy={titleId}
+        shouldScaleToFit
         className="w-110 items-center gap-5 text-center break-keep"
       >
         <TomatoConstructionSvg aria-hidden="true" />
-        <h2 id={titleId} className="text-2xl leading-normal">
-          앗, 모바일은
+        <h2 id={titleId} className="text-title leading-normal">
+          앗, 이 화면 크기는
           <br />
           아직 준비 중이에요
         </h2>
         <SquiggleDivider />
-        <p className="text-base leading-loose">
-          토마토들과 함께하는 집중 시간은 지금 데스크톱에서만 열려 있어요. PC로
-          다시 찾아와 주세요!
-        </p>
+        <p className="text-body-sm leading-loose">{NOTICE_MESSAGE}</p>
         <CopyButton
           text={window.location.href}
           label="링크 복사하기"
