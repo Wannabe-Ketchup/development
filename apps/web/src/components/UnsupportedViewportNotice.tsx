@@ -3,6 +3,7 @@ import { useSquigglePath } from '@squiggle-line/react';
 import TomatoConstructionSvg from '@/assets/tomato_construction.svg?react';
 import { CopyButton } from '@/components/CopyButton';
 import { Modal } from '@/components/Modal';
+import { PrivacyPolicyLink } from '@/components/PrivacyPolicyLink';
 
 const WOBBLY_STROKE_CLASS_NAME = 'fill-none stroke-black';
 
@@ -46,6 +47,7 @@ export function UnsupportedViewportNotice({
           copiedAnnouncement="링크를 복사했어요"
           failedAnnouncement="링크를 복사하지 못했어요"
         />
+        <PrivacyPolicyLink className="text-sm text-black/70" />
       </Modal>
     </main>
   );

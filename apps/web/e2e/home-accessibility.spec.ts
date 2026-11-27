@@ -180,4 +180,24 @@ test.describe('홈 화면 접근성 흐름', () => {
       await expect(group).toBeHidden();
     });
   });
+
+  test.describe('H-G. 개인정보처리방침을 연다', () => {
+    test('개인정보처리방침 링크는 /privacy.html을 새 탭으로 열고 Tab으로 포커스할 수 있다', async ({
+      page,
+    }) => {
+      const link = page.getByRole('link', { name: '개인정보처리방침' });
+      await expect(link).toHaveAttribute('href', '/privacy.html');
+      await expect(link).toHaveAttribute('target', '_blank');
+
+      await page.getByRole('button', { name: '사용 설명서' }).focus();
+      await page.keyboard.press('Tab');
+      await expect(link).toBeFocused();
+
+      const popupPromise = page.waitForEvent('popup');
+      await page.keyboard.press('Enter');
+      const popup = await popupPromise;
+      await expect(popup).toHaveURL(/\/privacy\.html$/);
+      await expect(page).toHaveURL('/');
+    });
+  });
 });

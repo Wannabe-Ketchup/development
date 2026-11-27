@@ -898,8 +898,22 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
         list.getByRole('button', { name: 'shot.png 빼기' }),
       ).toBeVisible();
 
+      // when: 전송 앞으로 Tab
+      const detailLink = dialog.getByRole('link', { name: '자세히 보기' });
+      await expect(dialog).toContainText(
+        '피드백과 함께 접속 정보(IP, 참여자 ID, 브라우저 정보)가 운영팀 메일로 전송돼요.',
+      );
+      await expect(detailLink).toHaveAttribute('href', '/privacy.html');
+      await expect(detailLink).toHaveAttribute('target', '_blank');
+      await detailLink.focus();
+      await page.keyboard.press('Tab');
+
+      // then: 자세히 보기 링크 다음이 전송하기
+      await expect(
+        dialog.getByRole('button', { name: '전송하기' }),
+      ).toBeFocused();
+
       // when: 전송
-      await dialog.getByRole('button', { name: '전송하기' }).focus();
       await page.keyboard.press('Enter');
 
       // then: 응답이 오기 전에는 전송 중으로 비활성
