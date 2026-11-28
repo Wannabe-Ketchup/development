@@ -165,19 +165,19 @@ textarea {
 
 @keyframes snot-slide {
   to {
-    transform: translateX(-150px);
+    transform: translateX(calc(-150px * var(--home-k, 1)));
   }
 }
 
 @keyframes pencil-slide {
   to {
-    transform: translateX(-180px);
+    transform: translateX(calc(-180px * var(--home-k, 1)));
   }
 }
 
 @keyframes tomato-surprised-slide {
   to {
-    transform: translateX(-250px);
+    transform: translateX(calc(-250px * var(--home-k, 1)));
   }
 }
 

@@ -5,6 +5,8 @@ import TomatoSleepingSvg from '@/assets/tomato_sleeping.svg?react';
 import SnotBubbleSvg from '@/assets/snot_bubble.svg?react';
 import type { TomatoState } from '../hooks/tomatoReducer';
 import { useTomatoDrag } from '../hooks/useTomatoDrag';
+import { toScaledPx } from '../lib/home-layout';
+import { HOME_ARTWORK_PX } from '../lib/home-artwork';
 
 interface SofaSectionProps {
   tomatoStatus: TomatoState['status'];
@@ -23,8 +25,14 @@ export function SofaSection({ tomatoStatus, handlers }: SofaSectionProps) {
   }, [tomatoStatus]);
 
   return (
-    <div className="relative">
-      <SofaSvg aria-hidden="true" />
+    <div className="relative" data-testid="sofa">
+      <SofaSvg
+        aria-hidden="true"
+        style={{
+          width: toScaledPx(HOME_ARTWORK_PX.sofa.width),
+          height: toScaledPx(HOME_ARTWORK_PX.sofa.height),
+        }}
+      />
       <button
         ref={buttonRef}
         type="button"
@@ -39,9 +47,29 @@ export function SofaSection({ tomatoStatus, handlers }: SofaSectionProps) {
         )}
         {...handlers}
       >
-        <TomatoSleepingSvg />
-        <div className="absolute top-7 left-9 size-7.5 overflow-hidden">
-          <SnotBubbleSvg aria-hidden="true" className="animate-snot-slide" />
+        <TomatoSleepingSvg
+          style={{
+            width: toScaledPx(HOME_ARTWORK_PX.sleepingTomato.width),
+            height: toScaledPx(HOME_ARTWORK_PX.sleepingTomato.height),
+          }}
+        />
+        <div
+          className="absolute overflow-hidden"
+          style={{
+            top: toScaledPx(HOME_ARTWORK_PX.snotBubble.top),
+            left: toScaledPx(HOME_ARTWORK_PX.snotBubble.left),
+            width: toScaledPx(HOME_ARTWORK_PX.snotBubble.frame),
+            height: toScaledPx(HOME_ARTWORK_PX.snotBubble.frame),
+          }}
+        >
+          <SnotBubbleSvg
+            aria-hidden="true"
+            className="animate-snot-slide"
+            style={{
+              width: toScaledPx(HOME_ARTWORK_PX.snotBubble.spriteWidth),
+              height: toScaledPx(HOME_ARTWORK_PX.snotBubble.frame),
+            }}
+          />
         </div>
       </button>
     </div>
