@@ -65,7 +65,7 @@ describe('App', () => {
       window.innerHeight = originalHeight;
     });
 
-    it('지원하지 않는 화면 크기에서도 없는 주소는 검색에서 제외된다', () => {
+    it('낮은 창에서도 없는 주소는 404를 그대로 보여 주고 검색에서 제외된다', () => {
       // given
       window.innerWidth = 1200;
       window.innerHeight = 400;
@@ -75,9 +75,7 @@ describe('App', () => {
       render(<App />);
 
       // then
-      expect(
-        screen.queryByRole('heading', { name: '페이지를 찾을 수 없어요' }),
-      ).toBeNull();
+      screen.getByRole('heading', { name: '페이지를 찾을 수 없어요' });
       expect(countRobots()).toBe(1);
     });
 

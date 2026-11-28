@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { act, render, screen } from '@testing-library/react';
-import { useStageScale } from '@/hooks/useStageScale';
 import { RoomViewportStage } from './RoomViewportStage';
 
 function setWindowSize(width: number, height: number) {
@@ -12,10 +11,6 @@ function setWindowSize(width: number, height: number) {
     configurable: true,
     value: height,
   });
-}
-
-function ScaleProbe() {
-  return <p data-testid="scale">{useStageScale()}</p>;
 }
 
 describe('RoomViewportStage', () => {
@@ -68,12 +63,12 @@ describe('RoomViewportStage', () => {
       // when
       const { unmount } = render(
         <RoomViewportStage renderCompact={() => null}>
-          <ScaleProbe />
+          <p>방 화면</p>
         </RoomViewportStage>,
       );
 
       // then
-      expect(screen.getByTestId('scale').textContent).toBe('1');
+      screen.getByText('방 화면');
       const room = screen.getByTestId('desktop-room');
       expect(room.style.transform).toBe('');
       expect(room.className).toContain('overflow-hidden');
