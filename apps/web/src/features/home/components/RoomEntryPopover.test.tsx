@@ -21,7 +21,7 @@ vi.mock('@/lib/room-id');
 const mockEnterRoomByInviteCode = enterRoomByInviteCode as unknown as Mock;
 
 const openInviteCodeInput = () => {
-  render(<RoomEntryPopover />);
+  render(<RoomEntryPopover layout="desktop" />);
   fireEvent.click(screen.getByRole('button', { name: '초대받은 방 입장하기' }));
 };
 
@@ -231,7 +231,7 @@ describe('RoomEntryPopover', () => {
   it('방 선택 화면에서 Escape를 누르면 토마토가 휴식을 취하는 상태로 돌아간다', () => {
     // given
     const handleClose = vi.fn();
-    render(<RoomEntryPopover onClose={handleClose} />);
+    render(<RoomEntryPopover layout="desktop" onClose={handleClose} />);
     const container = screen.getByText('어디서 공부할까요?').closest('div')!;
 
     // when
@@ -244,7 +244,7 @@ describe('RoomEntryPopover', () => {
   it('초대 코드 입력 화면에서 Escape를 누르면 토마토가 휴식을 취하는 상태로 돌아간다', () => {
     // given
     const handleClose = vi.fn();
-    render(<RoomEntryPopover onClose={handleClose} />);
+    render(<RoomEntryPopover layout="desktop" onClose={handleClose} />);
     fireEvent.click(
       screen.getByRole('button', { name: '초대받은 방 입장하기' }),
     );
@@ -260,7 +260,7 @@ describe('RoomEntryPopover', () => {
 
   it('방 선택 화면이 열리면 첫 번째 버튼에 포커스가 이동한다', () => {
     // given / when
-    render(<RoomEntryPopover />);
+    render(<RoomEntryPopover layout="desktop" />);
 
     // then
     expect(document.activeElement).toBe(

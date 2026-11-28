@@ -17,7 +17,7 @@ export default defineConfig({
       testIgnore: COMPACT_SPEC,
       use: {
         ...devices['Desktop Chrome'],
-        // 홈은 기준 크기(1440×820)라 축소하지 않고, 방은 너비 1080 이상이라 데스크톱이다.
+        // 홈은 너비 1200 이상이라 데스크톱이고, 방은 너비 1080 이상이라 데스크톱이다.
         viewport: { width: 1440, height: 900 },
         channel: 'chrome',
       },

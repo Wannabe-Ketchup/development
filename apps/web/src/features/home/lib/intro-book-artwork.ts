@@ -19,6 +19,18 @@ export const BOOK_FRAME_INSETS_PX = {
   left: 255,
 } as const;
 
+export type IntroBookSize = 'regular' | 'compact';
+
+// 중간 화면의 작은 책. 손으로 딴 선(traced path)까지 같은 그림을 정해진 배율로 그린다.
+// 0.79배면 본문(19)이 15가 된다. 오른쪽에는 책갈피·닫기 버튼 자리만 두고 왼쪽 빈 여백을 줄여, 책과 조작부 묶음이 화면 가운데에 온다
+export const COMPACT_BOOK_SCALE = 0.79;
+export const COMPACT_BOOK_FRAME_INSETS_PX = {
+  top: 32,
+  right: 140,
+  bottom: 20,
+  left: 24,
+} as const;
+
 export const BOOKMARK_SIZE_PX = { width: 136, height: 60 } as const;
 export const BOOKMARK_PATH =
   'M 1 4 C 40 2 78 5 106 3 Q 133 3 133 30 Q 134 57 106 57 C 74 58 38 56 1 57 Z';
