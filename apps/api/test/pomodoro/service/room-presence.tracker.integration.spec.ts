@@ -50,7 +50,7 @@ function createTracker(roomRepository: InMemoryRoomRepository) {
   return new RoomPresenceTracker(
     new LeaveRoomService(
       roomRepository,
-      new SseService(),
+      new SseService(new MetricsService(new Registry())),
       new InMemoryTimerScheduler(new EventEmitter2()),
       new SystemClock(),
     ),
