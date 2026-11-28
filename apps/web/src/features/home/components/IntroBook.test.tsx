@@ -1,12 +1,13 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { FLIP_DURATION_MS, JUMP_STAGGER_MS } from '../lib/intro-book';
 import { IntroBook } from './IntroBook';
+import { COMPACT_BOOK_SCALE } from '../lib/intro-book-artwork';
 
 const getDialog = () =>
   screen.getByRole('dialog', { hidden: true }) as HTMLDialogElement;
 
 const renderOpenedBook = (onClose = vi.fn()) => {
-  const view = render(<IntroBook isOpen onClose={onClose} />);
+  const view = render(<IntroBook isOpen size="regular" onClose={onClose} />);
   return { ...view, onClose };
 };
 
@@ -27,7 +28,7 @@ describe('IntroBook', () => {
 
   it('닫혀 있어도 모든 장의 글이 DOM에 있다', () => {
     // when
-    render(<IntroBook isOpen={false} onClose={vi.fn()} />);
+    render(<IntroBook isOpen={false} size="regular" onClose={vi.fn()} />);
 
     // then
     expect(getDialog().hasAttribute('open')).toBe(false);
@@ -151,15 +152,25 @@ describe('IntroBook', () => {
   it('다른 장을 보다가 닫고 다시 열면 첫 장부터 보인다', () => {
     // given
     const onClose = vi.fn();
-    const { rerender } = render(<IntroBook isOpen onClose={onClose} />);
+    const { rerender } = render(
+      <IntroBook isOpen size="regular" onClose={onClose} />,
+    );
     fireEvent.click(screen.getByRole('button', { name: 'FAQ' }));
     act(() => vi.advanceTimersByTime(JUMP_STAGGER_MS * 4 + FLIP_DURATION_MS));
 
     // when
-    rerender(<IntroBook isOpen={false} onClose={onClose} />);
-    rerender(<IntroBook isOpen onClose={onClose} />);
+    rerender(<IntroBook isOpen={false} size="regular" onClose={onClose} />);
+    rerender(<IntroBook isOpen size="regular" onClose={onClose} />);
 
     // then
     expect(screen.queryByText('1 / 5')).not.toBeNull();
+  });
+
+  it('작은 책은 정해진 배율로 그린다', () => {
+    // when
+    render(<IntroBook isOpen size="compact" onClose={vi.fn()} />);
+
+    // then
+    expect(getDialog().style.transform).toBe(`scale(${COMPACT_BOOK_SCALE})`);
   });
 });

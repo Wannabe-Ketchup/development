@@ -4,14 +4,16 @@ import {
   SquigglePill,
 } from '@/components/SquigglePill';
 import { IntroBook } from './IntroBook';
+import type { IntroBookSize } from '../lib/intro-book-artwork';
 
 interface IntroBookButtonProps {
+  bookSize: IntroBookSize;
   // 열기 전에 홈의 방 선택 그룹을 닫는다
   onOpen: () => void;
 }
 
 // 버튼과 그 열림 상태·포커스 복귀를 함께 둔다. 책(IntroBook)은 닫혀 있어도 항상 마운트한다
-export function IntroBookButton({ onOpen }: IntroBookButtonProps) {
+export function IntroBookButton({ bookSize, onOpen }: IntroBookButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -36,6 +38,7 @@ export function IntroBookButton({ onOpen }: IntroBookButtonProps) {
       </div>
       <IntroBook
         isOpen={isOpen}
+        size={bookSize}
         onClose={() => {
           setIsOpen(false);
           buttonRef.current?.focus();

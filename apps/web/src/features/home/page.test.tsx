@@ -103,4 +103,28 @@ describe('Home', () => {
         .getAttribute('aria-hidden'),
     ).toBeNull();
   });
+
+  it('휴대폰 크기에서는 사용 설명서 버튼이 없다', () => {
+    // given
+    setWindowSize(393, 852);
+
+    // when
+    render(<Home />);
+
+    // then
+    expect(screen.queryByRole('button', { name: '사용 설명서' })).toBeNull();
+  });
+
+  it('중간 화면에서는 사용 설명서 버튼이 있다', () => {
+    // given
+    setWindowSize(1024, 768);
+
+    // when
+    render(<Home />);
+
+    // then
+    expect(
+      screen.queryByRole('button', { name: '사용 설명서' }),
+    ).not.toBeNull();
+  });
 });

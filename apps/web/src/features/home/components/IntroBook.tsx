@@ -8,7 +8,6 @@ import {
 } from 'react';
 import CloseSvg from '@/assets/close.svg?react';
 import { IconButton } from '@/components/IconButton';
-import { useStageScale } from '@/hooks/useStageScale';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import { cn } from '@/lib/cn';
@@ -28,6 +27,9 @@ import {
 import {
   BOOK_ARTWORK,
   BOOK_FRAME_INSETS_PX,
+  COMPACT_BOOK_FRAME_INSETS_PX,
+  COMPACT_BOOK_SCALE,
+  type IntroBookSize,
   BOOKMARK_FILL_CLASS_NAMES,
 } from '../lib/intro-book-artwork';
 import { PAPER_BOUNDS_PX } from '../lib/intro-book-traced-paths';
@@ -53,23 +55,32 @@ const ROUND_BUTTON_CLASS_NAME =
 
 interface IntroBookProps {
   isOpen: boolean;
+  // compact: 중간 화면용 작은 책
+  size: IntroBookSize;
   // dialog close 이벤트(Esc·X·바깥 클릭 모두)에서 한 번만 불린다
   onClose: () => void;
 }
 
-export function IntroBook({ isOpen, onClose }: IntroBookProps) {
+export function IntroBook({ isOpen, size, onClose }: IntroBookProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const bookAreaRef = useRef<HTMLDivElement>(null);
   const backdropPressTargetRef = useRef<EventTarget | null>(null);
-  const stageScale = useStageScale();
   const viewportSize = useViewportSize();
   const prefersReducedMotion = usePrefersReducedMotion();
   const { spread, isFlipping, goTo, flip, reset } = useBookFlip();
   const [dialogSize, setDialogSize] = useState({ width: 0, height: 0 });
   // 책갈피로 고른 펼침. 넘김이 끝나면 그 장 제목으로 포커스를 옮긴다
   const [focusSpread, setFocusSpread] = useState<number | null>(null);
-  const scale = Math.min(stageScale, getFitScale(dialogSize, viewportSize));
+  const isCompact = size === 'compact';
+  const frameInsets = isCompact
+    ? COMPACT_BOOK_FRAME_INSETS_PX
+    : BOOK_FRAME_INSETS_PX;
+  // 정해진 크기로 그리고, 그래도 화면보다 크면 화면 안에 들어가게 더 줄인다
+  const scale = Math.min(
+    isCompact ? COMPACT_BOOK_SCALE : 1,
+    getFitScale(dialogSize, viewportSize),
+  );
   const flipDurationMs = prefersReducedMotion ? 0 : FLIP_DURATION_MS;
 
   // dialog의 열고 닫기만 맞춘다
@@ -150,10 +161,10 @@ export function IntroBook({ isOpen, onClose }: IntroBookProps) {
         ref={frameRef}
         className="relative flex flex-col items-start gap-16"
         style={{
-          paddingTop: BOOK_FRAME_INSETS_PX.top,
-          paddingRight: BOOK_FRAME_INSETS_PX.right,
-          paddingBottom: BOOK_FRAME_INSETS_PX.bottom,
-          paddingLeft: BOOK_FRAME_INSETS_PX.left,
+          paddingTop: frameInsets.top,
+          paddingRight: frameInsets.right,
+          paddingBottom: frameInsets.bottom,
+          paddingLeft: frameInsets.left,
         }}
       >
         <h2 id="intro-book-title" className="sr-only">
@@ -184,7 +195,7 @@ export function IntroBook({ isOpen, onClose }: IntroBookProps) {
         <IntroBookControls spread={spread} onFlip={flip} />
         <div
           className="absolute top-2 size-13.5"
-          style={{ left: BOOK_FRAME_INSETS_PX.left + BOOK_SIZE_PX.width + 72 }}
+          style={{ left: frameInsets.left + BOOK_SIZE_PX.width + 72 }}
         >
           <IntroBookRoundButtonArtwork />
           <IconButton

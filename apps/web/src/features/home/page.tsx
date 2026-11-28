@@ -17,6 +17,7 @@ const SURPRISED_TOMATO_PX = HOME_ARTWORK_PX.surprisedTomato;
 function Home() {
   const layout = useHomeLayout();
   const metrics = HOME_LAYOUT_METRICS[layout];
+  const hasIntroBook = layout === 'desktop' || layout === 'medium';
   const { tomatoState, tableRef, handlers, cancel } = useTomatoDrag(layout);
   const sceneRef = useRef<HTMLDivElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
@@ -67,7 +68,13 @@ function Home() {
         </div>
       </div>
 
-      <IntroBookButton onOpen={cancel} />
+      {/* 사용 설명서는 데스크톱·중간 화면에서만 연다. 휴대폰 크기에서는 책이 너무 작아져 읽기 어렵다 */}
+      {hasIntroBook && (
+        <IntroBookButton
+          bookSize={layout === 'medium' ? 'compact' : 'regular'}
+          onOpen={cancel}
+        />
+      )}
 
       {/* 데스크톱·중간은 사용 설명서 버튼과 마주 보는 왼쪽 아래, 휴대폰 크기는 소파·테이블을 피해 안전 영역 안 아래 가운데에 둔다 */}
       <PrivacyPolicyLink
