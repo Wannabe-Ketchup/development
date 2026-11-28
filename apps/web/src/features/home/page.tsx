@@ -25,7 +25,7 @@ function Home() {
       </div>
 
       <IntroBookButton onOpen={cancel} />
-      <PrivacyPolicyLink className="absolute bottom-10 left-11 z-20 text-sm text-black/70" />
+      <PrivacyPolicyLink className="absolute bottom-10 left-11 z-20 text-caption text-black/70" />
 
       {tomatoState.status === 'dragging' && (
         <div

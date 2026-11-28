@@ -34,7 +34,10 @@ export function StepButton({
   return (
     <WobblyBox
       {...CIRCLE_WOBBLY}
-      className={cn('size-9', isDisabled && 'opacity-40')}
+      className={cn(
+        'size-9 in-[.compact-safe-area]:size-12',
+        isDisabled && 'opacity-40',
+      )}
     >
       <IconButton
         label={label}
@@ -44,7 +47,7 @@ export function StepButton({
           if (!isDisabled) onClick();
         }}
         // relative여야 흰 채우기가 기호를 덮지 않는다
-        className="relative flex size-9 items-center justify-center text-black aria-[disabled=true]:cursor-default"
+        className="relative flex size-9 items-center justify-center text-black in-[.compact-safe-area]:size-12 aria-[disabled=true]:cursor-default"
         iconClassName="size-full"
       />
     </WobblyBox>

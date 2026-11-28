@@ -35,7 +35,10 @@ export function FeedbackButton({ onOpen, className }: FeedbackButtonProps) {
         icon={FeedbackSvg}
         aria-haspopup="dialog"
         onClick={handleOpen}
-        className={cn('flex size-20 items-center justify-center', className)}
+        className={cn(
+          'flex size-18 items-center justify-center [&_svg]:size-18',
+          className,
+        )}
       />
       {isOpen && <FeedbackModal onClose={handleClose} />}
     </>

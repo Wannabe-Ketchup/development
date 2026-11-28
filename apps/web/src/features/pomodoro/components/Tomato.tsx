@@ -22,7 +22,10 @@ export function Tomato({ stage, isPending, className }: TomatoProps) {
       <div className={cn('relative', isPending && 'opacity-40 grayscale')}>
         <TomatoSvg
           aria-hidden="true"
-          className={cn('w-28 max-w-none', BODY_COLOR_CLASS_BY_STAGE[stage])}
+          className={cn(
+            'h-auto w-25 max-w-none',
+            BODY_COLOR_CLASS_BY_STAGE[stage],
+          )}
         />
 
         {isPending && (
@@ -30,7 +33,7 @@ export function Tomato({ stage, isPending, className }: TomatoProps) {
             data-testid="self-seat-pending"
             className="absolute inset-0 flex items-center justify-center"
           >
-            <span className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
+            <span className="size-7 animate-spin rounded-full border-3 border-white border-t-transparent" />
           </div>
         )}
       </div>

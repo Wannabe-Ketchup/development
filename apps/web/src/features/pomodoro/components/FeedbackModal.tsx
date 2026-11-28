@@ -69,7 +69,7 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
       className="w-125 max-w-full gap-4"
     >
       <div className="flex w-full items-center justify-between">
-        <h2 id={titleId} className="text-2xl leading-[normal]">
+        <h2 id={titleId} className="text-title leading-[normal]">
           피드백 보내기
         </h2>
         <IconButton
@@ -78,11 +78,11 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
           icon={CloseSvg}
           disabled={isSending}
           onClick={onClose}
-          className="flex size-6 items-center justify-center"
+          className="flex size-6 items-center justify-center in-[.compact-safe-area]:-m-3 in-[.compact-safe-area]:size-12"
         />
       </div>
       {isSent ? (
-        <output className="flex h-20 w-full items-center justify-center text-base">
+        <output className="flex h-20 w-full items-center justify-center text-body-sm">
           피드백을 보냈어요
         </output>
       ) : (
@@ -95,7 +95,7 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
             placeholder="어떤 점이 좋았고 어떤 점이 불편했는지 적어주세요"
             readOnly={isSending}
             onChange={(e) => setContent(e.target.value)}
-            className={`h-39 w-full resize-none p-4 text-base ${BOX_CLASS_NAME}`}
+            className={`h-39 w-full resize-none p-4 text-body-sm ${BOX_CLASS_NAME}`}
           />
           <FeedbackAttachmentField
             files={files}
@@ -104,11 +104,11 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
             onFilesChange={setFiles}
           />
           {state.status === 'failed' && (
-            <p role="alert" className="text-base text-error">
+            <p role="alert" className="text-body-sm text-error">
               {FAILURE_MESSAGE[state.reason]}
             </p>
           )}
-          <p className="text-sm text-black/70">
+          <p className="text-caption text-black/70">
             피드백과 함께 접속 정보(IP, 참여자 ID, 브라우저 정보)가 운영팀
             메일로 전송돼요. <PrivacyPolicyLink>자세히 보기</PrivacyPolicyLink>
           </p>
@@ -117,7 +117,7 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
               type="button"
               disabled={!canSend}
               onClick={() => void submit(content, files)}
-              className="flex h-15 w-full items-center justify-center rounded-full bg-tomato-body-4 text-2xl text-white disabled:pointer-events-none disabled:bg-gray"
+              className="flex h-15 w-full items-center justify-center rounded-full bg-tomato-body-4 text-title text-white disabled:pointer-events-none disabled:bg-gray"
             >
               {isSending ? '전송 중' : '전송하기'}
             </button>

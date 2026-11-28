@@ -78,13 +78,13 @@ export function FeedbackAttachmentField({
           type="button"
           disabled={disabled}
           onClick={() => fileInputRef.current?.click()}
-          className="flex w-full items-center justify-between gap-2"
+          className="flex w-full items-center justify-between gap-2 in-[.compact-safe-area]:min-h-12"
         >
-          <span className="flex items-center gap-2 text-base">
+          <span className="flex items-center gap-2 text-body-sm">
             <ClipSvg aria-hidden="true" className="size-6" />
             사진, 동영상 첨부
           </span>
-          <span className="text-sm text-gray">최대 {MAX_TOTAL_MB}MB</span>
+          <span className="text-caption text-gray">최대 {MAX_TOTAL_MB}MB</span>
         </button>
         <input
           ref={fileInputRef}
@@ -108,8 +108,8 @@ export function FeedbackAttachmentField({
                 key={`${file.name}-${index}`}
                 className="flex max-w-full items-center gap-2 rounded-2xl border-2 border-gray bg-white px-3 py-1"
               >
-                <span className="truncate text-base">{file.name}</span>
-                <span className="shrink-0 text-sm text-gray">
+                <span className="truncate text-body-sm">{file.name}</span>
+                <span className="shrink-0 text-caption text-gray">
                   {formatFileSize(file.size)}
                 </span>
                 <IconButton
@@ -117,7 +117,7 @@ export function FeedbackAttachmentField({
                   icon={CloseSvg}
                   disabled={disabled}
                   onClick={() => handleRemoveFile(index)}
-                  className="flex size-2.5 shrink-0 items-center justify-center"
+                  className="flex size-2.5 shrink-0 items-center justify-center in-[.compact-safe-area]:-m-4 in-[.compact-safe-area]:size-12"
                 />
               </li>
             ))}
@@ -125,7 +125,7 @@ export function FeedbackAttachmentField({
         )}
       </div>
       {attachmentError && (
-        <p role="alert" className="text-base text-error">
+        <p role="alert" className="text-body-sm text-error">
           {attachmentError}
         </p>
       )}

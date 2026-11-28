@@ -6,6 +6,7 @@ import Pomodoro from './page';
 import { enterRoom } from '@/api/room';
 import { useRoomId } from '@/lib/room-id';
 import { useRoomSSE } from './hooks/useRoomSSE';
+import { useRoomSession } from './hooks/useRoomSession';
 
 vi.mock('@/api/room');
 vi.mock('@/lib/room-id');
@@ -14,6 +15,10 @@ vi.mock('./hooks/useRoomSSE');
 const mockEnterRoom = enterRoom as unknown as Mock;
 const mockUseRoomId = useRoomId as unknown as Mock;
 const mockUseRoomSSE = useRoomSSE as unknown as Mock;
+
+function PomodoroWithSession() {
+  return <Pomodoro session={useRoomSession()} />;
+}
 
 describe('Pomodoro 페이지', () => {
   const existingParticipant = {
@@ -57,7 +62,7 @@ describe('Pomodoro 페이지', () => {
     mockUseRoomSSE.mockReturnValue({ status: 'connecting' });
 
     // when
-    render(<Pomodoro />);
+    render(<PomodoroWithSession />);
 
     // then
     await waitFor(() => {
@@ -86,7 +91,7 @@ describe('Pomodoro 페이지', () => {
     );
 
     // when
-    render(<Pomodoro />);
+    render(<PomodoroWithSession />);
     await waitFor(() => screen.getByText(selfParticipant.nickname));
     const confirmedRoom: Room = {
       ...room,
@@ -136,7 +141,7 @@ describe('Pomodoro 페이지', () => {
         return { status: 'connected' };
       },
     );
-    render(<Pomodoro />);
+    render(<PomodoroWithSession />);
     await waitFor(() => screen.getByText('1st focus'));
 
     // when
@@ -156,7 +161,7 @@ describe('Pomodoro 페이지', () => {
     mockUseRoomSSE.mockReturnValue({ status: 'error' });
 
     // when
-    render(<Pomodoro />);
+    render(<PomodoroWithSession />);
 
     // then
     await waitFor(() => {
@@ -181,7 +186,7 @@ describe('Pomodoro 페이지', () => {
         return { status: 'connected' };
       },
     );
-    render(<Pomodoro />);
+    render(<PomodoroWithSession />);
     await waitFor(() => screen.getByText(selfParticipant.nickname));
 
     // when
@@ -217,7 +222,7 @@ describe('Pomodoro 페이지', () => {
         return { status: 'error' };
       },
     );
-    render(<Pomodoro />);
+    render(<PomodoroWithSession />);
     await waitFor(() => screen.getByTestId('sse-error'));
 
     // when
@@ -244,7 +249,7 @@ describe('Pomodoro 페이지', () => {
     });
 
     // when
-    render(<Pomodoro />);
+    render(<PomodoroWithSession />);
 
     // then
     const expectedMessage = '휴식 중…';
@@ -272,7 +277,7 @@ describe('Pomodoro 페이지', () => {
       });
 
       // when
-      render(<Pomodoro />);
+      render(<PomodoroWithSession />);
 
       // then
       expect(await screen.findByText(statusMessage)).toBeTruthy();

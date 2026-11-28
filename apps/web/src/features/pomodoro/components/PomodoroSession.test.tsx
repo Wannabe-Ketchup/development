@@ -58,6 +58,28 @@ describe('PomodoroSession', () => {
     expect(screen.queryByRole('button', { name: 'start' })).toBeNull();
   });
 
+  it('좁은 화면에서는 조작 버튼에 글자 없이 아이콘만 보이고, 같은 이름으로 눌러 요청을 보낸다', () => {
+    // given
+    mockPausePomodoro.mockResolvedValue(undefined);
+    render(
+      <PomodoroSession
+        roomId="room-1"
+        mode={ROOM_MODE.FOCUS}
+        currentCycle={1}
+        timerStatus="RUNNING"
+        isCompact
+      />,
+    );
+    const pauseButton = screen.getByRole('button', { name: 'pause' });
+    expect(pauseButton.textContent).toBe('');
+
+    // when
+    fireEvent.click(pauseButton);
+
+    // then
+    expect(mockPausePomodoro).toHaveBeenCalledWith('room-1');
+  });
+
   it('진행 중인 방에서 pause를 누르면 일시정지 요청을 보낸다', () => {
     // given
     mockPausePomodoro.mockResolvedValue(undefined);

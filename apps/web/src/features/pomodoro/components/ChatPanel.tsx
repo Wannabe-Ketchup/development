@@ -46,7 +46,7 @@ interface ChatPanelProps {
 }
 
 // 열어 둔 채 방을 조작할 수 있어야 해서 Modal을 쓰지 않는다(showModal은 뒤 화면을 막는다).
-// 1440px 화면에 4명이 있으면 조명과 왼쪽 참여자 일부가 가려진다. 더 넓히면 참여자를 많이 가린다
+// 1440px 화면에 4명이 있으면 조명이 가려진다. 더 넓히면 참여자를 많이 가린다
 export function ChatPanel({
   isOpen,
   messages,
@@ -81,23 +81,25 @@ export function ChatPanel({
       <section
         aria-labelledby={titleId}
         onKeyDown={handleKeyDown}
-        className="flex h-105 w-85 flex-col rounded-[20px] bg-cream px-4 pt-3 pb-3.5 font-(family-name:--font-ongleipryudung) tracking-[5%] [-webkit-text-stroke:0.5px_currentColor]"
+        className="flex h-86 w-70 flex-col rounded-[20px] bg-cream px-3 pt-2.5 pb-3 font-(family-name:--font-ongleipryudung) tracking-[5%] [-webkit-text-stroke:0.5px_currentColor]"
       >
         <div className="flex items-center justify-between pb-1.5">
-          <h2 id={titleId} className="text-[22px] leading-[normal]">
+          <h2 id={titleId} className="text-title-sm leading-[normal]">
             채팅
           </h2>
           <IconButton
             label="채팅 닫기"
             icon={CloseSvg}
             onClick={onClose}
-            className="flex size-6 items-center justify-center"
+            iconClassName="size-5"
+            className="flex size-5 items-center justify-center"
           />
         </div>
         <svg
           aria-hidden="true"
           viewBox="0 0 308 6"
-          className="h-1.5 w-77 shrink-0 fill-none stroke-black stroke-2"
+          preserveAspectRatio="none"
+          className="h-1.5 w-64 shrink-0 fill-none stroke-black stroke-2"
         >
           <path d={DIVIDER_PATH} strokeLinecap="round" />
         </svg>
@@ -118,7 +120,7 @@ export function ChatPanel({
           </ul>
         </div>
         {sendState.status === 'failed' && (
-          <p role="alert" className="pt-1.5 text-sm leading-none text-error">
+          <p role="alert" className="pt-1 text-caption leading-none text-error">
             {FAILURE_MESSAGE[sendState.reason]}
           </p>
         )}
@@ -130,7 +132,7 @@ export function ChatPanel({
             // 보내기를 클릭했어도 이어서 칠 수 있게 입력창으로 돌려보낸다
             inputRef.current?.focus();
           }}
-          className="flex items-center gap-3 pt-2"
+          className="flex items-center gap-2.5 pt-1.5"
         >
           <WobblyBox {...INPUT_WOBBLY} className="min-w-0 flex-1">
             <input
@@ -143,13 +145,13 @@ export function ChatPanel({
               autoComplete="off"
               readOnly={sendState.status === 'sending'}
               onChange={(event) => onDraftChange(event.target.value)}
-              className="relative h-9 w-full bg-transparent px-3 text-base outline-none placeholder:text-warm-gray"
+              className="relative h-8 w-full bg-transparent px-2.5 text-body-sm outline-none placeholder:text-warm-gray"
             />
           </WobblyBox>
           <button
             type="submit"
             disabled={!canSend}
-            className="shrink-0 text-base text-tomato-body-4 disabled:cursor-default disabled:opacity-50"
+            className="shrink-0 text-body-sm text-tomato-body-4 disabled:cursor-default disabled:opacity-50"
           >
             보내기
           </button>

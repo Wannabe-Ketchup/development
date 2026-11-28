@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { getSeatsWidthPx, getSeatTranslateX } from './seat-layout';
+import {
+  getCarouselTranslateX,
+  getSeatMoveDurationMs,
+  SEAT_MOVE_MAX_DURATION_MS,
+  SEAT_MOVE_MIN_DURATION_MS,
+  getSeatsWidthPx,
+  getSeatTranslateX,
+} from './seat-layout';
 
 const SEAT_SPACING_PX = 100;
 const SEAT_WIDTH_PX = 40;
@@ -62,5 +69,42 @@ describe('getSeatTranslateX', () => {
 
     // then
     expect(wide).toBe(narrow * 2);
+  });
+});
+
+describe('getCarouselTranslateX', () => {
+  it('보고 있는 참여자는 가운데, 앞뒤 참여자는 간격만큼 양옆에 있다', () => {
+    // given
+    const viewedIndex = 1;
+    const spacing = 393;
+
+    // when
+    const positions = [0, 1, 2].map((index) =>
+      getCarouselTranslateX(index, viewedIndex, spacing),
+    );
+
+    // then
+    expect(positions).toEqual([-393, 0, 393]);
+  });
+});
+
+describe('getSeatMoveDurationMs', () => {
+  it('이동 거리가 길수록 시간이 길다', () => {
+    // when
+    const oneStep = getSeatMoveDurationMs(393);
+    const longer = getSeatMoveDurationMs(600);
+
+    // then
+    expect(oneStep).toBe(328);
+    expect(longer).toBeGreaterThan(oneStep);
+  });
+
+  it('왼쪽으로 움직여도 거리만 본다', () => {
+    expect(getSeatMoveDurationMs(-393)).toBe(getSeatMoveDurationMs(393));
+  });
+
+  it('짧은 이동은 최소 시간, 아주 긴 이동은 최대 시간으로 막는다', () => {
+    expect(getSeatMoveDurationMs(10)).toBe(SEAT_MOVE_MIN_DURATION_MS);
+    expect(getSeatMoveDurationMs(5000)).toBe(SEAT_MOVE_MAX_DURATION_MS);
   });
 });

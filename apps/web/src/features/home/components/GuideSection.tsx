@@ -15,7 +15,7 @@ export function GuideSection({ tomatoStatus }: GuideSectionProps) {
         tomatoStatus === 'sleeping' ? 'visible' : 'invisible',
       )}
     >
-      <div className="text-4xl whitespace-nowrap">move the tomato!</div>
+      <div className="text-headline whitespace-nowrap">move the tomato!</div>
       <ArrowSvg />
     </div>
   );

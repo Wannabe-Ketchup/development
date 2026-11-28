@@ -126,7 +126,7 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
             <div role="group" aria-labelledby="room-entry-title">
               <div
                 id="room-entry-title"
-                className="mb-3 text-2xl whitespace-nowrap"
+                className="mb-3 text-title whitespace-nowrap"
               >
                 어디서 공부할까요?
               </div>
@@ -185,13 +185,13 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
                   if (event.key === 'Enter') handleEnterRoom();
                   if (event.key === 'Escape') onClose?.();
                 }}
-                className="w-full border-b-2 border-gray px-3 py-2 text-lg placeholder-gray outline-none"
+                className="w-full border-b-2 border-gray px-3 py-2 text-body placeholder-gray outline-none"
               />
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="rounded-lg border-2 border-gray px-3 py-2 text-lg whitespace-nowrap text-gray"
+                  className="rounded-lg border-2 border-gray px-3 py-2 text-body whitespace-nowrap text-gray"
                 >
                   뒤로가기
                 </button>
@@ -199,7 +199,7 @@ export function RoomEntryPopover({ onClose }: RoomEntryPopoverProps) {
                   aria-disabled={isPending || undefined}
                   aria-busy={isPending || undefined}
                   onClick={handleEnterRoom}
-                  className="flex-1 rounded-lg border-2 border-black bg-black px-3 py-2 text-lg text-white"
+                  className="flex-1 rounded-lg border-2 border-black bg-black px-3 py-2 text-body text-white"
                 >
                   입장하기
                 </button>

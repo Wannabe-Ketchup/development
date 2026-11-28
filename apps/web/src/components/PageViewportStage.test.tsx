@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import { useStageScale } from '@/hooks/useStageScale';
-import { ViewportStage } from './ViewportStage';
+import { PageViewportStage } from './PageViewportStage';
 
 function setWindowSize(width: number, height: number) {
   Object.defineProperty(window, 'innerWidth', {
@@ -17,7 +17,7 @@ function ScaleProbe() {
   return <p data-testid="scale">{useStageScale()}</p>;
 }
 
-describe('ViewportStage', () => {
+describe('PageViewportStage', () => {
   const originalSize = {
     width: window.innerWidth,
     height: window.innerHeight,
@@ -27,40 +27,56 @@ describe('ViewportStage', () => {
     setWindowSize(originalSize.width, originalSize.height);
   });
 
-  it('지원하지 않는 화면이면 자식을 렌더하지 않고 안내를 보여 준다', () => {
+  it('홈은 너비 936 미만에서 안내를 보여 준다', () => {
     // given
-    setWindowSize(390, 844);
+    setWindowSize(935, 900);
 
     // when
     render(
-      <ViewportStage notice={<p>안내</p>}>
-        <p>방 화면</p>
-      </ViewportStage>,
+      <PageViewportStage notice={<p>안내</p>}>
+        <p>홈 화면</p>
+      </PageViewportStage>,
     );
 
     // then
-    expect(screen.queryByText('방 화면')).toBeNull();
+    expect(screen.queryByText('홈 화면')).toBeNull();
     screen.getByText('안내');
   });
 
-  it('화면이 세로로 바뀌면 자식이 언마운트된다', () => {
+  it('좁은 휴대폰 화면에서도 안내를 보여 준다', () => {
+    // given
+    setWindowSize(393, 852);
+
+    // when
+    render(
+      <PageViewportStage notice={<p>안내</p>}>
+        <p>홈 화면</p>
+      </PageViewportStage>,
+    );
+
+    // then
+    screen.getByText('안내');
+    expect(screen.queryByText('홈 화면')).toBeNull();
+  });
+
+  it('화면이 지원 범위 밖으로 바뀌면 자식이 언마운트된다', () => {
     // given
     setWindowSize(1440, 900);
     render(
-      <ViewportStage notice={<p>안내</p>}>
-        <p>방 화면</p>
-      </ViewportStage>,
+      <PageViewportStage notice={<p>안내</p>}>
+        <p>홈 화면</p>
+      </PageViewportStage>,
     );
-    screen.getByText('방 화면');
+    screen.getByText('홈 화면');
 
     // when
     act(() => {
-      setWindowSize(900, 1440);
+      setWindowSize(1440, 400);
       window.dispatchEvent(new Event('resize'));
     });
 
     // then
-    expect(screen.queryByText('방 화면')).toBeNull();
+    expect(screen.queryByText('홈 화면')).toBeNull();
   });
 
   it('축소 화면이면 자식에 배율을 제공한다 (useStageScale 값)', () => {
@@ -69,9 +85,9 @@ describe('ViewportStage', () => {
 
     // when
     render(
-      <ViewportStage notice={<p>안내</p>}>
+      <PageViewportStage notice={<p>안내</p>}>
         <ScaleProbe />
-      </ViewportStage>,
+      </PageViewportStage>,
     );
 
     // then

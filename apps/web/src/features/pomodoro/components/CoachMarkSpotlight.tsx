@@ -1,5 +1,6 @@
 export interface CoachMarkSpotlightProps {
-  targetRect: DOMRect | null;
+  // 밝힐 영역들. 비어 있으면 화면 전체를 어둡게 한다
+  targetRects: readonly DOMRect[];
   paddingPx?: number;
   borderRadiusPx?: number;
   reduceMotion: boolean;
@@ -13,7 +14,7 @@ export const SPOTLIGHT_BORDER_RADIUS_PX = 12;
 const MIN_SPOTLIGHT_SIZE_PX = 40;
 
 export function CoachMarkSpotlight({
-  targetRect,
+  targetRects,
   paddingPx = SPOTLIGHT_PADDING_PX,
   borderRadiusPx = SPOTLIGHT_BORDER_RADIUS_PX,
   reduceMotion,
@@ -26,20 +27,26 @@ export function CoachMarkSpotlight({
       ? 'none'
       : `all ${SPOTLIGHT_TRANSITION_MS}ms ease`;
 
-  const holeX = targetRect ? targetRect.x - paddingPx : 0;
-  const holeY = targetRect ? targetRect.y - paddingPx : 0;
-  const holeW = targetRect
-    ? Math.max(targetRect.width + paddingPx * 2, MIN_SPOTLIGHT_SIZE_PX)
-    : 0;
-  const holeH = targetRect
-    ? Math.max(targetRect.height + paddingPx * 2, MIN_SPOTLIGHT_SIZE_PX)
-    : 0;
+  const holes = targetRects.map((targetRect) => ({
+    x: targetRect.x - paddingPx,
+    y: targetRect.y - paddingPx,
+    width: Math.max(targetRect.width + paddingPx * 2, MIN_SPOTLIGHT_SIZE_PX),
+    height: Math.max(targetRect.height + paddingPx * 2, MIN_SPOTLIGHT_SIZE_PX),
+  }));
 
   // 구멍을 뺀 영역만 클릭을 받는다. clip-path는 히트 테스트에 반영되므로 구멍 안의 클릭은 아래 요소로 통과한다.
   // (svg mask는 그림만 뚫을 뿐 히트 테스트에는 영향이 없어서 차단 레이어를 따로 둔다.)
-  const blockerClipPath = targetRect
-    ? `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${holeX}px ${holeY}px, ${holeX}px ${holeY + holeH}px, ${holeX + holeW}px ${holeY + holeH}px, ${holeX + holeW}px ${holeY}px, ${holeX}px ${holeY}px)`
-    : undefined;
+  // 구멍마다 시작점으로 돌아오는 고리를 이어 붙인다. evenodd라 고리 안쪽이 비고, 이어 주는 선은 두께가 없다
+  const holePolygonPoints = holes
+    .map(
+      ({ x, y, width, height }) =>
+        `${x}px ${y}px, ${x}px ${y + height}px, ${x + width}px ${y + height}px, ${x + width}px ${y}px, ${x}px ${y}px`,
+    )
+    .join(', ');
+  const blockerClipPath =
+    holes.length > 0
+      ? `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${holePolygonPoints})`
+      : undefined;
 
   return (
     <>
@@ -50,18 +57,19 @@ export function CoachMarkSpotlight({
         <defs>
           <mask id="spotlight-mask">
             <rect width="100%" height="100%" fill="white" />
-            {targetRect && (
+            {holes.map((hole, index) => (
               <rect
-                x={holeX}
-                y={holeY}
-                width={holeW}
-                height={holeH}
+                key={index}
+                x={hole.x}
+                y={hole.y}
+                width={hole.width}
+                height={hole.height}
                 rx={borderRadiusPx}
                 ry={borderRadiusPx}
                 fill="black"
                 style={{ transition: holeTransition }}
               />
-            )}
+            ))}
           </mask>
         </defs>
         <rect

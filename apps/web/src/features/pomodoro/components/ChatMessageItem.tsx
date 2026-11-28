@@ -27,7 +27,7 @@ export function ChatMessageItem({ message, isMine }: ChatMessageItemProps) {
         isMine ? 'items-end' : 'items-start',
       )}
     >
-      <p className="max-w-full text-sm leading-none break-all text-warm-gray-dark">
+      <p className="max-w-full text-caption leading-none break-all text-warm-gray-dark">
         {isMine ? '나' : message.nickname}
         <time dateTime={message.sentAt} className="ml-2 text-warm-gray">
           {formatChatTime(message.sentAt)}
@@ -42,7 +42,7 @@ export function ChatMessageItem({ message, isMine }: ChatMessageItemProps) {
         className="max-w-[85%]"
       >
         {/* relative여야 말풍선 채우기가 글자를 덮지 않는다 */}
-        <p className="relative px-3 py-1 text-base wrap-anywhere break-keep whitespace-pre-wrap">
+        <p className="relative px-3 py-1 text-body-sm wrap-anywhere break-keep whitespace-pre-wrap">
           {message.content}
         </p>
       </WobblyBox>

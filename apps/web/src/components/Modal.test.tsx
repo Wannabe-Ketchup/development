@@ -11,6 +11,10 @@ function renderModal(onClose?: () => void) {
 }
 
 describe('Modal', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('onClose가 없으면 Esc(cancel)를 막는다', () => {
     // given
     const dialog = renderModal();
@@ -47,5 +51,21 @@ describe('Modal', () => {
 
     // then
     expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('줄이지 않는 모달은 화면보다 커도 배율을 걸지 않고, 내용을 보이는 높이 안에서 스크롤한다', () => {
+    // given
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(2000);
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(
+      2000,
+    );
+
+    // when
+    const dialog = renderModal();
+
+    // then
+    expect(dialog.style.transform).toBe('scale(1)');
+    const content = screen.getByText('제목').parentElement;
+    expect(content?.style.maxHeight).toBe(`${window.innerHeight - 32}px`);
   });
 });
