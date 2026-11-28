@@ -55,6 +55,36 @@ describe('FeedbackModal', () => {
     expect(handleClose).not.toHaveBeenCalled();
   });
 
+  it('전송 전에는 접속 정보가 함께 전송된다는 안내와 처리방침 링크가 보인다', () => {
+    // given
+    render(<FeedbackModal onClose={() => {}} />);
+
+    // when
+    const link = screen.getByRole('link', { name: '자세히 보기' });
+
+    // then
+    screen.getByText(
+      /접속 정보\(IP, 참여자 ID, 브라우저 정보\)가 운영팀 메일로 전송돼요/,
+    );
+    expect(link.getAttribute('href')).toBe('/privacy.html');
+    expect(link.getAttribute('target')).toBe('_blank');
+  });
+
+  it('전송을 마치면 접속 정보 안내가 사라진다', async () => {
+    // given
+    vi.mocked(submitFeedback).mockResolvedValue(undefined);
+    render(<FeedbackModal onClose={() => {}} />);
+    typeContent('좋아요');
+
+    // when
+    fireEvent.click(screen.getByRole('button', { name: '전송하기' }));
+
+    // then
+    await screen.findByText('피드백을 보냈어요');
+    expect(screen.queryByRole('link', { name: '자세히 보기' })).toBeNull();
+    expect(screen.queryByText(/접속 정보/)).toBeNull();
+  });
+
   it('전송에 실패하면 입력한 내용과 첨부가 그대로 남는다', async () => {
     // given
     vi.mocked(submitFeedback).mockRejectedValue(

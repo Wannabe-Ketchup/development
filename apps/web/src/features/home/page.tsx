@@ -1,4 +1,5 @@
 import TomatoSurprisedSvg from '@/assets/tomato_surprised.svg?react';
+import { PrivacyPolicyLink } from '@/components/PrivacyPolicyLink';
 import { useStageScale } from '@/hooks/useStageScale';
 import { useTomatoDrag } from './hooks/useTomatoDrag';
 import { SofaSection } from './components/SofaSection';
@@ -24,6 +25,7 @@ function Home() {
       </div>
 
       <IntroBookButton onOpen={cancel} />
+      <PrivacyPolicyLink className="absolute bottom-10 left-11 z-20 text-sm text-black/70" />
 
       {tomatoState.status === 'dragging' && (
         <div
