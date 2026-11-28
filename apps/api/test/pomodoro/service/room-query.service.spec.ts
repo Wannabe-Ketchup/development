@@ -12,7 +12,12 @@ describe('RoomQueryService.findExistingRoom', () => {
 
   beforeEach(() => {
     findById = jest.fn();
-    roomRepository = { findById, save: jest.fn(), delete: jest.fn() };
+    roomRepository = {
+      findById,
+      findByParticipantId: jest.fn(),
+      save: jest.fn(),
+      delete: jest.fn(),
+    };
     service = new RoomQueryService(roomRepository);
   });
 

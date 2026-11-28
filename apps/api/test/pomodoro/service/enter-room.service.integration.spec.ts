@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -22,6 +23,7 @@ import { InMemoryRoomRepository } from '../../../src/pomodoro/repository/in-memo
 import { TimerScheduler } from '../../../src/pomodoro/scheduler/timer.scheduler';
 import { InMemoryTimerScheduler } from '../../../src/pomodoro/scheduler/in-memory.timer.scheduler';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
+import { Participant } from '../../../src/pomodoro/domain/participant.entity';
 import { PomodoroModule } from '../../../src/pomodoro/pomodoro.module';
 import { TIMER_EVENT } from '../../../src/pomodoro/constant/timer-event.constant';
 import { EMPTY_ROOM_DELETION_DELAY_SEC } from '../../../src/pomodoro/constant/room-deletion.constant';
@@ -37,6 +39,36 @@ class FixedClock extends Clock {
   now(): Date {
     return NOW;
   }
+}
+
+function restoreRoomWith(
+  roomId: string,
+  participantIds: string[],
+  capacity = 4,
+): Room {
+  return Room.restore({
+    roomId,
+    participants: participantIds.map((id) =>
+      Participant.restore({
+        id,
+        nickname: id,
+        statusMessage: '',
+        completedCycles: 0,
+        joinedAt: '2026-11-07T00:00:00.000Z',
+      }),
+    ),
+    capacity,
+    timer: Timer.restore({
+      status: 'IDLE',
+      focusTimeSec: FOCUS_DURATION_SECONDS,
+      breakTimeSec: BREAK_DURATION_SECONDS,
+      totalCycle: CYCLE_COUNT,
+      timerStartedAt: null,
+      remainingTimeSec: FOCUS_DURATION_SECONDS,
+    }),
+    mode: ROOM_MODE.IDLE,
+    currentCycle: 0,
+  });
 }
 
 function restoreEmptyRoom(roomId: string, emptiedAt?: Date): Room {
@@ -121,7 +153,9 @@ describe('EnterRoomService', () => {
 
       // when: 입장하고 연결을 유지한다
       moduleRef.get(EnterRoomService).joinRoom(roomId, participantId);
-      moduleRef.get(RoomPresenceTracker).connectParticipant(participantId);
+      moduleRef
+        .get(RoomPresenceTracker)
+        .connectParticipant(roomId, participantId);
 
       // then: 예약된 타이머가 하나도 남지 않고, 30분이 지나도 방이 남는다
       expect(jest.getTimerCount()).toBe(0);
@@ -129,6 +163,88 @@ describe('EnterRoomService', () => {
       expect(roomRepository.findById(roomId)).toBeDefined();
 
       await moduleRef.close();
+    });
+
+    describe('다른 방으로 이동', () => {
+      let moduleRef: TestingModule;
+
+      beforeEach(async () => {
+        moduleRef = await Test.createTestingModule({
+          imports: [EventEmitterModule.forRoot(), PomodoroModule],
+        }).compile();
+        await moduleRef.init();
+      });
+
+      afterEach(async () => {
+        await moduleRef.close();
+      });
+
+      it('다른 방에 있던 참여자가 새 방에 입장하면 이전 방 명단에서 바로 빠지고 이전 방 퇴장 타이머가 남지 않는다', () => {
+        // given: 이전 방에서 연결이 끊겨 유예 중인 참여자
+        const roomRepository = moduleRef.get(RoomRepository);
+        roomRepository.save(restoreRoomWith('room-a', ['P', 'Q']));
+        roomRepository.save(restoreRoomWith('room-b', []));
+        moduleRef
+          .get(RoomPresenceTracker)
+          .registerPendingParticipant('room-a', 'P');
+
+        // when
+        moduleRef.get(EnterRoomService).joinRoom('room-b', 'P');
+
+        // then: 새 방의 입장 대기 타이머 하나만 남는다
+        expect(roomRepository.findById('room-a')?.participants.has('P')).toBe(
+          false,
+        );
+        expect(roomRepository.findById('room-b')?.participants.has('P')).toBe(
+          true,
+        );
+        expect(jest.getTimerCount()).toBe(1);
+      });
+
+      it('이미 참여 중인 방에 다시 입장하면 그 방 명단에 그대로 남는다', () => {
+        // given
+        const roomRepository = moduleRef.get(RoomRepository);
+        roomRepository.save(restoreRoomWith('room-a', ['P', 'Q']));
+
+        // when
+        moduleRef.get(EnterRoomService).joinRoom('room-a', 'P');
+
+        // then
+        expect(roomRepository.findById('room-a')?.participants.has('P')).toBe(
+          true,
+        );
+      });
+
+      it('가득 찬 방에 입장하지 못하면 이전 방에 그대로 남는다', () => {
+        // given
+        const roomRepository = moduleRef.get(RoomRepository);
+        roomRepository.save(restoreRoomWith('room-a', ['P']));
+        roomRepository.save(restoreRoomWith('room-b', ['Q'], 1));
+
+        // when
+        const enter = () =>
+          moduleRef.get(EnterRoomService).joinRoom('room-b', 'P');
+
+        // then
+        expect(enter).toThrow(BadRequestException);
+        expect(roomRepository.findById('room-a')?.participants.has('P')).toBe(
+          true,
+        );
+      });
+
+      it('혼자 있던 방에서 다른 방으로 옮기면 이전 방은 30분 뒤 삭제된다', () => {
+        // given
+        const roomRepository = moduleRef.get(RoomRepository);
+        roomRepository.save(restoreRoomWith('room-a', ['P']));
+        roomRepository.save(restoreRoomWith('room-b', []));
+
+        // when
+        moduleRef.get(EnterRoomService).joinRoom('room-b', 'P');
+        jest.advanceTimersByTime(EMPTY_ROOM_DELETION_DELAY_SEC * MS_PER_SECOND);
+
+        // then
+        expect(roomRepository.findById('room-a')).toBeUndefined();
+      });
     });
 
     describe('빈 방 복귀 시간', () => {

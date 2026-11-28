@@ -58,6 +58,7 @@ export function CompactPomodoro({ layout, session }: CompactPomodoroProps) {
     selfParticipantId,
     isConfirmed,
     hasEnterRoomFailed,
+    hasMovedToAnotherRoom,
     sseStatus,
     canShowTour,
     chat,
@@ -157,7 +158,17 @@ export function CompactPomodoro({ layout, session }: CompactPomodoroProps) {
             </div>
           )}
 
-          {roomId && sseStatus === 'error' && (
+          {/* 다른 방에 입장해 이 방에서 퇴장된 경우. SSE 실패 안내보다 우선한다 */}
+          {roomId && hasMovedToAnotherRoom && (
+            <div
+              data-testid="moved-room-notice"
+              className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 text-white"
+            >
+              다른 방에 입장해서 이 방에서 퇴장되었습니다.
+            </div>
+          )}
+
+          {roomId && sseStatus === 'error' && !hasMovedToAnotherRoom && (
             <div
               data-testid="sse-error"
               className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 text-white"

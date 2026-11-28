@@ -21,7 +21,7 @@ export const TimerKey = {
   session: (roomId: string) => `room:${roomId}:session`,
   roomDeletion: (roomId: string) => `room:${roomId}:deletion`,
   // 입장 대기 타이머는 참가자마다 걸려서 한 방에 여러 개가 생긴다. 그래서 취소 기준을 roomId가 아닌 key로 정했다.
-  // 후속 리팩터링(RoomPresenceService)에서 사용한다.
+  // RoomPresenceTracker가 유예 타이머와 연결 기록의 키로 쓴다.
   presence: (roomId: string, participantId: string) =>
     `room:${roomId}:presence:${participantId}`,
 };

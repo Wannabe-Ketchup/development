@@ -272,4 +272,43 @@ describe('CompactPomodoro', () => {
       expect(screen.getByTestId('sse-error')).toBeTruthy();
     });
   });
+
+  it('방 상태의 참가자 목록에서 내가 빠지면 퇴장 안내가 보이고 실시간 연결 실패 안내는 보이지 않는다', async () => {
+    // given
+    mockEnterRoom.mockResolvedValue({
+      participant: selfParticipant,
+      room: baseRoom,
+    });
+    let emitRoomState: (
+      nextRoom: Room,
+      change: { isReset: boolean },
+    ) => void = () => {};
+    mockUseRoomSSE.mockImplementation(
+      (
+        _roomId: string,
+        _isEntered: boolean,
+        onRoomState: (nextRoom: Room, change: { isReset: boolean }) => void,
+      ) => {
+        emitRoomState = onRoomState;
+        return { status: 'error' };
+      },
+    );
+    render(<CompactPomodoroWithSession layout="mobile" />);
+    await waitFor(() => screen.getByTestId('sse-error'));
+
+    // when
+    act(() => {
+      emitRoomState(
+        { ...baseRoom, participants: [otherParticipant] },
+        { isReset: false },
+      );
+    });
+
+    // then
+    await waitFor(() => {
+      expect(screen.getByTestId('moved-room-notice')).toBeTruthy();
+    });
+    expect(screen.queryByTestId('sse-error')).toBeNull();
+    expect(mockUseRoomSSE.mock.calls.at(-1)?.[1]).toBe(false);
+  });
 });

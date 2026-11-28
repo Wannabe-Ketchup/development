@@ -7,6 +7,7 @@ import {
 import CloseSvg from '@/assets/close.svg?react';
 import { IconButton } from '@/components/IconButton';
 import { Modal } from '@/components/Modal';
+import { PrivacyPolicyLink } from '@/components/PrivacyPolicyLink';
 import type { SubmitFeedbackFailureReason } from '@/api/feedback';
 import { useSubmitFeedback } from '../hooks/useSubmitFeedback';
 import { BYTES_PER_MB } from '../lib/feedback-attachment';
@@ -107,6 +108,10 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
               {FAILURE_MESSAGE[state.reason]}
             </p>
           )}
+          <p className="text-caption text-black/70">
+            피드백과 함께 접속 정보(IP, 참여자 ID, 브라우저 정보)가 운영팀
+            메일로 전송돼요. <PrivacyPolicyLink>자세히 보기</PrivacyPolicyLink>
+          </p>
           <WobblyBox {...SEND_BUTTON_WOBBLY} className="w-full">
             <button
               type="button"

@@ -19,6 +19,12 @@ const EMPTY_ROOM_RETURN_BUCKETS_SECONDS = [
   30, 60, 120, 300, 600, 900, 1200, 1500, 1800,
 ];
 
+// 연결 수십 개에서는 수십 µs라 HTTP 버킷(0.5ms부터)으로는 모두 첫 칸에 들어간다
+const SSE_EMIT_DURATION_BUCKETS_SECONDS = [
+  0.00005, 0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+  0.1,
+];
+
 export const UNMATCHED_ROUTE = 'unmatched';
 
 const DEFAULT_SSE_EVENT_TYPE = 'message';
@@ -38,6 +44,7 @@ export class MetricsService {
   private readonly httpRequestDuration: Histogram<HttpLabelName>;
   private readonly sseConnections: Gauge;
   private readonly sseEventsSent: Counter<'type'>;
+  private readonly sseEmitDuration: Histogram<'type'>;
   private readonly emptyRoomReturn: Histogram;
   private readonly emptyRoomsDeleted: Counter<'usage'>;
 
@@ -66,6 +73,13 @@ export class MetricsService {
       labelNames: ['type'],
       registers: [registry],
     });
+    this.sseEmitDuration = new Histogram({
+      name: 'sse_emit_duration_seconds',
+      help: 'Time to hand one room event to every SSE connection, including JSON serialization and socket writes',
+      labelNames: ['type'],
+      buckets: SSE_EMIT_DURATION_BUCKETS_SECONDS,
+      registers: [registry],
+    });
     this.emptyRoomReturn = new Histogram({
       name: 'empty_room_return_seconds',
       help: 'Time from a room becoming empty until someone enters it again',
@@ -78,6 +92,10 @@ export class MetricsService {
       labelNames: ['usage'],
       registers: [registry],
     });
+  }
+
+  recordSseEmit(type: string, seconds: number): void {
+    this.sseEmitDuration.observe({ type }, seconds);
   }
 
   recordEmptyRoomReturn(seconds: number): void {

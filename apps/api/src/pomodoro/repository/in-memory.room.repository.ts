@@ -14,6 +14,15 @@ export class InMemoryRoomRepository extends RoomRepository {
     return this.rooms.get(roomId);
   }
 
+  findByParticipantId(participantId: string): Room | undefined {
+    for (const room of this.rooms.values()) {
+      if (room.participants.has(participantId)) {
+        return room;
+      }
+    }
+    return undefined;
+  }
+
   delete(roomId: string): void {
     this.rooms.delete(roomId);
   }

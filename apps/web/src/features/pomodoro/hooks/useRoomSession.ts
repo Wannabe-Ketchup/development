@@ -16,6 +16,8 @@ export interface RoomSession {
   selfParticipantId: string | null;
   isConfirmed: boolean;
   hasEnterRoomFailed: boolean;
+  // 다른 방에 입장해 서버가 이 방에서 퇴장시킨 상태
+  hasMovedToAnotherRoom: boolean;
   sseStatus: SSEStatus;
   canShowTour: boolean;
   chat: RoomChat;
@@ -47,6 +49,8 @@ export function useRoomSession(): RoomSession {
   const [isLastChangeReset, setIsLastChangeReset] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [hasEnterRoomFailed, setHasEnterRoomFailed] = useState(false);
+  // 다른 방에 입장해 서버가 이 방에서 퇴장시킨 상태. 방 이동은 전체 페이지 이동이라 초기화하지 않는다
+  const [hasMovedToAnotherRoom, setHasMovedToAnotherRoom] = useState(false);
 
   useEffect(() => {
     if (!roomId) return;
@@ -71,11 +75,18 @@ export function useRoomSession(): RoomSession {
   // 방 상태와 리셋 여부를 같은 렌더에 반영해야 세션 변경 훅이 둘을 맞춰 본다
   const handleRoomState = useCallback(
     (nextRoom: Room, change: RoomStateChange) => {
+      const isSelfInRoom = nextRoom.participants.some(
+        (participant) => participant.id === selfParticipantId,
+      );
+      if (!isSelfInRoom) {
+        setHasMovedToAnotherRoom(true);
+        return;
+      }
       setRoom(nextRoom);
       setIsLastChangeReset(change.isReset);
       setIsConfirmed(true);
     },
-    [],
+    [selfParticipantId],
   );
 
   const {
@@ -90,7 +101,7 @@ export function useRoomSession(): RoomSession {
 
   const { status: sseStatus } = useRoomSSE(
     roomId ?? undefined,
-    selfParticipantId !== null,
+    selfParticipantId !== null && !hasMovedToAnotherRoom, // false가 되면 effect cleanup이 SSE를 닫는다
     handleRoomState,
     addChatMessage,
     addChatHistory,
@@ -100,7 +111,11 @@ export function useRoomSession(): RoomSession {
 
   // 방 상태를 믿을 수 있을 때만 탭 제목과 브라우저 알림에 쓴다
   const isRoomLive =
-    !!roomId && !!room && !hasEnterRoomFailed && sseStatus !== 'error';
+    !!roomId &&
+    !!room &&
+    !hasEnterRoomFailed &&
+    !hasMovedToAnotherRoom &&
+    sseStatus !== 'error';
   const liveRoom = isRoomLive ? room : null;
 
   useNotificationPermission();
@@ -119,6 +134,7 @@ export function useRoomSession(): RoomSession {
     !!selfParticipantId &&
     isConfirmed &&
     !hasEnterRoomFailed &&
+    !hasMovedToAnotherRoom &&
     sseStatus !== 'error';
 
   return {
@@ -127,6 +143,7 @@ export function useRoomSession(): RoomSession {
     selfParticipantId,
     isConfirmed,
     hasEnterRoomFailed,
+    hasMovedToAnotherRoom,
     sseStatus,
     canShowTour,
     chat: {
