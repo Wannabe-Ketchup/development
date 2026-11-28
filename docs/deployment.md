@@ -159,8 +159,8 @@ sudo certbot certonly --standalone --expand \
 3. **브랜딩** 탭에 앱 이름, 사용자 지원 이메일, **애플리케이션 홈페이지 URL**, **개인정보처리방침 URL**, 승인된 도메인, 개발자 연락처를 채운다. 홈페이지와 개인정보처리방침이 없으면 4의 게시 버튼이 비활성화된다. 앱 로고는 올리지 않는다(외부·프로덕션 앱에 로고를 올리면 Google 인증을 위해 앱을 제출해야 한다). **데이터 액세스** 탭에는 범위를 추가하지 않는다(범위는 5의 Playground에서 요청한다).
 4. **대상** 탭에서 게시 상태가 "테스트 중"이면 **앱 게시**를 눌러 **프로덕션**으로 바꾼다. 사용자가 공용 계정 한 명뿐이어도 "테스트" 상태에서 발급한 refresh token은 7일 뒤 만료되므로 반드시 바꾸고, 바꾼 뒤에 5에서 토큰을 발급한다.
 5. **클라이언트** 탭(또는 사용자 인증 정보 만들기에서 액세스할 데이터로 **사용자 데이터** 선택)에서 OAuth 클라이언트를 만든다. 애플리케이션 유형은 **웹 애플리케이션**이어야 한다(다른 유형은 리디렉션 URI 칸이 없고, 유형은 나중에 바꿀 수 없다). 리디렉션 URI는 자동으로 생기지 않으므로 만든 클라이언트를 열어 승인된 리디렉션 URI에 `https://developers.google.com/oauthplayground`를 추가하고 저장한다. 클라이언트 ID·보안 비밀이 `FEEDBACK_MAIL_CLIENT_ID`, `FEEDBACK_MAIL_CLIENT_SECRET`이다.
-6. [OAuth 2.0 Playground](https://developers.google.com/oauthplayground) 설정(톱니바퀴)에서 "Use your own OAuth credentials"에 5의 값을 넣고, 범위 `https://mail.google.com/`을 공용 계정으로 허용한 뒤 "Exchange authorization code for tokens"로 받은 refresh token이 `FEEDBACK_MAIL_REFRESH_TOKEN`이다. 검증받지 않은 앱 경고가 나오면 "고급 → (앱 이름)(으)로 이동"으로 진행한다.
-7. 운영·staging `.env`에 네 값을 넣고 Nest를 다시 띄운다.
+6. [OAuth 2.0 Playground](https://developers.google.com/oauthplayground) 설정(톱니바퀴)에서 "Use your own OAuth credentials"에 5의 값을 넣는다. 왼쪽 Step 1 아래 "Input your own scopes" 칸에 범위 `https://mail.google.com/`을 넣고 **Authorize APIs**를 눌러 공용 계정으로 허용한다(nodemailer가 SMTP로 보내므로 보내기 전용 `gmail.send`로는 로그인이 안 된다). Step 2의 "Exchange authorization code for tokens"로 받은 refresh token이 `FEEDBACK_MAIL_REFRESH_TOKEN`이다. 검증받지 않은 앱 경고가 나오면 "고급 → (앱 이름)(으)로 이동"으로 진행한다.
+7. 운영·staging `.env`에 네 값을 넣고 `docker compose -f app-compose.yml up -d`로 Nest 컨테이너를 다시 만든다. 운영은 `TAG=<지금 배포된 커밋 SHA>`를 앞에 붙인다. `.env`는 `env_file`로 들어가 컨테이너를 만들 때만 읽히므로 `restart`로는 반영되지 않는다.
 
 refresh token은 다음 때 무효가 된다(Google OAuth 문서 기준). 그러면 피드백 발송이 503으로 실패하고, 운영 서버는 디스코드로 알린다. 서버 시작 시 확인이 실패하면 "피드백 메일 접속 확인 실패", 발송 중 인증이 실패하면 "피드백 메일 인증 실패"다. 토큰이 무효면 오류 코드가 `EAUTH (원인 EOAUTH2)`로 찍힌다.
 
