@@ -1,6 +1,8 @@
 import type { Room as RoomState } from '@pomodoro/shared';
 import { ChangeNicknameService } from '../../../src/pomodoro/service/change-nickname.service';
 import { RoomQueryService } from '../../../src/pomodoro/service/room-query.service';
+import { Registry } from 'prom-client';
+import { MetricsService } from '../../../src/metrics/metrics.service';
 import { SseService } from '../../../src/pomodoro/service/sse.service';
 import { InMemoryRoomRepository } from '../../../src/pomodoro/repository/in-memory.room.repository';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
@@ -17,7 +19,7 @@ describe('ChangeNicknameService', () => {
     const service = new ChangeNicknameService(
       new RoomQueryService(roomRepository),
       roomRepository,
-      new SseService(),
+      new SseService(new MetricsService(new Registry())),
     );
     const room = Room.create(roomId);
     room.join(Participant.create(participantId, '케첩', joinedAt));
@@ -42,7 +44,7 @@ describe('ChangeNicknameService', () => {
     const participantId = 'A';
     const joinedAt = '2026-09-02T00:00:00.000Z';
     const roomRepository = new InMemoryRoomRepository();
-    const sseService = new SseService();
+    const sseService = new SseService(new MetricsService(new Registry()));
     const service = new ChangeNicknameService(
       new RoomQueryService(roomRepository),
       roomRepository,
@@ -79,7 +81,7 @@ describe('ChangeNicknameService', () => {
     const participantId = 'A';
     const joinedAt = '2026-09-02T00:00:00.000Z';
     const roomRepository = new InMemoryRoomRepository();
-    const sseService = new SseService();
+    const sseService = new SseService(new MetricsService(new Registry()));
     const service = new ChangeNicknameService(
       new RoomQueryService(roomRepository),
       roomRepository,
@@ -115,7 +117,7 @@ describe('ChangeNicknameService', () => {
     const service = new ChangeNicknameService(
       new RoomQueryService(roomRepository),
       roomRepository,
-      new SseService(),
+      new SseService(new MetricsService(new Registry())),
     );
     const room = Room.create(roomId);
     room.join(Participant.create(participantId, '케첩', joinedAt));
@@ -144,7 +146,7 @@ describe('ChangeNicknameService', () => {
     const service = new ChangeNicknameService(
       new RoomQueryService(roomRepository),
       roomRepository,
-      new SseService(),
+      new SseService(new MetricsService(new Registry())),
     );
     const newNickname = '마요';
 
@@ -162,7 +164,7 @@ describe('ChangeNicknameService', () => {
     const service = new ChangeNicknameService(
       new RoomQueryService(roomRepository),
       roomRepository,
-      new SseService(),
+      new SseService(new MetricsService(new Registry())),
     );
     const room = Room.create(roomId);
     room.join(Participant.create('A', '케첩', joinedAt));

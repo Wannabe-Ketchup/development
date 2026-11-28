@@ -13,6 +13,8 @@ import { LeaveRoomService } from '../../../src/pomodoro/service/leave-room.servi
 import { RoomEventStreamService } from '../../../src/pomodoro/service/room-event-stream.service';
 import { RoomPresenceTracker } from '../../../src/pomodoro/service/room-presence.tracker';
 import { RoomQueryService } from '../../../src/pomodoro/service/room-query.service';
+import { Registry } from 'prom-client';
+import { MetricsService } from '../../../src/metrics/metrics.service';
 import { SseService } from '../../../src/pomodoro/service/sse.service';
 import { InMemoryRoomRepository } from '../../../src/pomodoro/repository/in-memory.room.repository';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
@@ -28,7 +30,7 @@ describe('RoomEventStreamService', () => {
 
   const setUp = () => {
     const roomRepository = new InMemoryRoomRepository();
-    const sseService = new SseService();
+    const sseService = new SseService(new MetricsService(new Registry()));
     const service = new RoomEventStreamService(
       sseService,
       new RoomPresenceTracker(
