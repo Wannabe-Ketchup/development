@@ -103,4 +103,101 @@ test.describe('홈 화면 접근성 흐름', () => {
       ).toBeFocused();
     });
   });
+
+  test.describe('H-F. 사용 설명서를 읽는다', () => {
+    test('사용 설명서를 열면 dialog가 열리고 첫 장이 펼쳐지며 "1 / 5"를 알린다', async ({
+      page,
+    }) => {
+      await page.getByRole('button', { name: '사용 설명서' }).press('Enter');
+      const dialog = page.getByRole('dialog', {
+        name: '워너비케챱 사용 설명서',
+      });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.locator('[aria-live="polite"]')).toHaveText(
+        '1 / 5, 차례',
+      );
+      await expect(dialog.locator(':focus')).toHaveCount(1);
+    });
+
+    test('방향키·책갈피로 마지막 장(FAQ)까지 읽으면 "다음 장"이 비활성화된다', async ({
+      page,
+    }) => {
+      await page.getByRole('button', { name: '사용 설명서' }).press('Enter');
+      const dialog = page.getByRole('dialog', {
+        name: '워너비케챱 사용 설명서',
+      });
+      const indicator = dialog.locator('[aria-live="polite"]');
+      await expect(indicator).toHaveText('1 / 5, 차례');
+      // 넘기는 동안(650ms)의 입력은 버려지므로 첫 장이 조작 가능해질 때까지 기다린다
+      await expect(dialog.locator('h1:not([inert] *)')).toBeVisible();
+
+      await page.keyboard.press('ArrowRight');
+      await expect(indicator).toHaveText('2 / 5, 뽀모도로란?');
+      await expect(
+        dialog.locator('h2:not([inert] *)', { hasText: '뽀모도로란?' }),
+      ).toBeVisible();
+
+      const faqBookmark = dialog.getByRole('button', { name: 'FAQ' });
+      await faqBookmark.press('Enter');
+      await expect(indicator).toHaveText('5 / 5, 자주 묻는 질문');
+      await expect(faqBookmark).toHaveAttribute('aria-current', 'true');
+      await expect(
+        dialog.getByRole('heading', { name: '자주 묻는 질문' }),
+      ).toBeFocused();
+      await expect(
+        dialog.locator('h2:not([inert] *)', { hasText: '자주 묻는 질문' }),
+      ).toBeVisible();
+      await expect(
+        dialog.getByRole('button', { name: '다음 장' }),
+      ).toBeDisabled();
+    });
+
+    test('사용 설명서를 연 뒤 Escape를 누르면 dialog가 닫히고 포커스가 열기 버튼으로 돌아온다', async ({
+      page,
+    }) => {
+      await page.getByRole('button', { name: '사용 설명서' }).press('Enter');
+      const dialog = page.getByRole('dialog', {
+        name: '워너비케챱 사용 설명서',
+      });
+      await expect(dialog).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect(
+        page.getByRole('button', { name: '사용 설명서' }),
+      ).toBeFocused();
+    });
+
+    test('방 선택 그룹이 열려 있을 때 사용 설명서를 열면 방 선택 그룹이 닫힌다', async ({
+      page,
+    }) => {
+      await page.getByRole('button', { name: '공부 시작' }).press('Space');
+      const group = page.getByRole('group', { name: '어디서 공부할까요?' });
+      await expect(group).toBeVisible();
+      await page.getByRole('button', { name: '사용 설명서' }).click();
+      await expect(
+        page.getByRole('dialog', { name: '워너비케챱 사용 설명서' }),
+      ).toBeVisible();
+      await expect(group).toBeHidden();
+    });
+  });
+
+  test.describe('H-G. 개인정보처리방침을 연다', () => {
+    test('개인정보처리방침 링크는 /privacy.html을 새 탭으로 열고 Tab으로 포커스할 수 있다', async ({
+      page,
+    }) => {
+      const link = page.getByRole('link', { name: '개인정보처리방침' });
+      await expect(link).toHaveAttribute('href', '/privacy.html');
+      await expect(link).toHaveAttribute('target', '_blank');
+
+      await page.getByRole('button', { name: '사용 설명서' }).focus();
+      await page.keyboard.press('Tab');
+      await expect(link).toBeFocused();
+
+      const popupPromise = page.waitForEvent('popup');
+      await page.keyboard.press('Enter');
+      const popup = await popupPromise;
+      await expect(popup).toHaveURL(/\/privacy\.html$/);
+      await expect(page).toHaveURL('/');
+    });
+  });
 });

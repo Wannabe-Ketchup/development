@@ -9,6 +9,7 @@ pnpm + Turborepo 모노레포. Node 24 (`.nvmrc`).
 | `apps/api`        | `@pomodoro/api`: NestJS 11 API 서버 (:3000)                             |
 | `apps/web`        | `@pomodoro/web`: React 19 + Vite (:5173). `/api` 요청은 api로 프록시    |
 | `packages/shared` | `@pomodoro/shared`: api와 web이 함께 쓰는 요청·응답 타입과 상수         |
+| `staging/`        | staging 서버 compose·nginx·모니터링 설정. 배포는 `docs/deployment.md`   |
 | `production/`     | 운영 서버 compose·nginx·Promtail 설정. 배포·롤백은 `docs/deployment.md` |
 
 ## 명령
@@ -32,6 +33,8 @@ pnpm + Turborepo 모노레포. Node 24 (`.nvmrc`).
 - `docs/domain/README.md`: 도메인 문서 목록과 작성 원칙(확정 / 논의 필요 / 현재 구현과 다름)
 - `docs/domain/pomodoro.md`: 방 입장·퇴장·연결 유예, 타이머(집중·휴식 반복, 조작, 알림), 참여자(닉네임·상태 메시지·입력 문자), 범위
 - `docs/domain/auth.md`: 게스트 자동 로그인, 참여자 ID, 로그인 세션, 구글 로그인(추후)
+- `docs/domain/feedback.md`: 피드백 보내기, 첨부(형식·크기·이름), 메일 구성, 하루 접수 한도
+- `docs/domain/privacy.md`: 개인정보처리방침 공개, 동의 기준, 보관 기간과 그 값이 정해진 곳, 보호책임자
 
 도메인 규칙을 추가하거나 바꾸면 같은 작업에서 해당 문서도 고친다. 새 도메인이면 문서를 새로 만들고 위 목록에 추가한다.
 컨벤션 문서(`.claude/rules/`)에는 도메인 지식을 적지 않는다.

@@ -7,14 +7,13 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { COACH_MARK_STEPS } from '../lib/coach-mark-steps';
+import type { CoachMarkStep } from '../lib/coach-mark-steps';
 import {
   computeBubblePlacement,
   type BubbleTail,
 } from '../lib/bubble-placement';
-import { useTargetRect } from '../hooks/useTargetRect';
-import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
-import { useStageScale } from '@/hooks/useStageScale';
+import { useTargetRects } from '../hooks/useTargetRect';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import {
   CoachMarkSpotlight,
   SPOTLIGHT_BORDER_RADIUS_PX,
@@ -25,9 +24,10 @@ import { CoachMarkBubble } from './CoachMarkBubble';
 import { useState } from 'react';
 
 export interface CoachMarkTourProps {
+  // 화면(데스크톱·중간·폰)마다 다른 단계 목록
+  steps: readonly CoachMarkStep[];
   isOpen: boolean;
   stepIndex: number;
-  totalSteps: number;
   canGoPrev: boolean;
   canGoNext: boolean;
   onClose: () => void;
@@ -50,9 +50,9 @@ function isTypingOutsideDialog(
 }
 
 export function CoachMarkTour({
+  steps,
   isOpen,
   stepIndex,
-  totalSteps,
   canGoPrev,
   canGoNext,
   onClose,
@@ -60,11 +60,12 @@ export function CoachMarkTour({
   onPrev,
   triggerRef,
 }: CoachMarkTourProps): ReactNode {
-  const step = COACH_MARK_STEPS[stepIndex];
-  const targetRect = useTargetRect(isOpen ? step.selector : null);
+  const step = steps[stepIndex];
+  const totalSteps = steps.length;
+  const targetRects = useTargetRects(isOpen ? step.selector : null);
+  // 말풍선은 맞는 요소 중 첫 번째에 붙인다
+  const targetRect = targetRects[0] ?? null;
   const reduceMotion = usePrefersReducedMotion();
-  // 투어는 body로 portal되어 스테이지 밖(화면 px)에 그려진다. 말풍선과 구멍만 화면과 같은 배율로 줄인다.
-  const scale = useStageScale();
 
   const prevBtnRef = useRef<HTMLButtonElement>(null);
   const nextBtnRef = useRef<HTMLButtonElement>(null);
@@ -242,9 +243,9 @@ export function CoachMarkTour({
           className="pointer-events-none fixed inset-0 z-40"
         >
           <CoachMarkSpotlight
-            targetRect={targetRect}
-            paddingPx={SPOTLIGHT_PADDING_PX * scale}
-            borderRadiusPx={SPOTLIGHT_BORDER_RADIUS_PX * scale}
+            targetRects={targetRects}
+            paddingPx={SPOTLIGHT_PADDING_PX}
+            borderRadiusPx={SPOTLIGHT_BORDER_RADIUS_PX}
             reduceMotion={reduceMotion}
             isAnimating={isSpotlightAnimating}
             onOverlayClick={onClose}
@@ -253,11 +254,10 @@ export function CoachMarkTour({
           {/* 말풍선: spotlight 위에 절대 배치 */}
           <div className="pointer-events-none fixed inset-0 z-50">
             <div
-              className="pointer-events-auto absolute origin-top-left"
+              className="pointer-events-auto absolute"
               style={{
                 left: bubbleStyle?.left ?? 0,
                 top: bubbleStyle?.top ?? 0,
-                transform: `scale(${scale})`,
               }}
             >
               <CoachMarkBubble
@@ -274,15 +274,7 @@ export function CoachMarkTour({
                 closeBtnRef={closeBtnRef}
                 bubbleRef={bubbleRef}
                 isReady={isReady}
-                // 꼬리는 말풍선 안쪽(축소 전) 좌표로 그린다
-                tail={
-                  bubbleStyle?.tail
-                    ? {
-                        ...bubbleStyle.tail,
-                        offset: bubbleStyle.tail.offset / scale,
-                      }
-                    : null
-                }
+                tail={bubbleStyle?.tail ?? null}
               />
             </div>
           </div>

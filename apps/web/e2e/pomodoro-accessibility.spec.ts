@@ -3,6 +3,10 @@ import {
   mockRoomWith,
   mockEnterRoomOnly,
   mockRoomWithSSEConnected,
+  mockTimerDuration,
+  mockTimerAction,
+  mockChatMessage,
+  emitSseEvent,
 } from './fixtures/api-mocks';
 
 test.describe('뽀모도로 화면 접근성 흐름', () => {
@@ -208,7 +212,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       for (let i = 0; i < 3; i++) {
         await page.getByRole('button', { name: '다음' }).click();
       }
-      await expect(page.getByText('4/6단계')).toBeVisible();
+      await expect(page.getByText('4/7단계')).toBeVisible();
 
       // when: 하이라이트된 닉네임의 수정 버튼을 클릭
       await page.getByRole('button', { name: '닉네임 수정' }).click();
@@ -244,7 +248,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await expect(dialog).toBeVisible();
     });
 
-    test('다음/이전 버튼으로 6개 스텝을 순차 이동하고 설명·스텝 번호가 변경된다', async ({
+    test('다음/이전 버튼으로 7개 스텝을 순차 이동하고 설명·스텝 번호가 변경된다', async ({
       page,
     }) => {
       // given: 투어 열기
@@ -258,8 +262,8 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       ).toBeVisible();
 
       // when/then: 1→2→3→4→5→6 순차 이동 확인
-      // exact: true를 사용해 aria-live 영역("6단계 중 N단계. {설명}")과 실제 <p> 요소를 구분한다.
-      await expect(page.getByText('1/6단계')).toBeVisible();
+      // exact: true를 사용해 aria-live 영역("7단계 중 N단계. {설명}")과 실제 <p> 요소를 구분한다.
+      await expect(page.getByText('1/7단계')).toBeVisible();
       await expect(
         page.getByText(
           '시작·중지 버튼으로 타이머를 조작하고, 남은 시간과 현재 세션을 확인할 수 있어요.',
@@ -268,7 +272,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       ).toBeVisible();
 
       await page.getByRole('button', { name: '다음' }).click();
-      await expect(page.getByText('2/6단계')).toBeVisible();
+      await expect(page.getByText('2/7단계')).toBeVisible();
       await expect(
         page.getByText(
           '함께 공부하는 사람들을 확인할 수 있어요. 토마토 색상은 완료한 세션 수를, 노트북과 커피는 각 참가자의 집중·휴식 상태를 나타내요.',
@@ -277,20 +281,28 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       ).toBeVisible();
 
       await page.getByRole('button', { name: '다음' }).click();
-      await expect(page.getByText('3/6단계')).toBeVisible();
+      await expect(page.getByText('3/7단계')).toBeVisible();
 
       await page.getByRole('button', { name: '다음' }).click();
-      await expect(page.getByText('4/6단계')).toBeVisible();
+      await expect(page.getByText('4/7단계')).toBeVisible();
 
       await page.getByRole('button', { name: '다음' }).click();
-      await expect(page.getByText('5/6단계')).toBeVisible();
+      await expect(page.getByText('5/7단계')).toBeVisible();
 
       await page.getByRole('button', { name: '다음' }).click();
-      await expect(page.getByText('6/6단계')).toBeVisible();
+      await expect(page.getByText('6/7단계')).toBeVisible();
+
+      await page.getByRole('button', { name: '다음' }).click();
+      await expect(page.getByText('7/7단계')).toBeVisible();
+      await expect(
+        page.getByText('같은 방 사람들과 메시지를 주고받을 수 있어요.', {
+          exact: true,
+        }),
+      ).toBeVisible();
 
       // 이전 버튼으로 되돌아가기
       await page.getByRole('button', { name: '이전' }).click();
-      await expect(page.getByText('5/6단계')).toBeVisible();
+      await expect(page.getByText('6/7단계')).toBeVisible();
     });
 
     test('첫 스텝 "이전" / 마지막 스텝 "다음"이 비활성화되고 Tab이 비활성 버튼을 건너뛴다', async ({
@@ -320,11 +332,11 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await page.keyboard.press('Shift+Tab');
       await expect(nextBtn).toBeFocused();
 
-      // when: 마지막 스텝으로 이동 (5회 다음 클릭)
-      for (let i = 0; i < 5; i++) {
+      // when: 마지막 스텝으로 이동 (6회 다음 클릭)
+      for (let i = 0; i < 6; i++) {
         await nextBtn.click();
       }
-      await expect(page.getByText('6/6단계')).toBeVisible();
+      await expect(page.getByText('7/7단계')).toBeVisible();
 
       // then: 마지막 스텝 "다음" 버튼은 disabled
       await expect(nextBtn).toBeDisabled();
@@ -337,7 +349,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await expect(closeBtn).toBeFocused();
     });
 
-    test('`aria-live` 영역이 스텝 전환 시 "6단계 중 N단계. {설명}" 형식으로 재공표된다', async ({
+    test('`aria-live` 영역이 스텝 전환 시 "7단계 중 N단계. {설명}" 형식으로 재공표된다', async ({
       page,
     }) => {
       // given: 투어 열기
@@ -355,7 +367,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
         '[aria-live="polite"][aria-atomic="true"]',
       );
       await expect(liveRegion).toContainText(
-        '6단계 중 1단계. 시작·중지 버튼으로 타이머를 조작하고, 남은 시간과 현재 세션을 확인할 수 있어요.',
+        '7단계 중 1단계. 시작·중지 버튼으로 타이머를 조작하고, 남은 시간과 현재 세션을 확인할 수 있어요.',
       );
 
       // when: 다음 클릭
@@ -363,7 +375,7 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
 
       // then: 2단계 aria-live 텍스트로 교체
       await expect(liveRegion).toContainText(
-        '6단계 중 2단계. 함께 공부하는 사람들을 확인할 수 있어요. 토마토 색상은 완료한 세션 수를, 노트북과 커피는 각 참가자의 집중·휴식 상태를 나타내요.',
+        '7단계 중 2단계. 함께 공부하는 사람들을 확인할 수 있어요. 토마토 색상은 완료한 세션 수를, 노트북과 커피는 각 참가자의 집중·휴식 상태를 나타내요.',
       );
     });
 
@@ -391,6 +403,26 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       const sseError = page.getByTestId('sse-error');
       await expect(sseError).toBeVisible({ timeout: 5000 });
       await expect(dialog).not.toBeVisible();
+    });
+
+    test('투어가 열린 채 채팅을 열면 투어는 사라지고 포커스가 메시지 입력으로 간다', async ({
+      page,
+    }) => {
+      // given: 투어가 열린 상태
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: 'how to use' }).click();
+      const tourDialog = page.getByRole('dialog', { name: '뽀모도로 사용법' });
+      await expect(tourDialog).toBeVisible();
+
+      // when
+      await page.getByRole('button', { name: 'chat' }).focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(page.getByRole('region', { name: '채팅' })).toBeVisible();
+      await expect(tourDialog).not.toBeVisible();
+      await expect(page.getByRole('textbox', { name: '메시지' })).toBeFocused();
     });
 
     test('SSE 연결 완료 전에는 How to use 버튼이 접근성 트리에 노출되지 않는다', async ({
@@ -552,6 +584,480 @@ test.describe('뽀모도로 화면 접근성 흐름', () => {
       await expect(page.getByRole('status')).toHaveText(
         '초대코드를 복사했어요',
       );
+    });
+  });
+
+  test.describe('P-F. 시간 설정 모달로 집중·휴식 시간을 바꾼다', () => {
+    test('Enter로 열어 집중·휴식 시간을 바꾸고 저장하면 요청을 보내고 열기 버튼으로 포커스가 돌아온다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      const requestBodies = await mockTimerDuration(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '시간 설정' });
+      await expect(openBtn).toBeVisible();
+      await openBtn.focus();
+
+      // when: 단계 1~2
+      await page.keyboard.press('Enter');
+
+      // then
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByRole('group', { name: '집중' })).toContainText(
+        '25분',
+      );
+      await expect(dialog.getByRole('group', { name: '휴식' })).toContainText(
+        '5분',
+      );
+      await expect(page.getByRole('button', { name: '닫기' })).toBeFocused();
+
+      // when: 단계 3
+      const increaseFocusBtn = page.getByRole('button', {
+        name: '집중 시간 늘리기',
+      });
+      await increaseFocusBtn.focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog.getByRole('group', { name: '집중' })).toContainText(
+        '30분',
+      );
+      await expect(page.getByRole('status').first()).toHaveText('30분');
+      await expect(increaseFocusBtn).toBeFocused();
+
+      // when: 단계 4
+      const decreaseBreakBtn = page.getByRole('button', {
+        name: '휴식 시간 줄이기',
+      });
+      await decreaseBreakBtn.focus();
+      for (let i = 0; i < 4; i++) await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog.getByRole('group', { name: '휴식' })).toContainText(
+        '1분',
+      );
+      await expect(decreaseBreakBtn).toHaveAttribute('aria-disabled', 'true');
+      await expect(decreaseBreakBtn).toBeFocused();
+
+      // when: 단계 5
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog.getByRole('group', { name: '휴식' })).toContainText(
+        '1분',
+      );
+      await expect(decreaseBreakBtn).toBeFocused();
+
+      // when: 단계 6
+      await page.getByRole('button', { name: '저장하기' }).focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+      expect(requestBodies).toEqual([{ focusMinutes: 30, breakMinutes: 1 }]);
+    });
+
+    test('Escape로 닫히고 열기 버튼으로 포커스가 복원된다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '시간 설정' });
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
+      await expect(dialog).toBeVisible();
+
+      // when
+      await page.keyboard.press('Escape');
+
+      // then
+      await expect(dialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+
+    test('저장이 409로 거절되면 진행 중이라고 알리고 모달은 열려 있다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await mockTimerDuration(page, { status: 409 });
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: '시간 설정' }).focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
+      const saveBtn = page.getByRole('button', { name: '저장하기' });
+      await saveBtn.focus();
+
+      // when
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(page.getByRole('alert')).toHaveText(
+        '진행 중에는 바꿀 수 없어요',
+      );
+      await expect(dialog).toBeVisible();
+    });
+
+    test('방이 진행 중이면 현재 값만 보이고 조절·저장 버튼은 눌러도 변화가 없다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page, {
+        roomOverrides: {
+          mode: 'FOCUS',
+          timer: {
+            status: 'RUNNING',
+            focusTimeSec: 1500,
+            breakTimeSec: 300,
+            totalCycle: 4,
+            timerStartedAt: new Date().toISOString(),
+            remainingTimeSec: 1500,
+          },
+        },
+      });
+      const requestBodies = await mockTimerDuration(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: '시간 설정' }).focus();
+
+      // when
+      await page.keyboard.press('Enter');
+
+      // then
+      const dialog = page.getByRole('dialog', { name: '시간 설정' });
+      await expect(
+        dialog.getByText('뽀모도로 진행 중에는 설정을 바꿀 수 없어요'),
+      ).toBeVisible();
+      await expect(dialog.getByRole('group', { name: '집중' })).toContainText(
+        '25분',
+      );
+      const names = [
+        '집중 시간 늘리기',
+        '집중 시간 줄이기',
+        '휴식 시간 늘리기',
+        '휴식 시간 줄이기',
+        '저장하기',
+      ];
+      for (const name of names) {
+        const button = page.getByRole('button', { name });
+        await expect(button).toHaveAttribute('aria-disabled', 'true');
+        await button.focus();
+        await page.keyboard.press('Enter');
+        await expect(button).toBeFocused();
+      }
+      await expect(dialog.getByRole('group', { name: '집중' })).toContainText(
+        '25분',
+      );
+      await expect(dialog.getByRole('group', { name: '휴식' })).toContainText(
+        '5분',
+      );
+      expect(requestBodies).toEqual([]);
+    });
+
+    test('투어가 열린 채 설정 모달을 열면 투어는 사라지고 닫으면 열기 버튼으로 포커스가 간다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      await page.goto('/pomodoro/r1');
+      await page.getByRole('button', { name: 'how to use' }).click();
+      const tourDialog = page.getByRole('dialog', { name: '뽀모도로 사용법' });
+      await expect(tourDialog).toBeVisible();
+      const openBtn = page.getByRole('button', { name: '시간 설정' });
+
+      // when
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      const settingsDialog = page.getByRole('dialog', { name: '시간 설정' });
+      await expect(settingsDialog).toBeVisible();
+      await expect(tourDialog).not.toBeVisible();
+
+      // when
+      await page.keyboard.press('Escape');
+
+      // then
+      await expect(settingsDialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+  });
+
+  test.describe('P-G. 리셋 버튼으로 타이머를 처음으로 되돌린다', () => {
+    test('대기 중에는 리셋이 비활성이고, 진행 중에 누르면 요청을 보내 대기로 돌아온다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      const resetCalls = await mockTimerAction(page, 'reset');
+      await page.goto('/pomodoro/r1');
+      const resetBtn = page.getByRole('button', { name: '리셋' });
+      await expect(resetBtn).toBeVisible();
+      const idleRoom = {
+        roomId: 'test-room',
+        participants: [
+          {
+            id: 'self-p1',
+            nickname: '토마토1',
+            statusMessage: '',
+            completedCycles: 1,
+          },
+        ],
+        timer: {
+          status: 'IDLE' as const,
+          focusTimeSec: 1500,
+          breakTimeSec: 300,
+          totalCycle: 4,
+          timerStartedAt: null,
+          remainingTimeSec: 1500,
+        },
+        mode: 'IDLE' as const,
+        currentCycle: 0,
+      };
+      const runningRoom = {
+        ...idleRoom,
+        mode: 'FOCUS' as const,
+        currentCycle: 1,
+        timer: {
+          ...idleRoom.timer,
+          status: 'RUNNING' as const,
+          timerStartedAt: new Date().toISOString(),
+        },
+      };
+
+      // when: 단계 1~2
+      await resetBtn.focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(resetBtn).toHaveAttribute('aria-disabled', 'true');
+      expect(resetCalls.count).toBe(0);
+      await expect(page.getByText('idle')).toBeVisible();
+
+      // when: 단계 3
+      await emitSseEvent(page, 'room_state', runningRoom);
+
+      // then
+      await expect(page.getByText('1st focus')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'pause' })).toBeVisible();
+      await expect(resetBtn).toHaveAttribute('aria-disabled', 'false');
+
+      // when: 단계 4
+      await resetBtn.focus();
+      await page.keyboard.press('Enter');
+      await emitSseEvent(page, 'pomodoro_reset', idleRoom);
+
+      // then
+      await expect.poll(() => resetCalls.count).toBe(1);
+      await expect(page.getByText('idle')).toBeVisible();
+      await expect(page.locator('[data-tour-id="timer"]')).toHaveText(
+        '25 : 00',
+      );
+      await expect(page.getByRole('button', { name: 'start' })).toBeVisible();
+      await expect(resetBtn).toBeFocused();
+      await expect(resetBtn).toHaveAttribute('aria-disabled', 'true');
+    });
+  });
+
+  test.describe('P-H. 피드백 모달로 피드백을 보낸다', () => {
+    test('Enter로 열어 내용과 첨부를 넣고 전송하면 완료가 발화되고 닫으면 포커스가 열기 버튼으로 돌아간다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      let releaseResponse!: () => void;
+      const responseReleased = new Promise<void>((resolve) => {
+        releaseResponse = resolve;
+      });
+      await page.route('**/api/feedbacks', async (route) => {
+        await responseReleased;
+        await route.fulfill({ status: 204 });
+      });
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: '피드백 보내기' });
+      await openBtn.focus();
+
+      // when: 열기
+      await page.keyboard.press('Enter');
+
+      // then: 포커스는 내용 입력칸, 전송하기는 비활성
+      const dialog = page.getByRole('dialog', { name: '피드백 보내기' });
+      const textbox = dialog.getByRole('textbox', { name: '내용' });
+      await expect(dialog).toBeVisible();
+      await expect(textbox).toBeFocused();
+      await expect(textbox).toHaveAttribute(
+        'placeholder',
+        '어떤 점이 좋았고 어떤 점이 불편했는지 적어주세요',
+      );
+      await expect(
+        dialog.getByRole('button', { name: '전송하기' }),
+      ).toBeDisabled();
+
+      // when: 입력
+      await page.keyboard.type('좋아요');
+
+      // then
+      await expect(textbox).toHaveValue('좋아요');
+      await expect(
+        dialog.getByRole('button', { name: '전송하기' }),
+      ).toBeEnabled();
+
+      // when: Esc
+      await page.keyboard.press('Escape');
+
+      // then: 내용이 있어 닫히지 않는다
+      await expect(dialog).toBeVisible();
+
+      // when: 파일 선택
+      await dialog.getByTestId('feedback-file-input').setInputFiles({
+        name: 'shot.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('png'),
+      });
+
+      // then
+      const list = dialog.getByRole('list', { name: '첨부 파일' });
+      await expect(list.getByRole('listitem')).toHaveCount(1);
+      await expect(
+        list.getByRole('button', { name: 'shot.png 빼기' }),
+      ).toBeVisible();
+
+      // when: 전송 앞으로 Tab
+      const detailLink = dialog.getByRole('link', { name: '자세히 보기' });
+      await expect(dialog).toContainText(
+        '피드백과 함께 접속 정보(IP, 참여자 ID, 브라우저 정보)가 운영팀 메일로 전송돼요.',
+      );
+      await expect(detailLink).toHaveAttribute('href', '/privacy.html');
+      await expect(detailLink).toHaveAttribute('target', '_blank');
+      await detailLink.focus();
+      await page.keyboard.press('Tab');
+
+      // then: 자세히 보기 링크 다음이 전송하기
+      await expect(
+        dialog.getByRole('button', { name: '전송하기' }),
+      ).toBeFocused();
+
+      // when: 전송
+      await page.keyboard.press('Enter');
+
+      // then: 응답이 오기 전에는 전송 중으로 비활성
+      await expect(
+        dialog.getByRole('button', { name: '전송 중' }),
+      ).toBeDisabled();
+
+      // when: 응답 도착
+      releaseResponse();
+
+      // then: status 발화
+      await expect(dialog.getByRole('status')).toHaveText('피드백을 보냈어요');
+
+      // when: 닫기
+      await expect(dialog.getByRole('button', { name: '닫기' })).toBeFocused();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(dialog).not.toBeVisible();
+      await expect(openBtn).toBeFocused();
+    });
+  });
+
+  test.describe('P-I. 채팅창을 열어 메시지를 주고받는다', () => {
+    test('닫혀 있으면 포커스가 들어가지 않고, 열어 메시지를 주고받은 뒤 닫으면 열기 버튼으로 포커스가 돌아간다', async ({
+      page,
+    }) => {
+      // given
+      await mockRoomWithSSEConnected(page);
+      const chat = await mockChatMessage(page);
+      await page.goto('/pomodoro/r1');
+      const openBtn = page.getByRole('button', { name: /^chat/ });
+      const region = page.getByRole('region', { name: '채팅' });
+      const textbox = page.getByRole('textbox', { name: '메시지' });
+      const items = page.getByRole('log').getByRole('listitem');
+      await expect(openBtn).toBeVisible();
+      await emitSseEvent(page, 'chat_history', { messages: [] });
+
+      // when: 단계 1
+      await openBtn.focus();
+      await page.keyboard.press('Tab');
+
+      // then
+      await expect(region).toBeHidden();
+      await expect(page.locator('section :focus')).toHaveCount(0);
+
+      // when: 단계 2
+      await emitSseEvent(page, 'chat_message', {
+        id: 1,
+        senderId: 'other-p2',
+        nickname: '토마토2',
+        content: '안녕하세요',
+        sentAt: new Date(2026, 0, 1, 14, 3).toISOString(),
+      });
+
+      // then
+      await expect(openBtn).toHaveAccessibleName('chat 안 읽은 메시지 있음');
+
+      // when: 단계 3
+      await openBtn.focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(region).toBeVisible();
+      await expect(textbox).toBeFocused();
+      await expect(openBtn).toBeHidden();
+      await expect(items).toHaveCount(1);
+      await expect(items.first()).toContainText('토마토2');
+      await expect(items.first()).toContainText('14:03');
+      await expect(items.first()).toContainText('안녕하세요');
+
+      // when: 단계 4
+      await page.keyboard.type('다들 화이팅');
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(items).toHaveCount(2);
+      await expect(items.last()).toContainText(/^나/);
+      await expect(items.last()).toContainText('다들 화이팅');
+      await expect(textbox).toHaveValue('');
+      await expect(textbox).toBeFocused();
+
+      // when: 단계 5
+      chat.status = 429;
+      await page.keyboard.type('또 보내기');
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(region.getByRole('alert')).toHaveText(
+        '너무 자주 보냈어요. 잠시 후 다시 보내 주세요',
+      );
+      await expect(textbox).toHaveValue('또 보내기');
+      expect(chat.contents).toEqual(['다들 화이팅', '또 보내기']);
+
+      // when: 단계 6
+      await page.keyboard.press('Escape');
+
+      // then
+      await expect(region).toBeHidden();
+      await expect(openBtn).toBeFocused();
+      await expect(openBtn).toHaveAccessibleName('chat');
+
+      // when: 단계 7
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(region).toBeVisible();
+      await expect(textbox).toHaveValue('또 보내기');
+
+      // when: 단계 8
+      await region.getByRole('button', { name: '채팅 닫기' }).focus();
+      await page.keyboard.press('Enter');
+
+      // then
+      await expect(region).toBeHidden();
+      await expect(openBtn).toBeFocused();
     });
   });
 });

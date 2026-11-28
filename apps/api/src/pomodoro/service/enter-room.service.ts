@@ -38,20 +38,32 @@ export class EnterRoomService {
       };
     }
 
+    // 한 번에 한 방에만 참여한다. 이전 방은 입장에 성공한 뒤 퇴장시키지만,
+    // join 뒤에 찾으면 방금 들어간 이 방이 나오므로 미리 찾는다
+    const previousRoom = this.roomRepository.findByParticipantId(participantId);
+
     let nickname: string;
     do {
       nickname = this.generateRandomNickname();
     } while (room.hasNickname(nickname));
 
-    const joinedAt = new Date().toISOString();
+    // 채팅은 보낸 시각(clock)과 이 시각을 비교해 입장한 뒤 메시지를 고르므로 같은 시계를 쓴다
+    const now = this.clock.now();
+    const joinedAt = now.toISOString();
     const participant = Participant.create(participantId, nickname, joinedAt);
     // 입장하면 빈 방이 된 시각이 지워지므로 먼저 읽는다
-    const secondsSinceEmptied = room.secondsSinceEmptied(this.clock.now());
+    const secondsSinceEmptied = room.secondsSinceEmptied(now);
     room.join(participant);
 
     this.roomRepository.save(room);
     this.timerScheduler.cancel(TimerKey.roomDeletion(roomId));
     this.roomPresenceTracker.registerPendingParticipant(roomId, participant.id);
+    if (previousRoom) {
+      this.roomPresenceTracker.leaveImmediately(
+        previousRoom.roomId,
+        participantId,
+      );
+    }
     if (secondsSinceEmptied !== undefined) {
       this.metricsService.recordEmptyRoomReturn(secondsSinceEmptied);
     }

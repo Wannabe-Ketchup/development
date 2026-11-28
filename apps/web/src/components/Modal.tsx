@@ -6,10 +6,10 @@ import {
   type ReactNode,
 } from 'react';
 import { WobblyBox } from '@squiggle-line/react';
-import { useStageScale } from '@/hooks/useStageScale';
 import { useViewportSize } from '@/hooks/useViewportSize';
+import { useVisualViewportRect } from '@/hooks/useVisualViewportRect';
 import { cn } from '@/lib/cn';
-import { getFitScale } from '@/lib/fit-scale';
+import { FIT_GUTTER_PX, getFitScale } from '@/lib/fit-scale';
 
 // 배경색은 안쪽 요소에 CSS로 칠하고 WobblyBox는 테두리만 그린다.
 // 테두리 svg는 크기를 잰 뒤에야 그려지므로, 그 전에도 배경과 글자가 함께 보이게 하기 위해서다
@@ -29,6 +29,8 @@ interface ModalProps {
   onClose?: () => void;
   // 안쪽 박스의 너비·정렬·간격
   className?: string;
+  // 화면보다 크면 모양 그대로 통째로 줄인다(홈·404의 화면 크기 안내). 없으면 실제 크기로 두고 넘치는 내용은 안에서 스크롤한다
+  shouldScaleToFit?: boolean;
   children: ReactNode;
 }
 
@@ -36,15 +38,25 @@ export function Modal({
   labelledBy,
   onClose,
   className,
+  shouldScaleToFit = false,
   children,
 }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const isBackdropPressRef = useRef(false);
-  const stageScale = useStageScale();
   const viewportSize = useViewportSize();
+  // 화면 키보드가 올라오면 보이는 영역(키보드 위)의 가운데로 옮긴다. 키보드로 화면 높이를 줄이는 브라우저(Chrome)도,
+  // 줄이지 않고 화면을 미는 브라우저(Safari)도 보이는 영역은 visualViewport로 같게 잰다
+  const visibleRect = useVisualViewportRect();
   const [dialogSize, setDialogSize] = useState({ width: 0, height: 0 });
-  // 화면이 축소 중이면 같은 배율로 줄이고, 모달이 화면보다 크면(폰 등) 모양은 그대로 둔 채 화면에 맞게 더 줄인다
-  const scale = Math.min(stageScale, getFitScale(dialogSize, viewportSize));
+  const visibleSize = {
+    width: viewportSize.width,
+    height: visibleRect.height,
+  };
+  const scale = shouldScaleToFit ? getFitScale(dialogSize, visibleSize) : 1;
+  // 줄이지 않는 모달은 보이는 높이(위아래 여백 제외)를 넘지 않는다
+  const maxHeight = shouldScaleToFit
+    ? undefined
+    : visibleSize.height - FIT_GUTTER_PX * 2;
   const isDismissible = onClose !== undefined;
 
   // 마운트되면 모달로 연다. StrictMode 이중 실행 대비로 open을 확인한다.
@@ -78,11 +90,14 @@ export function Modal({
     <dialog
       ref={dialogRef}
       aria-labelledby={labelledBy}
-      className="fixed inset-auto top-1/2 left-1/2 m-0 max-h-none w-max max-w-none -translate-x-1/2 -translate-y-1/2 overflow-visible bg-transparent p-0 backdrop:bg-black/32"
-      // showModal()은 top layer에 그려져 축소 스테이지의 transform을 받지 않으므로 배율을 직접 건다.
+      className="fixed inset-auto top-1/2 left-1/2 m-0 max-h-none w-max max-w-none -translate-x-1/2 -translate-y-1/2 overflow-visible bg-transparent p-0 select-none backdrop:bg-black/30"
+      // 브라우저가 모달 dialog에 user-select: text를 기본으로 줘서 body의 select-none을 이어받지 못하므로 여기서 다시 막는다. 입력칸은 전역 규칙으로 선택된다
       // 화면보다 커도 브라우저 기본 max-width/height로 찌그러지지 않게 풀고, 가운데 기준(translate + 기본 origin)으로 줄여 중앙을 유지한다.
       // WobblyBox는 contentRect(transform 전 크기)로 재서 테두리가 어긋나지 않는다
-      style={{ transform: `scale(${scale})` }}
+      style={{
+        transform: `scale(${scale})`,
+        top: visibleRect.top + visibleRect.height / 2,
+      }}
       onCancel={(e) => {
         if (!isDismissible) e.preventDefault();
       }}
@@ -110,8 +125,13 @@ export function Modal({
         <div
           className={cn(
             'flex flex-col rounded-[32px] bg-cream px-9 py-7',
+            // 줄이지 않는 모달은 화면 너비(좌우 여백 16 제외)를 넘지 않고, 높이가 모자라면 안에서 스크롤한다
+            !shouldScaleToFit && 'max-w-[calc(100dvw-2rem)] overflow-y-auto',
+            // 좁은 화면(compact-safe-area 안)은 모달을 줄이지 않고, 좌우 여백만 남기고 폭을 맞춘다
+            'in-[.compact-safe-area]:w-[min(31.25rem,calc(100dvw-var(--side)*2))] in-[.compact-safe-area]:px-6 in-[.compact-safe-area]:py-6',
             className,
           )}
+          style={{ maxHeight }}
         >
           {children}
         </div>

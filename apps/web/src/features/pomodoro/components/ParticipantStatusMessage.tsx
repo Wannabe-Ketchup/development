@@ -1,19 +1,26 @@
-import { type KeyboardEvent } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import { WobblySpeechBubble } from '@squiggle-line/react';
 import EditIcon from '@/assets/edit.svg?react';
 import OkIcon from '@/assets/ok.svg?react';
 import { IconButton } from '@/components/IconButton';
 import { cn } from '@/lib/cn';
+import { useCoversTimer } from '../hooks/useCoversTimer';
 import { usePreventDragSelection } from '../hooks/usePreventDragSelection';
 import { useStatusMessageEditor } from '../hooks/useStatusMessageEditor';
 
 const BREAK_STATUS_MESSAGE = '휴식 중…';
+
+// 좁은 화면(compact-safe-area 안)에서는 보이는 크기는 그대로 두고 누르는 영역만 넓힌다
+const COMPACT_TOUCH_CLASS_NAME =
+  "in-[.compact-safe-area]:after:absolute in-[.compact-safe-area]:after:-inset-2 in-[.compact-safe-area]:after:content-['']";
 
 interface ParticipantStatusMessageProps {
   roomId: string;
   message: string;
   isSelf: boolean;
   isBreak: boolean;
+  // 폰은 자리표시 문구를 한 줄로 보여 준다(넓은 화면은 두 줄)
+  hasOneLinePlaceholder?: boolean;
   className?: string;
 }
 
@@ -22,6 +29,7 @@ export function ParticipantStatusMessage({
   message,
   isSelf,
   isBreak,
+  hasOneLinePlaceholder = false,
   className,
 }: ParticipantStatusMessageProps) {
   const {
@@ -34,6 +42,8 @@ export function ParticipantStatusMessage({
     confirmEditing,
   } = useStatusMessageEditor({ roomId, statusMessage: message });
   const { isPointerDown, onPointerDown } = usePreventDragSelection();
+  const [rootElement, setRootElement] = useState<HTMLDivElement | null>(null);
+  const isCoveringTimer = useCoversTimer(rootElement);
 
   const isEmpty = !statusMessage;
   const isEditing = draft !== null;
@@ -48,7 +58,10 @@ export function ParticipantStatusMessage({
 
   const displayMessage = (() => {
     if (isShowingBreak) return BREAK_STATUS_MESSAGE;
-    if (isPlaceholder) return '지금 무엇을\n하고있나요?';
+    if (isPlaceholder)
+      return hasOneLinePlaceholder
+        ? '지금 무엇을 하고있나요?'
+        : '지금 무엇을\n하고있나요?';
     return statusMessage;
   })();
 
@@ -72,16 +85,20 @@ export function ParticipantStatusMessage({
 
   return (
     <div
+      ref={setRootElement}
       data-tour-id={isSelf ? 'self-status' : undefined}
       className={cn(
         'group relative inline-flex flex-col items-center',
+        // 화면이 낮아 타이머와 겹치면 숨긴다. 고치는 중에는 입력이 사라지지 않게 그대로 둔다
+        isCoveringTimer && !isEditing && 'invisible',
         className,
       )}
     >
       <WobblySpeechBubble
         key={isEditing ? 'edit' : 'view'}
         className={cn(
-          'font-ongleipryudung text-2xl whitespace-pre',
+          // 데스크톱 24, 좁은 화면 22. 닉네임과 같은 크기다
+          'font-ongleipryudung text-title whitespace-pre in-[.compact-safe-area]:text-title-sm',
           textColor,
           error && 'animate-shake',
         )}
@@ -123,6 +140,7 @@ export function ParticipantStatusMessage({
           onClick={startEditing}
           className={cn(
             'absolute top-0 right-0 z-10 translate-x-1/2 -translate-y-1/2 rounded-full p-2 text-white',
+            COMPACT_TOUCH_CLASS_NAME,
             'opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100',
             'group-focus-within:opacity-100',
             buttonBg,
@@ -138,6 +156,7 @@ export function ParticipantStatusMessage({
           onClick={confirmEditing}
           className={cn(
             'absolute top-0 right-0 z-10 translate-x-1/2 -translate-y-1/2 rounded-full p-2',
+            COMPACT_TOUCH_CLASS_NAME,
             buttonBg,
           )}
         />
@@ -146,7 +165,7 @@ export function ParticipantStatusMessage({
       {error && (
         <p
           role="alert"
-          className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs whitespace-nowrap text-error"
+          className="absolute -top-6 left-1/2 -translate-x-1/2 text-caption whitespace-nowrap text-error"
         >
           {error}
         </p>

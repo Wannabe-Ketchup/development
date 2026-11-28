@@ -21,7 +21,7 @@ vi.mock('@/lib/room-id');
 const mockEnterRoomByInviteCode = enterRoomByInviteCode as unknown as Mock;
 
 const openInviteCodeInput = () => {
-  render(<RoomEntryPopover />);
+  render(<RoomEntryPopover layout="desktop" />);
   fireEvent.click(screen.getByRole('button', { name: '초대받은 방 입장하기' }));
 };
 
@@ -79,16 +79,20 @@ describe('RoomEntryPopover', () => {
     expect(mockShake).toHaveBeenCalledTimes(expectedShakeCount);
   });
 
-  it('초대 코드로 입장하면 입장 응답의 방 ID로 이동한다', async () => {
+  it('소문자가 섞인 초대 코드를 대문자로 표시하고 공백을 제거한 코드로 방에 입장한다', async () => {
     // given
     mockEnterRoomByInviteCode.mockResolvedValue({
       participant: { id: 'p-1', nickname: '졸린토마토' },
       room: { roomId: 'room-1' },
     });
     openInviteCodeInput();
+    const input =
+      screen.getByPlaceholderText<HTMLInputElement>('초대 코드를 입력하세요');
 
     // when
-    enterWithCode('K7P2QX');
+    fireEvent.change(input, { target: { value: ' k7P2qX ' } });
+    expect(input.value).toBe(' K7P2QX ');
+    fireEvent.click(screen.getByRole('button', { name: '입장하기' }));
 
     // then
     expect(mockEnterRoomByInviteCode).toHaveBeenCalledWith('K7P2QX');
@@ -196,7 +200,7 @@ describe('RoomEntryPopover', () => {
     // given
     openInviteCodeInput();
     fireEvent.change(screen.getByPlaceholderText('초대 코드를 입력하세요'), {
-      target: { value: 'room-1' },
+      target: { value: 'k7p2qx' },
     });
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }));
 
@@ -206,7 +210,7 @@ describe('RoomEntryPopover', () => {
     );
 
     // then
-    const expectedCode = 'room-1';
+    const expectedCode = 'K7P2QX';
     expect(screen.getByDisplayValue(expectedCode)).toBeTruthy();
   });
 
@@ -227,7 +231,7 @@ describe('RoomEntryPopover', () => {
   it('방 선택 화면에서 Escape를 누르면 토마토가 휴식을 취하는 상태로 돌아간다', () => {
     // given
     const handleClose = vi.fn();
-    render(<RoomEntryPopover onClose={handleClose} />);
+    render(<RoomEntryPopover layout="desktop" onClose={handleClose} />);
     const container = screen.getByText('어디서 공부할까요?').closest('div')!;
 
     // when
@@ -240,7 +244,7 @@ describe('RoomEntryPopover', () => {
   it('초대 코드 입력 화면에서 Escape를 누르면 토마토가 휴식을 취하는 상태로 돌아간다', () => {
     // given
     const handleClose = vi.fn();
-    render(<RoomEntryPopover onClose={handleClose} />);
+    render(<RoomEntryPopover layout="desktop" onClose={handleClose} />);
     fireEvent.click(
       screen.getByRole('button', { name: '초대받은 방 입장하기' }),
     );
@@ -256,7 +260,7 @@ describe('RoomEntryPopover', () => {
 
   it('방 선택 화면이 열리면 첫 번째 버튼에 포커스가 이동한다', () => {
     // given / when
-    render(<RoomEntryPopover />);
+    render(<RoomEntryPopover layout="desktop" />);
 
     // then
     expect(document.activeElement).toBe(

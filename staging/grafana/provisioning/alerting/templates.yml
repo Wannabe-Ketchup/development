@@ -1,0 +1,23 @@
+apiVersion: 1
+
+# 디스코드 메시지 형식. 기본 형식은 해결됐을 때도 울릴 때의 summary·할 일을 그대로 붙여
+# "느려지는 중입니다" 같은 문구가 해결 메시지에 남는다. 해결됐을 때는 이름과 시각만 보낸다.
+templates:
+  - orgId: 1
+    name: discord
+    template: |
+      {{ define "discord.title" -}}
+      {{ if eq .Status "firing" }}울림{{ else }}해결됨{{ end }}: {{ .CommonLabels.alertname }}
+      {{- end }}
+
+      {{ define "discord.message" -}}
+      {{ range .Alerts.Firing -}}
+      **울림: {{ .Labels.alertname }}** ({{ .StartsAt | tz "Asia/Seoul" | date "01-02 15:04" }}부터)
+      {{ .Annotations.summary }}
+      {{ .Annotations.description }}
+      {{ .GeneratorURL }}
+      {{ end -}}
+      {{ range .Alerts.Resolved -}}
+      **해결됨: {{ .Labels.alertname }}** ({{ .StartsAt | tz "Asia/Seoul" | date "01-02 15:04" }} ~ {{ .EndsAt | tz "Asia/Seoul" | date "15:04" }})
+      {{ end -}}
+      {{- end }}

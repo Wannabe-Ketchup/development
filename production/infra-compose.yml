@@ -32,6 +32,33 @@ services:
       - ketchup-network
     restart: always
 
+  # 서버 전체 메모리·스왑·CPU·디스크를 모니터링 서버(staging) Prometheus에 내보낸다.
+  # 포트는 열지 않는다. 운영 nginx가 /api/node-metrics를 staging IP에만 열어 이 컨테이너로 넘긴다.
+  node-exporter:
+    image: prom/node-exporter:v1.10.2
+    container_name: node-exporter
+    command:
+      # 서버 파일을 읽기 전용으로 붙여 컨테이너가 아니라 서버 전체 값을 읽게 한다.
+      - '--path.rootfs=/host'
+      # 기본 수집기는 끄고 메모리·스왑 문제를 보는 데 필요한 것만 켠다(메모리·저장량을 줄이려고).
+      - '--collector.disable-defaults'
+      - '--collector.meminfo' # 남은 메모리, 스왑 사용량
+      - '--collector.vmstat' # 스왑 들고 나는 횟수, OOM으로 강제 종료된 횟수
+      - '--collector.pressure' # 메모리·디스크를 기다리느라 멈춘 시간
+      - '--collector.cpu' # CPU 사용률, iowait
+      - '--collector.filesystem' # 디스크 남은 용량
+      - '--collector.filesystem.mount-points-include=^/$'
+    environment:
+      # mem_limit에 닿기 전에 GC가 메모리를 회수하게 한다.
+      - GOMEMLIMIT=25MiB
+    volumes:
+      - /:/host:ro,rslave
+    # 로컬 측정에서 15초마다 수집할 때 약 10MB, 몰아서 수집할 때 약 14MB를 썼다.
+    mem_limit: 32m
+    networks:
+      - ketchup-network
+    restart: always
+
 networks:
   ketchup-network:
     name: ketchup-network

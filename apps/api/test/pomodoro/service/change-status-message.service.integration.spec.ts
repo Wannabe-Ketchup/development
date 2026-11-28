@@ -2,6 +2,8 @@ import type { Room as RoomState } from '@pomodoro/shared';
 import { NotFoundException } from '@nestjs/common';
 import { ChangeStatusMessageService } from '../../../src/pomodoro/service/change-status-message.service';
 import { RoomQueryService } from '../../../src/pomodoro/service/room-query.service';
+import { Registry } from 'prom-client';
+import { MetricsService } from '../../../src/metrics/metrics.service';
 import { SseService } from '../../../src/pomodoro/service/sse.service';
 import { InMemoryRoomRepository } from '../../../src/pomodoro/repository/in-memory.room.repository';
 import { Room } from '../../../src/pomodoro/domain/room.entity';
@@ -17,7 +19,7 @@ describe('ChangeStatusMessageService', () => {
     const service = new ChangeStatusMessageService(
       new RoomQueryService(roomRepository),
       roomRepository,
-      new SseService(),
+      new SseService(new MetricsService(new Registry())),
     );
     const room = Room.create(roomId);
     room.join(Participant.create(participantId, '케첩', joinedAt));
@@ -41,7 +43,7 @@ describe('ChangeStatusMessageService', () => {
     const participantId = 'A';
     const joinedAt = '2026-09-02T00:00:00.000Z';
     const roomRepository = new InMemoryRoomRepository();
-    const sseService = new SseService();
+    const sseService = new SseService(new MetricsService(new Registry()));
     const service = new ChangeStatusMessageService(
       new RoomQueryService(roomRepository),
       roomRepository,
@@ -76,7 +78,7 @@ describe('ChangeStatusMessageService', () => {
     const roomId = 'roomId';
     const joinedAt = '2026-09-02T00:00:00.000Z';
     const roomRepository = new InMemoryRoomRepository();
-    const sseService = new SseService();
+    const sseService = new SseService(new MetricsService(new Registry()));
     const service = new ChangeStatusMessageService(
       new RoomQueryService(roomRepository),
       roomRepository,
@@ -115,7 +117,7 @@ describe('ChangeStatusMessageService', () => {
     const service = new ChangeStatusMessageService(
       new RoomQueryService(roomRepository),
       roomRepository,
-      new SseService(),
+      new SseService(new MetricsService(new Registry())),
     );
     const newStatusMessage = '집중 중';
 

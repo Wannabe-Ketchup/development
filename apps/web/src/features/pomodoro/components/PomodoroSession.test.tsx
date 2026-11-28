@@ -2,13 +2,19 @@ import { describe, it, expect, vi, afterEach, type Mock } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ROOM_MODE } from '@pomodoro/shared';
 import { PomodoroSession } from './PomodoroSession';
-import { pausePomodoro, resumePomodoro, startPomodoro } from '@/api/timer';
+import {
+  pausePomodoro,
+  resetPomodoro,
+  resumePomodoro,
+  startPomodoro,
+} from '@/api/timer';
 
 vi.mock('@/api/timer');
 
 const mockStartPomodoro = startPomodoro as unknown as Mock;
 const mockPausePomodoro = pausePomodoro as unknown as Mock;
 const mockResumePomodoro = resumePomodoro as unknown as Mock;
+const mockResetPomodoro = resetPomodoro as unknown as Mock;
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -50,6 +56,28 @@ describe('PomodoroSession', () => {
     expect(screen.getByText('1st focus')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'pause' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'start' })).toBeNull();
+  });
+
+  it('좁은 화면에서는 조작 버튼에 글자 없이 아이콘만 보이고, 같은 이름으로 눌러 요청을 보낸다', () => {
+    // given
+    mockPausePomodoro.mockResolvedValue(undefined);
+    render(
+      <PomodoroSession
+        roomId="room-1"
+        mode={ROOM_MODE.FOCUS}
+        currentCycle={1}
+        timerStatus="RUNNING"
+        isCompact
+      />,
+    );
+    const pauseButton = screen.getByRole('button', { name: 'pause' });
+    expect(pauseButton.textContent).toBe('');
+
+    // when
+    fireEvent.click(pauseButton);
+
+    // then
+    expect(mockPausePomodoro).toHaveBeenCalledWith('room-1');
   });
 
   it('진행 중인 방에서 pause를 누르면 일시정지 요청을 보낸다', () => {
@@ -155,5 +183,69 @@ describe('PomodoroSession', () => {
     expect(
       screen.getByRole<HTMLButtonElement>('button', { name: 'start' }).disabled,
     ).toBe(false);
+  });
+
+  it('진행 중에 리셋 버튼을 누르면 리셋을 요청한다', () => {
+    // given
+    mockResetPomodoro.mockResolvedValue(undefined);
+    render(
+      <PomodoroSession
+        roomId="room-1"
+        mode={ROOM_MODE.FOCUS}
+        currentCycle={2}
+        timerStatus="RUNNING"
+      />,
+    );
+
+    // when
+    fireEvent.click(screen.getByRole('button', { name: '리셋' }));
+
+    // then
+    expect(mockResetPomodoro).toHaveBeenCalledWith('room-1');
+  });
+
+  it('대기 중에는 리셋 버튼이 aria-disabled이고 눌러도 요청하지 않는다', () => {
+    // given
+    render(
+      <PomodoroSession
+        roomId="room-1"
+        mode={ROOM_MODE.IDLE}
+        currentCycle={0}
+        timerStatus="IDLE"
+      />,
+    );
+    const resetButton = screen.getByRole('button', { name: '리셋' });
+
+    // when
+    fireEvent.click(resetButton);
+
+    // then
+    expect(resetButton.getAttribute('aria-disabled')).toBe('true');
+    expect(mockResetPomodoro).not.toHaveBeenCalled();
+  });
+
+  it('리셋 요청이 실패하면 다시 누를 수 있다', async () => {
+    // given
+    mockResetPomodoro.mockRejectedValue(new Error('실패'));
+    render(
+      <PomodoroSession
+        roomId="room-1"
+        mode={ROOM_MODE.FOCUS}
+        currentCycle={1}
+        timerStatus="RUNNING"
+      />,
+    );
+    const resetButton = screen.getByRole('button', { name: '리셋' });
+    fireEvent.click(resetButton);
+    await vi.waitFor(() => {
+      expect(resetButton.getAttribute('aria-disabled')).toBe('false');
+    });
+
+    // when
+    fireEvent.click(resetButton);
+
+    // then
+    const expectedCallCount = 2;
+    expect(mockResetPomodoro).toHaveBeenCalledTimes(expectedCallCount);
   });
 });

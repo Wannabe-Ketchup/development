@@ -21,6 +21,8 @@
 
   --color-black: #1b1b1b;
   --color-gray: #bababa;
+  --color-warm-gray: #99918a;
+  --color-warm-gray-dark: #807870;
   --color-white: #ffffff;
   --color-cream: #fffdf9;
 
@@ -28,13 +30,55 @@
   --color-tomato-body-2: #f5ae8d;
   --color-tomato-body-3: #f5908d;
   --color-tomato-body-4: #f36673;
+  --color-tomato-pale: #ffe3de;
   --color-tomato-leaf: #2ae578;
   --color-lamp-on: #ffed92;
   --color-lamp-off: #ffffff;
   --color-error: #f36673;
+  /* 방 배경 이미지(wall·floor)의 평균 색. 이미지 밖 브라우저 영역을 칠할 때 쓴다 */
+  --color-room-wall: #f8efe2;
+  --color-room-floor: #e1b98e;
 
   --font-dearfromsol: 'DearFromsol', 'OngleipRyudung';
   --font-ongleipryudung: 'OngleipRyudung';
+
+  /* 글자 크기 위계. Tailwind 기본 크기(sm, 2xl 등)는 지우고 이 토큰만 쓴다.
+     값은 화면에 보이는 px 그대로다(어느 화면도 비율로 줄이지 않는다. 홈만 창 크기에 맞춰 줄인다).
+     줄 간격은 토큰으로 바꾸기 전 Tailwind 기본값을 그대로 옮겼다(없는 것은 부모를 따른다).
+     토큰을 더하거나 지우면 lib/cn.ts의 FONT_SIZE_TOKENS도 고친다 */
+  --text-*: initial;
+  /* 방 타이머. 화면마다 하나씩 */
+  --text-timer: 6.5rem; /* 104 데스크톱 */
+  --text-timer--line-height: 1;
+  --text-timer-tablet: 6rem; /* 96 */
+  --text-timer-mobile: 5rem; /* 80 */
+  --text-timer-sm: 4.5rem; /* 72 작은 폰 */
+  /* 큰 제목: 홈 안내, 초대코드 */
+  --text-headline: 2.25rem; /* 36 */
+  --text-headline--line-height: 2.5rem;
+  /* 제목: 모달 제목, 큰 버튼, 알약, 닉네임·상태 메시지 */
+  --text-title: 1.5rem; /* 24 */
+  --text-title--line-height: 2rem;
+  /* 작은 제목: 채팅창 제목, 시간 설정 숫자 */
+  --text-title-sm: 1.375rem; /* 22 */
+  /* 큰 본문: 좁은 화면 알약, 시간 설정 라벨 */
+  --text-body-lg: 1.25rem; /* 20 */
+  --text-body-lg--line-height: 1.75rem;
+  /* 본문: 투어 설명, 홈 입력·버튼 */
+  --text-body: 1.125rem; /* 18 */
+  --text-body--line-height: 1.75rem;
+  /* 기본 본문: 모달 본문, 채팅 메시지·입력 */
+  --text-body-sm: 1rem; /* 16 */
+  --text-body-sm--line-height: 1.5rem;
+  /* 보조·오류: 투어 단계, 첨부 용량, 입력 오류 */
+  --text-caption: 0.875rem; /* 14 */
+  --text-caption--line-height: 1.25rem;
+  /* 홈 사용 설명서. 책처럼 따로 맞춘 크기 */
+  --text-book-title: 2rem; /* 32 */
+  --text-book-toc: 1.3125rem; /* 21 */
+  --text-book-body: 1.1875rem; /* 19 */
+  --text-book-list: 1.0625rem; /* 17 */
+  --text-book-caption: 0.9375rem; /* 15 */
 
   --cursor-default: url('./assets/cursor_default.svg') 4 4, default;
   --cursor-pointer: url('./assets/cursor_pointer.svg') 4 4, pointer;
@@ -60,8 +104,49 @@
   @apply brightness-85;
 }
 
+/* 좁은 화면(모바일·중간) 방 화면의 노치·홈 인디케이터 여백. index.html의 viewport-fit=cover와 함께 쓴다.
+   env()는 이 화면에서만 쓰므로 데스크톱 레이아웃에는 영향이 없다 */
+@utility compact-safe-area {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
 body {
   @apply cursor-default font-dearfromsol tracking-[10%] text-black select-none;
+}
+
+/* 방 화면에서 페이지 밖(당겨서 늘어나는 곳 등)을 위는 벽, 아래는 바닥 색으로 칠한다.
+   iOS 26 Safari는 상단 상태 표시줄을 페이지 배경색으로 칠하므로 배경색은 벽 색으로 둔다(그라데이션은 읽지 않는다).
+   모달·사용 안내가 열리면 화면을 덮는 막과 같은 비율로 어둡게 섞는다. Safari는 반투명한 막을 상태 표시줄·주소창에 쓰지 않아서다.
+   비율은 모달 막(bg-black/30, Modal·ChatSheet)과 사용 안내 막(CoachMarkSpotlight 0.6)과 맞춘다 */
+html:has([data-room-page]) {
+  --room-edge-dim: 0%;
+  --room-edge-wall: color-mix(
+    in srgb,
+    var(--color-room-wall),
+    black var(--room-edge-dim)
+  );
+  --room-edge-floor: color-mix(
+    in srgb,
+    var(--color-room-floor),
+    black var(--room-edge-dim)
+  );
+  background-color: var(--room-edge-wall);
+  background-image: linear-gradient(
+    to bottom,
+    var(--room-edge-wall) 50%,
+    var(--room-edge-floor) 50%
+  );
+}
+
+html:has([data-room-page]):has(dialog:modal) {
+  --room-edge-dim: 30%;
+}
+
+html:has([data-room-page]):has(#coach-mark-tour) {
+  --room-edge-dim: 60%;
 }
 
 button,
@@ -80,31 +165,32 @@ textarea {
 
 @keyframes snot-slide {
   to {
-    transform: translateX(-150px);
+    transform: translateX(calc(-150px * var(--home-k, 1)));
   }
 }
 
 @keyframes pencil-slide {
   to {
-    transform: translateX(-180px);
+    transform: translateX(calc(-180px * var(--home-k, 1)));
   }
 }
 
 @keyframes tomato-surprised-slide {
   to {
-    transform: translateX(-250px);
+    transform: translateX(calc(-250px * var(--home-k, 1)));
   }
 }
 
+/* 음표·김은 그림 크기가 화면마다 달라, 그림 너비 기준(%)으로 칸을 넘긴다 */
 @keyframes note-slide {
   to {
-    transform: translateX(-384px);
+    transform: translateX(-100%);
   }
 }
 
 @keyframes steam-slide {
   to {
-    transform: translateX(-280px);
+    transform: translateX(-100%);
   }
 }
 
@@ -137,4 +223,13 @@ textarea {
   .animate-shake {
     animation: none;
   }
+}
+
+/* 폰 Safari가 상태 표시줄·주소창 뒤를 칠할 때 쓰는 화면 위·아래 끝 띠의 색. 모달이 열리면 함께 어두워진다 */
+@utility room-edge-top {
+  background-color: var(--room-edge-wall);
+}
+
+@utility room-edge-bottom {
+  background-color: var(--room-edge-floor);
 }

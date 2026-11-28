@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ROOM_MODE, type RoomMode } from '@pomodoro/shared';
+import { ChatMessage } from './chat-message.entity';
+import { ChatMessages, type SendChatMessageResult } from './chat-messages';
 import { Participant } from './participant.entity';
 import { Timer } from './timer.entity';
 
@@ -17,6 +19,7 @@ export class Room {
     private _timer: Timer,
     private _mode: RoomMode,
     private _currentCycle: number,
+    private readonly _chatMessages: ChatMessages,
     // 퇴장으로 빈 방이 된 시각. 방을 만들 때는 두지 않아 입장한 적 없는 방과 구분된다
     private _emptiedAt?: Date,
   ) {}
@@ -27,8 +30,17 @@ export class Room {
     const capacity = 4;
     const participants = new Map<string, Participant>();
     const currentCycle = 0;
+    const chatMessages = ChatMessages.create();
 
-    return new Room(roomId, participants, capacity, timer, mode, currentCycle);
+    return new Room(
+      roomId,
+      participants,
+      capacity,
+      timer,
+      mode,
+      currentCycle,
+      chatMessages,
+    );
   }
 
   // 검증하지 않는다. repository 매퍼와 테스트 given에서만 호출한다
@@ -39,6 +51,8 @@ export class Room {
     timer: Timer;
     mode: RoomMode;
     currentCycle: number;
+    // 채팅을 다루지 않는 테스트를 위해 생략하면 빈 목록으로 둔다
+    chatMessages?: ChatMessages;
     emptiedAt?: Date;
   }): Room {
     return new Room(
@@ -50,6 +64,7 @@ export class Room {
       props.timer,
       props.mode,
       props.currentCycle,
+      props.chatMessages ?? ChatMessages.create(),
       props.emptiedAt,
     );
   }
@@ -122,6 +137,40 @@ export class Room {
     }
   }
 
+  // 보낸 당시 닉네임을 메시지에 복사해 두므로, 이후 닉네임을 바꾸거나 퇴장해도 그대로 남는다
+  sendChatMessage(
+    participantId: string,
+    props: { clientMessageId: string; content: string; sentAt: string },
+  ): SendChatMessageResult {
+    const sender = this.getParticipant(participantId);
+    return this._chatMessages.send({
+      senderId: sender.id,
+      nickname: sender.nickname,
+      ...props,
+    });
+  }
+
+  // 참여자가 입장한 뒤의 메시지. 연결이 열릴 때 그 연결에 chat_history로 보낸다
+  chatMessagesSinceJoined(participantId: string): ChatMessage[] {
+    const participant = this.getParticipant(participantId);
+    return this._chatMessages.messagesSince(participant.joinedAt);
+  }
+
+  private getParticipant(participantId: string): Participant {
+    const participant = this._participants.get(participantId);
+    if (!participant) {
+      throw new NotFoundException('방에 존재하지 않는 참가자입니다.');
+    }
+    return participant;
+  }
+
+  // 대기 상태가 아니면(진행 중·일시정지 중) 거부한다. 일시정지 중에도 mode는 FOCUS/BREAK다
+  private validateIdle(): void {
+    if (!this.isIdle()) {
+      throw new ConflictException('대기 중에만 시간을 바꿀 수 있습니다.');
+    }
+  }
+
   startPomodoro(participantId: string, now: Date): void {
     this.validateParticipant(participantId);
     if (this.isRunning()) {
@@ -131,6 +180,17 @@ export class Room {
     this._mode = ROOM_MODE.FOCUS;
     this._currentCycle = 1;
     this._timer = this._timer.startFocus(now);
+  }
+
+  // 시간은 대기 상태에서만 바꿀 수 있다
+  changeTimerDuration(
+    participantId: string,
+    focusMinutes: number,
+    breakMinutes: number,
+  ): void {
+    this.validateParticipant(participantId);
+    this.validateIdle();
+    this._timer = this._timer.changeDuration(focusMinutes, breakMinutes);
   }
 
   // 모드와 회차는 그대로 두고 타이머만 멈춘다
@@ -143,6 +203,19 @@ export class Room {
   resumePomodoro(participantId: string, now: Date): void {
     this.validateParticipant(participantId);
     this._timer = this._timer.resume(now);
+  }
+
+  // 흘러간 시간과 회차를 처음으로 돌려 대기 상태로 만든다. 시간 설정과 참여자의 토마토 단계는 그대로다.
+  // 끝나는 순간에 와도 거부하지 않는다. 예약된 전환은 서비스가 취소한다
+  resetPomodoro(participantId: string): void {
+    this.validateParticipant(participantId);
+    if (this.isIdle()) {
+      throw new ConflictException('대기 중에는 초기화할 수 없습니다.');
+    }
+
+    this._mode = ROOM_MODE.IDLE;
+    this._currentCycle = 0;
+    this._timer = this._timer.reset();
   }
 
   // 휴식은 집중이 실제로 처리된 시각이 아니라 끝나기로 예정된 시각에 시작한다
@@ -180,6 +253,10 @@ export class Room {
 
   isEmpty(): boolean {
     return this._participants.size === 0;
+  }
+
+  isIdle(): boolean {
+    return this._mode === ROOM_MODE.IDLE;
   }
 
   isRunning(): boolean {

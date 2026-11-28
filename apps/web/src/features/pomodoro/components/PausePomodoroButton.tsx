@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import PauseSvg from '@/assets/pause.svg?react';
 import { pausePomodoro } from '@/api/timer';
-import { PILL_CONTENT_CLASS_NAME } from './SquigglePill';
+import { IconButton } from '@/components/IconButton';
+import { ICON_PILL_CONTENT_CLASS_NAME } from '@/components/SquigglePill';
 
 interface PausePomodoroButtonProps {
   roomId: string;
@@ -20,15 +21,14 @@ export function PausePomodoroButton({ roomId }: PausePomodoroButtonProps) {
     }
   };
 
+  // 모든 화면에서 아이콘만 보이는 지름 48 원형 버튼이다. 접근 가능한 이름은 label로 남긴다
   return (
-    <button
-      type="button"
+    <IconButton
+      label="pause"
+      icon={PauseSvg}
       disabled={isPausing}
       onClick={handleClick}
-      className={PILL_CONTENT_CLASS_NAME}
-    >
-      pause
-      <PauseSvg aria-hidden="true" />
-    </button>
+      className={ICON_PILL_CONTENT_CLASS_NAME}
+    />
   );
 }

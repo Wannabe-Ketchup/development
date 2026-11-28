@@ -16,10 +16,10 @@ export function Lamp({ theme, onToggle }: LampProps) {
       label={label}
       icon={LampSvg}
       iconClassName={cn(
-        'pointer-events-none cursor-pointer *:pointer-events-auto [&_.lamp-outline]:opacity-0 hover:[&_.lamp-outline]:opacity-100',
+        'pointer-events-none h-auto w-50 cursor-pointer *:pointer-events-auto [&_.lamp-outline]:opacity-0 hover:[&_.lamp-outline]:opacity-100',
         theme === 'dark' ? 'text-lamp-off' : 'text-lamp-on',
       )}
-      className="pointer-events-none absolute bottom-18 -left-38"
+      className="pointer-events-none absolute bottom-17 -left-34.25"
       onClick={onToggle}
     />
   );

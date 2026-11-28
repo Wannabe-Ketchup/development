@@ -1,6 +1,9 @@
 import { forwardRef } from 'react';
 import { cn } from '@/lib/cn';
-import { PILL_CONTENT_CLASS_NAME, SquigglePill } from './SquigglePill';
+import {
+  ROOM_PILL_CONTENT_CLASS_NAME,
+  SquigglePill,
+} from '@/components/SquigglePill';
 
 export interface HowToUseButtonProps {
   isOpen: boolean;
@@ -13,7 +16,7 @@ export const HowToUseButton = forwardRef<
   HowToUseButtonProps
 >(function HowToUseButton({ isOpen, onClick, className }, ref) {
   return (
-    <div className={cn('absolute bottom-8 left-8 z-20', className)}>
+    <div className={cn('absolute bottom-6.5 left-6.5 z-20', className)}>
       <SquigglePill>
         <button
           ref={ref}
@@ -22,7 +25,7 @@ export const HowToUseButton = forwardRef<
           aria-expanded={isOpen}
           aria-controls="coach-mark-tour"
           onClick={onClick}
-          className={PILL_CONTENT_CLASS_NAME}
+          className={ROOM_PILL_CONTENT_CLASS_NAME}
         >
           how to use
         </button>

@@ -3,11 +3,17 @@ import {
   BREAK_DURATION_SECONDS,
   CYCLE_COUNT,
   FOCUS_DURATION_SECONDS,
+  isValidDurationMinutes,
+  TIMER_DURATION_RULE,
   type Timer as TimerShape,
   type TimerStatus,
 } from '@pomodoro/shared';
 
 const MS_PER_SECOND = 1000;
+const SECONDS_PER_MINUTE = 60;
+
+const FOCUS_RULE = TIMER_DURATION_RULE.focus;
+const BREAK_RULE = TIMER_DURATION_RULE.break;
 
 interface TimerProps {
   status: TimerStatus;
@@ -102,6 +108,29 @@ export class Timer implements TimerShape {
       totalCycle: this.totalCycle,
       timerStartedAt: null,
       remainingTimeSec: this.focusTimeSec,
+    });
+  }
+
+  // 집중·휴식 시간을 바꾼 대기 타이머. 대기 화면은 1회차 집중 전체 시간을 보여 주므로 남은 시간도 새 집중 시간이 된다
+  changeDuration(focusMinutes: number, breakMinutes: number): Timer {
+    if (!isValidDurationMinutes('focus', focusMinutes)) {
+      throw new BadRequestException(
+        `집중 시간은 ${FOCUS_RULE.minMinutes}~${FOCUS_RULE.maxMinutes}분, ${FOCUS_RULE.stepMinutes}분 단위입니다.`,
+      );
+    }
+    if (!isValidDurationMinutes('break', breakMinutes)) {
+      throw new BadRequestException(
+        `휴식 시간은 ${BREAK_RULE.minMinutes}~${BREAK_RULE.maxMinutes}분, ${BREAK_RULE.stepMinutes}분 단위입니다.`,
+      );
+    }
+    const focusTimeSec = focusMinutes * SECONDS_PER_MINUTE;
+    return Timer.of({
+      status: 'IDLE',
+      focusTimeSec,
+      breakTimeSec: breakMinutes * SECONDS_PER_MINUTE,
+      totalCycle: this.totalCycle,
+      timerStartedAt: null,
+      remainingTimeSec: focusTimeSec,
     });
   }
 

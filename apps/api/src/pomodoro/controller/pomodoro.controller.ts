@@ -7,14 +7,17 @@ import {
   Param,
   Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import { ParticipantId } from '../../auth/decorator/participant-id.decorator';
 import { EnterRoomService } from '../service/enter-room.service';
 import { ChangeNicknameService } from '../service/change-nickname.service';
 import { ChangeStatusMessageService } from '../service/change-status-message.service';
 import { StartPomodoroService } from '../service/start-pomodoro.service';
+import { ChangeTimerDurationService } from '../service/change-timer-duration.service';
 import { PausePomodoroService } from '../service/pause-pomodoro.service';
 import { ResumePomodoroService } from '../service/resume-pomodoro.service';
+import { ResetPomodoroService } from '../service/reset-pomodoro.service';
 import type { JoinRoomResponse } from '../dto/join-room-response.dto';
 import type { ChangeNicknameRequest } from '../dto/change-nickname-request.dto';
 import { CreateRoomService } from '../service/create-room.service';
@@ -24,8 +27,13 @@ import { EnterRoomByInviteCodeService } from '../service/enter-room-by-invite-co
 import type { EnterRoomByInviteCodeRequest } from '../dto/enter-room-by-invite-code-request.dto';
 import { InviteCodeResponse } from '../dto/invite-code-response.dto';
 import type { CreateRoomResponse, ExistsRoomResponse } from '@pomodoro/shared';
+import type { ChangeTimerDurationRequest } from '../dto/change-timer-duration-request.dto';
 import type { ChangeStatusMessageRequest } from '../dto/change-status-message-request.dto';
 import { NotifyDiscord } from '../../common/notification/notify-discord.decorator';
+import { RequestValidationPipe } from '../../common/pipe/request-validation.pipe';
+import { SendChatMessageService } from '../service/send-chat-message.service';
+import { SendChatMessageDto } from '../dto/send-chat-message.dto';
+import { SendChatMessageResponse } from '../dto/send-chat-message-response.dto';
 
 @Controller('pomodoro')
 export class PomodoroController {
@@ -36,10 +44,13 @@ export class PomodoroController {
     private readonly roomQueryService: RoomQueryService,
     private readonly changeStatusMessageService: ChangeStatusMessageService,
     private readonly startPomodoroService: StartPomodoroService,
+    private readonly changeTimerDurationService: ChangeTimerDurationService,
     private readonly pausePomodoroService: PausePomodoroService,
     private readonly resumePomodoroService: ResumePomodoroService,
+    private readonly resetPomodoroService: ResetPomodoroService,
     private readonly findInviteCodeService: FindInviteCodeService,
     private readonly enterRoomByInviteCodeService: EnterRoomByInviteCodeService,
+    private readonly sendChatMessageService: SendChatMessageService,
   ) {}
 
   @Get('room/:roomId/exists')
@@ -113,6 +124,37 @@ export class PomodoroController {
     );
   }
 
+  // 재전송이어도 처음 저장된 메시지로 201을 응답한다
+  @Post('room/:roomId/chat-message')
+  sendChatMessage(
+    @Param('roomId') roomId: string,
+    @ParticipantId() participantId: string,
+    @Body(RequestValidationPipe) body: SendChatMessageDto,
+  ): SendChatMessageResponse {
+    const message = this.sendChatMessageService.sendChatMessage({
+      roomId,
+      participantId,
+      clientMessageId: body.clientMessageId,
+      content: body.content,
+    });
+    return SendChatMessageResponse.from(message);
+  }
+
+  @Put('room/:roomId/participant/timer-duration')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  changeTimerDuration(
+    @Param('roomId') roomId: string,
+    @ParticipantId() participantId: string,
+    @Body() body: ChangeTimerDurationRequest,
+  ): void {
+    this.changeTimerDurationService.changeTimerDuration(
+      roomId,
+      participantId,
+      body.focusMinutes,
+      body.breakMinutes,
+    );
+  }
+
   @Post('room/:roomId/participant/pomodoro-start')
   @HttpCode(HttpStatus.NO_CONTENT)
   startPomodoro(
@@ -138,5 +180,14 @@ export class PomodoroController {
     @ParticipantId() participantId: string,
   ): void {
     this.resumePomodoroService.resumePomodoro(roomId, participantId);
+  }
+
+  @Post('room/:roomId/participant/pomodoro-reset')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  resetPomodoro(
+    @Param('roomId') roomId: string,
+    @ParticipantId() participantId: string,
+  ): void {
+    this.resetPomodoroService.resetPomodoro(roomId, participantId);
   }
 }
