@@ -31,7 +31,11 @@ export class RoomEventStreamService {
         data: RoomDto.fromEntity(room),
       };
 
-      if (this.roomPresenceTracker.connectParticipant(participantId)) {
+      const connection = this.roomPresenceTracker.connectParticipant(
+        roomId,
+        participantId,
+      );
+      if (connection.isFirstConnection) {
         this.sseService.emit(roomId, roomStateEvent);
       }
 
@@ -43,6 +47,7 @@ export class RoomEventStreamService {
       };
 
       // 두 스냅샷과 구독이 한 번에 동기로 이어져, 그 사이에 저장된 메시지를 놓치거나 두 번 받지 않는다
+      // finalize가 connection을 읽을 수 있게 defer 안쪽 Observable에 붙인다
       return merge(
         of(
           this.sseService.createOwnSnapshotEvent(roomStateEvent),
@@ -50,11 +55,15 @@ export class RoomEventStreamService {
         ),
         this.sseService.subscribe(roomId),
         this.sseService.heartbeats(),
+      ).pipe(
+        finalize(() =>
+          this.roomPresenceTracker.disconnectParticipant(
+            roomId,
+            participantId,
+            connection.connectionId,
+          ),
+        ),
       );
-    }).pipe(
-      finalize(() =>
-        this.roomPresenceTracker.disconnectParticipant(roomId, participantId),
-      ),
-    );
+    });
   }
 }

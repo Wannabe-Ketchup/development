@@ -49,6 +49,8 @@ function Pomodoro() {
   const [isLastChangeReset, setIsLastChangeReset] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [hasEnterRoomFailed, setHasEnterRoomFailed] = useState(false);
+  // 다른 방에 입장해 서버가 이 방에서 퇴장시킨 상태. 방 이동은 전체 페이지 이동이라 초기화하지 않는다
+  const [hasMovedToAnotherRoom, setHasMovedToAnotherRoom] = useState(false);
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const tour = useCoachMarkTour({ totalSteps: TOTAL_STEPS });
@@ -76,11 +78,18 @@ function Pomodoro() {
   // 방 상태와 리셋 여부를 같은 렌더에 반영해야 세션 변경 훅이 둘을 맞춰 본다
   const handleRoomState = useCallback(
     (nextRoom: Room, change: RoomStateChange) => {
+      const isSelfInRoom = nextRoom.participants.some(
+        (participant) => participant.id === selfParticipantId,
+      );
+      if (!isSelfInRoom) {
+        setHasMovedToAnotherRoom(true);
+        return;
+      }
       setRoom(nextRoom);
       setIsLastChangeReset(change.isReset);
       setIsConfirmed(true);
     },
-    [],
+    [selfParticipantId],
   );
 
   const {
@@ -92,7 +101,7 @@ function Pomodoro() {
 
   const { status: sseStatus } = useRoomSSE(
     roomId ?? undefined,
-    selfParticipantId !== null,
+    selfParticipantId !== null && !hasMovedToAnotherRoom, // false가 되면 effect cleanup이 SSE를 닫는다
     handleRoomState,
     addChatMessage,
     addChatHistory,
@@ -102,7 +111,11 @@ function Pomodoro() {
 
   // 방 상태를 믿을 수 있을 때만 탭 제목과 브라우저 알림에 쓴다
   const isRoomLive =
-    !!roomId && !!room && !hasEnterRoomFailed && sseStatus !== 'error';
+    !!roomId &&
+    !!room &&
+    !hasEnterRoomFailed &&
+    !hasMovedToAnotherRoom &&
+    sseStatus !== 'error';
   const liveRoom = isRoomLive ? room : null;
 
   useNotificationPermission();
@@ -121,6 +134,7 @@ function Pomodoro() {
     !!selfParticipantId &&
     isConfirmed &&
     !hasEnterRoomFailed &&
+    !hasMovedToAnotherRoom &&
     sseStatus !== 'error';
 
   // 투어 열린 상태에서 에러로 전환되면 자동 닫기
@@ -230,8 +244,18 @@ function Pomodoro() {
           </ul>
         )}
 
+        {/* 다른 방에 입장해 이 방에서 퇴장된 경우. SSE 실패 안내보다 우선한다 */}
+        {roomId && hasMovedToAnotherRoom && (
+          <div
+            data-testid="moved-room-notice"
+            className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 text-white"
+          >
+            다른 방에 입장해서 이 방에서 퇴장되었습니다.
+          </div>
+        )}
+
         {/* 입장은 됐지만 실시간 연결(SSE)이 끊긴 경우 */}
-        {roomId && sseStatus === 'error' && (
+        {roomId && sseStatus === 'error' && !hasMovedToAnotherRoom && (
           <div
             data-testid="sse-error"
             className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 text-white"
