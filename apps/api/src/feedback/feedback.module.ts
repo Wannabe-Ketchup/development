@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Clock } from '../common/clock/clock';
 import { SystemClock } from '../common/clock/system.clock';
+import { NotificationSender } from '../common/notification/notification-sender';
 import { FeedbackController } from './controller/feedback.controller';
 import { FeedbackUploadDirectory } from './config/feedback-upload-directory';
 import {
@@ -33,13 +34,15 @@ import { SubmitFeedbackService } from './service/submit-feedback.service';
       useFactory: (
         transport: FeedbackMailTransport,
         configService: ConfigService,
+        notificationSender: NotificationSender,
       ) =>
         new NodemailerFeedbackMailSender(
           transport,
           configService,
+          notificationSender,
           FEEDBACK_MAIL_SEND_TIMEOUT_MS,
         ),
-      inject: [FeedbackMailTransport, ConfigService],
+      inject: [FeedbackMailTransport, ConfigService, NotificationSender],
     },
   ],
 })

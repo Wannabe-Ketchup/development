@@ -24,7 +24,12 @@ describe('SessionGuard', () => {
       .overrideProvider(LoadS3MusicService)
       .useValue({})
       .overrideProvider(FeedbackMailTransport)
-      .useValue({})
+      .useValue(
+        new FeedbackMailTransport({
+          sendMail: jest.fn(),
+          verify: jest.fn().mockResolvedValue(true),
+        }),
+      )
       .overrideProvider(FeedbackUploadDirectory)
       .useValue({})
       .compile();

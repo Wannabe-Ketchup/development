@@ -146,7 +146,30 @@ sudo certbot certonly --standalone --expand \
 
 운영 서버의 `APP_DIR`에 `production/` 아래 파일을 그대로 둔다. `app-compose.yml`과 `infra-compose.yml`이 같은 `./logs`를 공유해야 Promtail이 Nest 로그를 읽을 수 있으므로 두 파일은 같은 디렉터리에 있어야 한다. 인증서는 nginx를 띄우기 전에 `sudo certbot certonly --standalone -d wannabe-ketchup.com --pre-hook "docker stop nginx" --post-hook "docker start nginx"`로 받는다. nginx 컨테이너가 아직 없을 때는 훅이 실패해도 발급은 진행되며, 훅은 renewal 설정에 저장돼 이후 자동 갱신에 쓰인다.
 
-비밀값은 커밋하지 않는 `.env`에 두고, 루트 `.env.example`의 항목을 운영 값으로 채운다. 피드백 메일용 `FEEDBACK_MAIL_USER`, `FEEDBACK_MAIL_APP_PASSWORD`(Gmail 앱 비밀번호)가 없으면 Nest가 시작하지 못하므로, 피드백 기능이 들어간 버전을 배포하기 전에 운영·staging 서버의 `.env`에 두 값을 먼저 넣는다. nginx의 `/api/feedbacks` 업로드 크기(19m) 설정도 함께 서버에 반영한다.
+비밀값은 커밋하지 않는 `.env`에 두고, 루트 `.env.example`의 항목을 운영 값으로 채운다. 피드백 메일용 `FEEDBACK_MAIL_USER`, `FEEDBACK_MAIL_CLIENT_ID`, `FEEDBACK_MAIL_CLIENT_SECRET`, `FEEDBACK_MAIL_REFRESH_TOKEN`이 없으면 Nest가 시작하지 못하므로, 피드백 기능이 들어간 버전을 배포하기 전에 운영·staging 서버의 `.env`에 네 값을 먼저 넣는다(발급 절차는 아래 "피드백 메일 OAuth2 토큰"). nginx의 `/api/feedbacks` 업로드 크기(19m) 설정도 함께 서버에 반영한다.
+
+#### 피드백 메일 OAuth2 토큰
+
+피드백 메일은 공용 Gmail 계정이 자기 자신에게 보낸다. 공용 계정에 2단계 인증을 켤 수 없어 앱 비밀번호 대신 OAuth2 refresh token으로 인증한다. staging과 운영은 같은 값을 쓴다.
+
+처음 한 번 발급한다. OAuth 설정은 콘솔의 "Google 인증 플랫폼"(예전 "OAuth 동의 화면", [바로 가기](https://console.cloud.google.com/auth/overview))에 모여 있다. 화면 위쪽에서 프로젝트가 맞게 선택됐는지 먼저 확인한다.
+
+1. 공용 계정으로 Google Cloud 콘솔에 들어가 프로젝트를 만들고 Gmail API를 사용 설정한다.
+2. Google 인증 플랫폼을 처음 열면 "시작하기"에서 앱 정보를 입력한다. 대상은 **외부**로 고른다.
+3. **브랜딩** 탭에 앱 이름, 사용자 지원 이메일, **애플리케이션 홈페이지 URL**, **개인정보처리방침 URL**, 승인된 도메인, 개발자 연락처를 채운다. 홈페이지와 개인정보처리방침이 없으면 4의 게시 버튼이 비활성화된다. 앱 로고는 올리지 않는다(외부·프로덕션 앱에 로고를 올리면 Google 인증을 위해 앱을 제출해야 한다). **데이터 액세스** 탭에는 범위를 추가하지 않는다(범위는 5의 Playground에서 요청한다).
+4. **대상** 탭에서 게시 상태가 "테스트 중"이면 **앱 게시**를 눌러 **프로덕션**으로 바꾼다. 사용자가 공용 계정 한 명뿐이어도 "테스트" 상태에서 발급한 refresh token은 7일 뒤 만료되므로 반드시 바꾸고, 바꾼 뒤에 5에서 토큰을 발급한다.
+5. **클라이언트** 탭(또는 사용자 인증 정보 만들기에서 액세스할 데이터로 **사용자 데이터** 선택)에서 OAuth 클라이언트를 만든다. 애플리케이션 유형은 **웹 애플리케이션**이어야 한다(다른 유형은 리디렉션 URI 칸이 없고, 유형은 나중에 바꿀 수 없다). 리디렉션 URI는 자동으로 생기지 않으므로 만든 클라이언트를 열어 승인된 리디렉션 URI에 `https://developers.google.com/oauthplayground`를 추가하고 저장한다. 클라이언트 ID·보안 비밀이 `FEEDBACK_MAIL_CLIENT_ID`, `FEEDBACK_MAIL_CLIENT_SECRET`이다.
+6. [OAuth 2.0 Playground](https://developers.google.com/oauthplayground) 설정(톱니바퀴)에서 "Use your own OAuth credentials"에 5의 값을 넣는다. 왼쪽 Step 1 아래 "Input your own scopes" 칸에 범위 `https://mail.google.com/`을 넣고 **Authorize APIs**를 눌러 공용 계정으로 허용한다(nodemailer가 SMTP로 보내므로 보내기 전용 `gmail.send`로는 로그인이 안 된다). Step 2의 "Exchange authorization code for tokens"로 받은 refresh token이 `FEEDBACK_MAIL_REFRESH_TOKEN`이다. 검증받지 않은 앱 경고가 나오면 "고급 → (앱 이름)(으)로 이동"으로 진행한다.
+7. 운영·staging `.env`에 네 값을 넣고 `docker compose -f app-compose.yml up -d`로 Nest 컨테이너를 다시 만든다. 운영은 `TAG=<지금 배포된 커밋 SHA>`를 앞에 붙인다. `.env`는 `env_file`로 들어가 컨테이너를 만들 때만 읽히므로 `restart`로는 반영되지 않는다.
+
+refresh token은 다음 때 무효가 된다(Google OAuth 문서 기준). 그러면 피드백 발송이 503으로 실패하고, 운영 서버는 디스코드로 알린다. 서버 시작 시 확인이 실패하면 "피드백 메일 접속 확인 실패", 발송 중 인증이 실패하면 "피드백 메일 인증 실패"다. 토큰이 무효면 오류 코드가 `EAUTH (원인 EOAUTH2)`로 찍힌다.
+
+- 공용 계정 비밀번호를 바꿨을 때
+- 공용 계정에서 이 앱의 접근 권한을 해제했을 때
+- 6개월 동안 쓰지 않았을 때. 서버가 시작할 때마다 Gmail 접속을 확인하므로 배포가 이어지는 동안은 생기지 않는다
+- 같은 클라이언트로 refresh token을 100개 넘게 발급했을 때(가장 오래된 것부터 무효)
+
+다시 발급할 때는 6·7만 반복한다. 새 토큰을 넣고 Nest를 다시 띄운 뒤, 로그에 `피드백 메일 접속 확인 성공`이 찍히는지 본다.
 
 `docker compose -f infra-compose.yml up -d`로 nginx, Promtail, node exporter를 먼저 띄운다. Nest는 main에 머지하면 워크플로가 띄우고, 그 전에 직접 띄우려면 staging에서 검증한 커밋 SHA로 `TAG=<SHA> docker compose -f app-compose.yml up -d --wait`를 실행한다. 운영 `app-compose.yml`은 `TAG`가 없으면 실행을 거부한다.
 
